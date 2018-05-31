@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>二次贝塞尔曲线，带有圆角的箭头图案</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+            /* width:600px;
+            height:300px; */
+        }     
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="400" height="400">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li><span>quadraticCurveTo(cpx,cpy, x,y)创建一条二次贝塞尔曲线的路径。该方法需要传入两个点，第一个是控制点，第二个是锚点</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        // 绘制16格表盘，每隔分8个刻度，一共2*8*8个小格
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        
+        var ARROW_MARGIN = 30,//箭头距离边框的距离
+            POINT_RADIUS = 7,//圆圈半径
+            points = [
+                // 右下角坐标，右
+                {
+                    x:canvas.width - ARROW_MARGIN,
+                    y:canvas.height - ARROW_MARGIN
+                },
+                // 右下角坐标，左，实心
+                {
+                    x:canvas.width - ARROW_MARGIN*2,
+                    y:canvas.height - ARROW_MARGIN
+                },
+                // 左侧坐标，左
+                {
+                    x:POINT_RADIUS,
+                    y:canvas.height/2
+                },
+                // 左侧坐标，右，实心
+                {
+                    x:ARROW_MARGIN,
+                    y:canvas.height/2 - ARROW_MARGIN
+                },
+                // 右上角坐标，上
+                {
+                    x:canvas.width - ARROW_MARGIN,
+                    y:ARROW_MARGIN
+                },
+                // 右上角坐标，下，实心
+                {
+                    x:canvas.width - ARROW_MARGIN,
+                    y:ARROW_MARGIN*2
+                }
+            ]
+
+            //Functions......
+
+            // 绘制圆圈
+            function drawPoint(x,y,strokeStyle,fillStyle){
+                context.beginPath();
+                context.fillStyle = fillStyle;
+                context.strokeStyle = strokeStyle;
+                context.lineWidth = 0.5;
+                context.arc(x,y,POINT_RADIUS,0,Math.PI*2,false);
+                context.fill();
+                context.stroke();
+            }
+            // 绘制所有的圆圈
+            function drawBezierPoints(){
+                var i,
+                    strokeStyle,
+                    fillStyle;
+                for(i=0; i<points.length; ++i){
+                    // 偶数为白色填充蓝色边框，奇数为蓝色填充白色边框
+                    fillStyle = i % 2 === 0 ? 'white' : 'blue';
+                    strokeStyle = i % 2 === 0 ? 'blue' : 'white';
+                    drawPoint(points[i].x, points[i].y, strokeStyle, fillStyle);
+                }
+            }
+            
+            // 绘制箭头
+            function drawArrow(){
+                // 白边蓝底
+                context.strokeStyle = 'white';
+                context.fillStyle = 'cornflowerblue';
+
+                // 右上角，右边框上起点
+                context.moveTo(canvas.width - ARROW_MARGIN, ARROW_MARGIN*2);
+
+                // 右下角，右边框终点（贝塞尔起点）
+                context.lineTo(canvas.width - ARROW_MARGIN, canvas.height-ARROW_MARGIN*2);
+
+                // （右下角，右圆圈） —— （右下角，左圆圈）
+                context.quadraticCurveTo(points[0].x, points[0].y, points[1].x,points[1].y);
+
+                // 左侧，下边框终点（贝塞尔起点）
+                context.lineTo(ARROW_MARGIN, canvas.height/2 + ARROW_MARGIN);
+                
+                // （左侧，左圆圈） —— （左侧，右圆圈）
+                context.quadraticCurveTo(points[2].x,points[2].y, points[3].x,points[3].y);
+
+                // 右上角，上边框终点（贝塞尔起点）
+                context.lineTo(canvas.width - ARROW_MARGIN*2, ARROW_MARGIN);
+
+                // （右上角，上圆圈）——（右上角，下圆圈）
+                context.quadraticCurveTo(points[4].x, points[4].y, points[5].x,points[5].y);
+
+                context.fill();
+                context.stroke();
+            }
+
+            // Initialization......
+            context.clearRect(0,0,canvas.width,canvas.height);
+            drawArrow();
+            drawBezierPoints();
+
+            console.profileEnd();
+    
+    </script>
+</body>
+</html>

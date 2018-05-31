@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas打印</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            position:absolute;
+            left:10px;
+            top:1.5em;
+            margin:20px;
+            border:thin solid #aaa;
+        }     
+        #snapshotImageElement{
+            position:absolute;
+            left:10px;
+            top:1.5em;
+            margin:20px;
+            border:thin solid #aaa;
+        }
+        .info{
+            position:absolute;
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <input id="snapshotButton" type="button" value="Take snapshot">
+    </div>
+
+    <img id="snapshotImageElement">
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="400" height="400">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>toDataURL()方法，将canvas内容打印，该方法返回的引用，指向了某个给定canvas元素的数据地址</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            snapshotButton = document.getElementById('snapshotButton'),
+            snapshotImageElement = document.getElementById('snapshotImageElement'),
+            loop;
+        
+        var FONT_HEIGHT = 15,//字体大小
+            MARGIN = 35,//表距离边框的距离
+            HAND_TRUNCATION = canvas.width/25,//分针、秒针距离表框的间距
+            HOUR_HAND_TRUNCATION = canvas.width/10,//时针距离表框的间距
+            NUMERAL_SPACING = 20,//表数字距离边框的距离
+            RADIUS = canvas.width/2 - MARGIN,//半径（canvas的宽/2 - 外边距）
+            HAND_RADIUS = RADIUS + NUMERAL_SPACING;//表数字距离中心的半径
+
+        // 表外框
+        function drawCircle(){
+            context.beginPath();
+            context.arc(canvas.width/2,canvas.height/2,RADIUS,0,Math.PI*2,true);
+            context.stroke();
+        }
+
+        // 表数字
+        function drawNumerals(){
+            var numerals = [1,2,3,4,5,6,7,8,9,10,11,12],
+                angle = 0;
+                numralWidth = 0;
+            numerals.forEach(function(numeral){
+                angle = Math.PI/6 * (numeral - 3);//
+                numralWidth = context.measureText(numeral).width;//在画布上输出文本之前，检查字体的宽度
+                context.fillText(numeral,
+                canvas.width/2 + Math.cos(angle)*(HAND_RADIUS) - numralWidth/2, // 文本的 x 坐标位置
+                canvas.height/2 + Math.sin(angle)*(HAND_RADIUS) + FONT_HEIGHT/3 ); //文本的 y 坐标位置
+            });
+        }
+
+        // 中心点,半径是5px
+        function drawCenter(){
+            context.beginPath();
+            context.arc(canvas.width/2,canvas.height/2,5,0,Math.PI*2,true);
+            context.fill();
+        }
+
+        // 表指针
+        function drawHand(loc,isHour){
+            var angle = (Math.PI*2)*(loc/60)-Math.PI/2, //根据时间偏移比例等比获取角度偏移
+                handRadius = isHour ? RADIUS -HAND_TRUNCATION - HOUR_HAND_TRUNCATION : RADIUS - HAND_TRUNCATION;
+            context.moveTo(canvas.width/2,canvas.height/2);
+            context.lineTo(canvas.width/2+Math.cos(angle)*handRadius, canvas.height/2+Math.sin(angle)*handRadius);
+            context.stroke();
+        }
+
+        // 绘制所有指针
+        function drawHands(){
+            var date = new Date(),
+                hour = date.getHours();
+            hour = hour >12 ? hour - 12 : hour;
+            drawHand(hour*5 + (date.getMinutes()/60)*5,true,0.5);//一个小时包含五个小格
+            drawHand(date.getMinutes(),false,0.5);
+            drawHand(date.getSeconds(),false,0.2);
+        }
+
+        // 绘制表
+        function drawClock(){
+            context.clearRect(0,0,canvas.width,canvas.height);
+            drawCircle();
+            drawCenter();
+            drawHands();
+            drawNumerals();
+        }       
+
+        snapshotButton.onclick = function(){
+            var dataUrl;
+
+            if(snapshotButton.value === 'Take snapshot'){
+                dataUrl = canvas.toDataURL();
+                clearInterval(loop);
+                snapshotImageElement.src = dataUrl;
+                snapshotImageElement.style.display = 'inline';
+                canvas.style.display = 'none';
+                snapshotButton.value = 'Return to Canvas';
+            }else{
+                canvas.style.display = 'inline';
+                snapshotImageElement.style.display = 'none';
+                loop = setInterval(drawClock,1000);
+                snapshotButton.value = 'Take snapshot';
+            }
+        }
+
+        // 设置字体大小
+        context.font = FONT_HEIGHT + 'PX Arial';
+        // 每隔一秒绘制一次
+        loop = setInterval(drawClock,1000);
+
+        console.profileEnd();
+     
+    </script>
+</body>
+</html>

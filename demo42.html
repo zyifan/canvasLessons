@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>图像合成模式演示</title>
+<style>
+    canvas {
+        border:1px solid cornflowerblue;
+        position:absolute;
+        left:80px;
+        top:100px;
+        background:#eee;
+        border:thin solid #aaa;
+        cursor:pointer;
+        -webkit-box-shadow:rgba(200,200,255,0.9) 5px 5px 10px;
+        -moz-box-shadow:rgba(200,200,255,0.9) 5px 5px 10px;
+        box-shadow:rgba(200,200,255,0.9) 5px 5px 10px;
+    }
+    .info{
+        margin-top:600px;
+    }
+    .info li{
+        font-size:13px;
+        color:#888;
+    }
+</style>
+</head>
+<body>  
+    <p style="margin-bottom:25px;">图像合成 globalCompositeOperation：</p>
+
+    <select id="compositingSelect">
+        <option value="source-atop">source-atop</option>
+        <option value="source-in">source-in</option>
+        <option value="source-out">source-out</option>
+        <option value="source-over">source-over</option>
+        <option value="destination-atop">destination-atop</option>
+        <option value="destination-in">destination-in</option>
+        <option value="destination-out">destination-out</option>
+        <option value="destination-over">destination-over</option>
+        <option value="lighter">lighter</option>
+        <option value="copy">copy</option>
+        <option value="xor">xor</option>
+    </select>
+
+    <canvas id="canvas" width="600" height="420">
+        Canvas not supported
+    </canvas>
+
+    <div>
+        <ul class="info">
+            <li>source-atop	在目标图像顶部显示源图像。源图像位于目标图像之外的部分是不可见的。</li>
+            <li>source-in	在目标图像中显示源图像。只有目标图像之内的源图像部分会显示，目标图像是透明的。</li>
+            <li>source-out	在目标图像之外显示源图像。只有目标图像之外的源图像部分会显示，目标图像是透明的。</li>
+            <li>source-over	默认。在目标图像上显示源图像。</li>
+            <li>destination-atop	在源图像顶部显示目标图像。目标图像位于源图像之外的部分是不可见的。</li>
+            <li>destination-in	在源图像中显示目标图像。只有源图像之内的目标图像部分会被显示，源图像是透明的。</li>
+            <li>destination-out	在源图像之外显示目标图像。只有源图像之外的目标图像部分会被显示，源图像是透明的。</li>
+            <li>destination-over	在源图像上显示目标图像。</li>
+            <li>lighter	显示源图像 + 目标图像。</li>
+            <li>copy	显示源图像。忽略目标图像。</li>
+            <li>xor	使用异或操作对源图像与目标图像进行组合。</li>
+        </ul>
+    </div>
+    <script>
+        var context = document.getElementById('canvas').getContext('2d'),
+            selectElement = document.getElementById('compositingSelect');
+        
+        //Funcitons......
+        function drawText(){
+            context.save();
+
+            context.shadowColor = 'rgba(100,100,150,0.8)';
+            context.shadowOffsetX = 5;
+            context.shadowOffsetY = 5;
+            context.shadowBlur = 10;
+            context.fillStyle = 'cornflowerblue';
+
+            context.fillText('HTML5',20,250);
+            context.strokeStyle = 'yellow';
+            context.strokeText('HTML5',20,250);
+
+            context.restore();
+        }
+
+        //Event Handlers......
+        function windowToCanvas(canvas,x,y){
+            var bbox = canvas.getBoundingClientRect();
+            return {
+                x: (x - bbox.left) * (canvas.width/bbox.width),
+                y: (y - bbox.top) * (canvas.height/bbox.height)
+            }
+        }
+        context.canvas.onmousemove = function(e){
+            var loc = windowToCanvas(context.canvas,e.clientX,e.clientY);
+
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+            drawText();
+
+            context.save();
+            context.globalCompositeOperation = selectElement.value;
+            context.beginPath();
+            context.arc(loc.x,loc.y,100,0,2*Math.PI,false);
+            context.fillStyle = 'orange';
+            context.stroke();
+            context.fill();
+            context.restore();
+        }
+
+        //Initialization......
+        selectElement.selectIndex = 3;
+        context.lineWidth = 0.5;
+        context.font = '128pt Comic-sans';
+        drawText();
+    </script>
+
+</body>
+</html>

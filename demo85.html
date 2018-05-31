@@ -1,0 +1,154 @@
+<head>
+  <title>走路动画Animating with sprite sheets</title>
+  <meta name="description" content="使用精灵表绘制器制作动画（包含动画每一帧图像的图片，就叫做精灵表sprite sheet）" />
+  <style>
+    body {
+      background: #dddddd;
+    }
+
+    #canvas {
+      position: absolute;
+      left: 0px;
+      top: 20px;
+      margin: 20px;
+      background: #ffffff;
+      border: thin inset rgba(100, 150, 230, 0.5);
+    }
+
+    #animateButton {
+      margin-top: 10px;
+      margin-left: 15px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <input id='animateButton' type='button' value='Animate' />
+
+  <canvas id='canvas' width='462' height='300'>
+    Canvas not supported
+  </canvas>
+
+  <script src='requestNextAnimationFrame.js'></script>
+  <script src='sprites.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      animateButton = document.getElementById('animateButton'),
+
+      // 精灵图表参数设置
+      spritesheet = new Image(),
+      runnerCells = [
+        { left: 0,   top: 0, width: 47, height: 64 },
+        { left: 55,  top: 0, width: 44, height: 64 },
+        { left: 107, top: 0, width: 39, height: 64 },
+        { left: 150, top: 0, width: 46, height: 64 },
+        { left: 208, top: 0, width: 49, height: 64 },
+        { left: 265, top: 0, width: 46, height: 64 },
+        { left: 320, top: 0, width: 42, height: 64 },
+        { left: 380, top: 0, width: 35, height: 64 },
+        { left: 425, top: 0, width: 35, height: 64 },
+      ],
+
+      // demo2 小树成长
+      // runnerCells = [
+      //   { left: 0,   top: 0, width: 73, height: 119 },
+      //   { left: 73,  top: 0, width: 73, height: 119 },
+      //   { left: 146, top: 0, width: 73, height: 119 },
+      //   { left: 219, top: 0, width: 73, height: 119 },
+      //   { left: 292, top: 0, width: 73, height: 119 },
+      //   { left: 365, top: 0, width: 73, height: 119 },
+      // ],
+
+      sprite = new Sprite('runner', new SpriteSheetPainter(runnerCells)),
+
+      interval,
+      lastAdvance = 0,
+      paused = false,
+      PAGEFLIP_INTERVAL = 100; //帧间隔时间
+      
+      // demo2
+      // PAGEFLIP_INTERVAL = 200;
+
+    // Functions.....................................................
+    // 绘制网格
+    function drawBackground() {
+      var STEP_Y = 12,
+        i = context.canvas.height;
+
+      while (i > STEP_Y * 4) {
+        context.beginPath();
+        context.moveTo(0, i);
+        context.lineTo(context.canvas.width, i);
+        context.stroke();
+        i -= STEP_Y;
+      }
+    }
+    
+    // 停止动画
+    function pauseAnimation() {
+      animateButton.value = 'Animate';
+      paused = true;
+    }
+
+    // 开始动画
+    function startAnimation() {
+      animateButton.value = 'Pause';
+      paused = false;
+      lastAdvance = 0;
+      window.requestNextAnimationFrame(animate);
+    }
+
+    // Event handlers................................................
+
+    animateButton.onclick = function (e) {
+      if (animateButton.value === 'Animate'){
+        startAnimation();
+      } else {
+        pauseAnimation();
+      }
+    };
+
+    // Animation.....................................................
+
+    function animate(time) {
+      if (!paused) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        drawBackground();
+        context.drawImage(spritesheet, 0, 0); //绘制精灵图片
+
+        sprite.paint(context);// 绘制精灵单元
+        
+        // 每超过100ms则绘制下一幅图片
+        if (time - lastAdvance > PAGEFLIP_INTERVAL) {
+          sprite.painter.advance();
+          lastAdvance = time;
+        }
+        window.requestNextAnimationFrame(animate);
+      }
+    }
+
+    // Initialization................................................
+
+    spritesheet.src = 'imgs/running-sprite-sheet.png';
+    
+    // demo2
+    // spritesheet.src = 'imgs/1.jpg';
+
+    spritesheet.onload = function (e) {
+      context.drawImage(spritesheet, 0, 0);
+    };
+
+    sprite.left = 200;
+    sprite.top = 100;
+
+    context.strokeStyle = 'lightgray';
+    context.lineWidth = 0.5;
+
+    drawBackground();
+
+  </script>
+</body>
+
+</html>

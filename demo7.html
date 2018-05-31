@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>在 canvas 联合 html 用法，高级html控件用法，橡皮筋式选取框</title>
+    <style>
+        body{
+            background:rgba(100,145,250,0.3);
+        }
+        #canvas{
+            margin-left:20px;
+            margin-right:0;         
+            margin-bottom:20px;
+            background:#fff;
+            border:thin solid #aaa;
+            cursor:crosshair;
+            padding:0;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #controls{
+            margin:20px 0 20px 20px;
+        }
+
+        #rubberbandDiv{
+            position:absolute;
+            border:3px solid blue;
+            cursor:crosshair;
+            display:none;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <input type="button" id="resetButton" value="Reset">
+    </div>
+
+    <div id="rubberbandDiv"></div>
+
+    <canvas id="canvas" width="800" height="520">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>这个demo采用了一种名为‘橡皮筋式’（rubberbanding）选取狂的技术，让用户在canvas之中选择某个区域</span></li>
+            <li>
+                <span>drawImage()方法：</span>
+                <ul>
+                    <li>drawImage(image, x, y); 把整个图像复制到画布，将其放置到指定点的左上角，并且将每个图像像素映射成画布坐标系统的一个单元</li>
+                    <li>drawImage(image, x, y, width, height); 把整个图像复制到画布，但是允许您用画布单位来指定想要的图像的宽度和高度</li>
+                    <li>drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight); 指定图像的任何矩形区域并复制它，对画布中的任何位置都可进行任何的缩放</li>
+                    <br>
+                    <li>参数说明：</li>
+                    <li>image： 所要绘制的图像。这必须是<img>标记或者屏幕外图像的Image对象，或者是canvas元素</li>                   
+                    <li>x，y：要绘制的图像左上角的位置</li>
+                    <li>width，height：图像所应该绘制的尺寸。指定这些参数使得图像缩放</li>
+                    <li>sourceX，sourceY：图像将要被绘制的区域的左上角。这些整数参数用图像像素来度量</li>
+                    <li>sourceWidth，sourceHeight：图像所要绘制区域的大小，用图像像素表示</li>
+                    <li>destX，destY：所要绘制的图像区域的左上角的画布坐标</li>
+                    <li>destWidth，destHeight：图像区域所要绘制的画布大小</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <script>
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            rubberbandDiv = document.getElementById('rubberbandDiv'),//选择框
+            resetButton = document.getElementById('resetButton'),//重置按钮
+            image = new Image(), //图片
+            mousedown = {}, //鼠标点下时，存储e.clientX、e.clientY 初始坐标
+            rubberbandRectangle = {}, //选择框left、top、width、height参数
+            dragging = false;
+
+        //Functions .......
+
+        // mousedown 方法
+        function rubberbandStart(x,y){
+            // event.clientX = x, event.clientY = y
+            mousedown.x = x;
+            mousedown.y = y;
+
+            rubberbandRectangle.left = mousedown.x;
+            rubberbandRectangle.top = mousedown.y;
+
+            moveRubberbandDiv(); //设置‘选择框’的top和left值
+            showRubberbandDiv(); // 显示‘选择框’
+            
+            dragging = true;
+        }
+        //设置‘选择框’的top和left值
+        function moveRubberbandDiv(){
+           rubberbandDiv.style.top = rubberbandRectangle.top + 'px';
+           rubberbandDiv.style.left = rubberbandRectangle.left + 'px';
+        }
+        // 显示‘选择框’
+        function showRubberbandDiv(){
+            rubberbandDiv.style.display = 'inline';
+        }
+
+        // move方法，实时更新位置
+        function rubberbandStretch(x,y){
+            // 如果e.clientX、e.clientY 小于选择框的left和top，则将‘选择框’的left、top重新赋值
+            // mousedown存储的是鼠标点下时的初始 x、y 坐标
+            rubberbandRectangle.left = x < mousedown.x ? x : mousedown.x;
+            rubberbandRectangle.top = y < mousedown.y ? y : mousedown.y;
+
+            // 取鼠标移动的距离的正值存储宽、高
+            rubberbandRectangle.width = Math.abs(x - mousedown.x);
+            rubberbandRectangle.height = Math.abs(y - mousedown.y);
+
+            moveRubberbandDiv();//设置‘选择框’的top和left值
+            resizeRubberbandDiv();// 设置‘选择框’宽、高
+        }
+        // 设置‘选择框’宽、高
+        function resizeRubberbandDiv(){
+            rubberbandDiv.style.width = rubberbandRectangle.width + 'px';
+            rubberbandDiv.style.height = rubberbandRectangle.height + 'px';
+        }
+
+        // mouseup方法
+        function rubberbandEnd(){
+            // 获取canvas的位置信息width、height、left、top
+            var bbox = canvas.getBoundingClientRect();
+
+            try{
+                // drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight)
+                // 将‘选择框’内的图片绘制到整个canvas区域内
+                context.drawImage(
+                    canvas,
+                    rubberbandRectangle.left - bbox.left,
+                    rubberbandRectangle.top - bbox.top,
+                    rubberbandRectangle.width,
+                    rubberbandRectangle.height,
+                    0,0,canvas.width,canvas.height
+                );
+            }
+            catch (e) {
+                //Suppress error message when mouse is releasee
+                //outside the canvas
+            }
+
+            resetRubberbandRectangle();//重置位置参数
+
+            rubberbandDiv.style.width = 0;//重置选择框宽度
+            rubberbandDiv.style.height = 0;//重置选择框高度
+
+            hideRubberbandDiv();//隐藏选择框
+
+            dragging = false;
+        }    
+        //重置位置参数
+        function resetRubberbandRectangle(){
+            rubberbandRectangle = { top:0, left:0, width:0 ,height:0 }
+        }
+        //隐藏选择框
+        function hideRubberbandDiv(){
+            rubberbandDiv.style.display = 'none';
+        }
+
+        
+
+        //Event handlers........
+        canvas.onmousedown = function(e){
+            var x = e.clientX,
+                y = e.clientY;
+                e.preventDefault();
+                rubberbandStart(x,y);//初始化‘选择框’位置
+        }
+
+        window.onmousemove = function(e){
+            var x = e.clientX,
+                y = e.clientY;
+                e.preventDefault();
+                if(dragging){
+                    rubberbandStretch(x,y);//实时绘制选择框
+                }
+        }
+
+        window.onmouseup = function(e){
+                e.preventDefault();
+                rubberbandEnd();//缩放图片，重置选择框
+        }
+
+        // 绘制图片
+        image.onload = function(){
+            context.drawImage(image,0,0,canvas.width,canvas.height);
+        }
+
+        // 重绘图片
+        resetButton.onclick = function(e){
+            context.clearRect(0,0,context.canvas.width,context.canvas.height);
+            context.drawImage(image,0,0,canvas.width,canvas.height);
+        }
+
+        //Initialization.....................
+        image.src = './imgs/sence.jpg';
+
+
+    </script>
+</body>
+</html>

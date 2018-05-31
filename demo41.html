@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>图像合成示例</title>
+<style>
+    body{
+        padding-left:50px;
+        padding-top:30px;
+    }
+    canvas {
+        border:1px solid #d3d3d3;
+        margin-right:20px;
+        margin-bottom:20px;	
+    }
+    .info li{
+        font-size:13px;
+        color:#888;
+    }
+
+</style>
+</head>
+<body>  
+    <p style="margin-bottom:25px;">图像合成 globalCompositeOperation：</p>
+    <script>
+        var gco = new Array();
+        gco.push("source-atop");
+        gco.push("source-in");
+        gco.push("source-out");
+        gco.push("source-over");
+        gco.push("destination-atop");
+        gco.push("destination-in");
+        gco.push("destination-out");
+        gco.push("destination-over");
+        gco.push("lighter");
+        gco.push("copy");
+        gco.push("xor");
+
+        var info = [
+            '默认，在目标图像上显示源图像',
+            '在目标图像中显示源图像。只有目标图像之内的源图像部分会显示，目标图像是透明的',
+            '在目标图像之外显示源图像。只有目标图像之外的源图像部分会显示，目标图像是透明的',
+            '默认。在目标图像上显示源图像',
+            '在源图像顶部显示目标图像。目标图像位于源图像之外的部分是不可见的',
+            '在源图像中显示目标图像。只有源图像之内的目标图像部分会被显示，源图像是透明的',
+            '在源图像之外显示目标图像。只有源图像之外的目标图像部分会被显示，源图像是透明的',
+            '在源图像上显示目标图',
+            '显示源图像 + 目标图像',
+            '显示源图像。忽略目标图像',
+            '使用异或操作对源图像与目标图像进行组合'
+        ]
+
+        for (n=0; n<gco.length; n++) {
+            if((n+1)%4 === 1){
+                document.write('<div style="overflow:hidden;">');
+            }
+            document.write("<div id='p_" + n + "' style='float:left;' title='"+info[n]+"'>" + gco[n] + ":<br>");
+            var c=document.createElement("canvas");
+            c.width=120;
+            c.height=100;
+
+            document.getElementById("p_" + n).appendChild(c);            
+            var ctx=c.getContext("2d");    
+
+            ctx.fillStyle="blue";
+            ctx.fillRect(10,10,50,50);
+            ctx.globalCompositeOperation = gco[n];
+
+            ctx.beginPath();
+            ctx.fillStyle="red";
+            ctx.arc(50,50,30,0,2*Math.PI);
+            ctx.fill();
+            document.write("</div>");	
+            if((n+1)%4 === 0){
+                document.write('</div>');
+            }
+        }
+    
+        var infoHtml =  '<div>'+
+                        '<ul class="info">'+
+                            '<li>source-atop	在目标图像顶部显示源图像。源图像位于目标图像之外的部分是不可见的。</li>'+
+                            '<li>source-in	在目标图像中显示源图像。只有目标图像之内的源图像部分会显示，目标图像是透明的。</li>'+
+                            '<li>source-out	在目标图像之外显示源图像。只有目标图像之外的源图像部分会显示，目标图像是透明的。</li>'+
+                            '<li>source-over	默认。在目标图像上显示源图像。</li>'+
+                            '<li>destination-atop	在源图像顶部显示目标图像。目标图像位于源图像之外的部分是不可见的。</li>'+
+                            '<li>destination-in	在源图像中显示目标图像。只有源图像之内的目标图像部分会被显示，源图像是透明的。</li>'+
+                            '<li>destination-out	在源图像之外显示目标图像。只有源图像之外的目标图像部分会被显示，源图像是透明的。</li>'+
+                            '<li>destination-over	在源图像上显示目标图像。</li>'+
+                            '<li>lighter	显示源图像 + 目标图像。</li>'+
+                            '<li>copy	显示源图像。忽略目标图像。</li>'+
+                            '<li>xor	使用异或操作对源图像与目标图像进行组合。</li>'+
+                        '</ul></div>'
+        var infoD = document.createElement('div');
+        infoD.innerHTML = infoHtml;
+        document.body.appendChild(infoD);
+    </script>
+
+</body>
+</html>

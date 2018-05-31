@@ -1,0 +1,198 @@
+<html>
+
+<head>
+  <title>Sprite Clock 精灵时钟</title>
+
+  <style>
+    #canvas {
+      background: #fefefe;
+      padding: 30px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      margin-left: 20px;
+      border: thin solid lightgray;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='500' height='500'>
+    Canvas not supported
+  </canvas>
+
+  <script src='requestNextAnimationFrame.js'></script>
+  <script src='sprites.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+
+      CLOCK_RADIUS = canvas.width / 2 - 15, //钟表半径
+      HOUR_HAND_TRUNCATION = 35,
+
+      // Painter...................................................
+
+      ballPainter = {
+        paint: function (sprite, context) {
+          var x = sprite.left + sprite.width / 2,
+            y = sprite.top + sprite.height / 2,
+            width = sprite.width,
+            height = sprite.height,
+            radius = sprite.width / 2;
+
+          context.save();
+          context.beginPath();
+          context.arc(x, y, radius, 0, Math.PI * 2, false);
+          context.clip();
+
+          context.shadowColor = 'rgb(0,0,0)';
+          context.shadowOffsetX = -4;
+          context.shadowOffsetY = -4;
+          context.shadowBlur = 8;
+
+          context.fillStyle = 'rgba(218, 165, 32, 0.1)';
+          context.fill();
+
+          context.lineWidth = 2;
+          context.strokeStyle = 'rgb(100,100,195)';
+          context.stroke();
+
+          context.restore();
+        }
+      },
+
+      // Sprite....................................................
+
+      ball = new Sprite('ball', ballPainter);
+
+    // Functions.....................................................
+
+    function drawGrid(color, stepx, stepy) {
+      context.save()
+
+      context.shadowColor = undefined;
+      context.shadowBlur = 0;
+      context.shadowOffsetX = 0;
+      context.shadowOffsetY = 0;
+
+      context.strokeStyle = color;
+      context.fillStyle = '#ffffff';
+      context.lineWidth = 0.5;
+      context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+
+      for (var i = stepx + 0.5; i < context.canvas.width; i += stepx) {
+        context.beginPath();
+        context.moveTo(i, 0);
+        context.lineTo(i, context.canvas.height);
+        context.stroke();
+      }
+
+      for (var i = stepy + 0.5; i < context.canvas.height; i += stepy) {
+        context.beginPath();
+        context.moveTo(0, i);
+        context.lineTo(context.canvas.width, i);
+        context.stroke();
+      }
+
+      context.restore();
+    }
+
+    function drawHand(loc, isHour) {
+      var angle = (Math.PI * 2) * (loc / 60) - Math.PI / 2,
+        handRadius = isHour ? CLOCK_RADIUS - HOUR_HAND_TRUNCATION : CLOCK_RADIUS,
+        // 指针终点
+        lineEnd = {
+          x: canvas.width / 2 + Math.cos(angle) * (handRadius - ball.width / 2),
+          y: canvas.height / 2 + Math.sin(angle) * (handRadius - ball.width / 2)
+        };
+
+      // 绘制指针
+      context.beginPath();
+      context.moveTo(canvas.width / 2, canvas.height / 2);
+      context.lineTo(lineEnd.x, lineEnd.y);
+      context.stroke();
+
+      ball.left = canvas.width / 2 + Math.cos(angle) * handRadius - ball.width / 2;
+      ball.top = canvas.height / 2 + Math.sin(angle) * handRadius - ball.height / 2;
+
+      ball.paint(context);
+    }
+
+    function drawClock() {
+      drawClockFace(); // 绘制钟表圆环
+      drawHands(); // 绘制指针
+    }
+
+    function drawHands() {
+      var date = new Date(),
+        hour = date.getHours();
+
+      // 绘制秒针
+      ball.width = 20;
+      ball.height = 20;
+      drawHand(date.getSeconds(), false);
+
+      // 绘制分针
+      hour = hour > 12 ? hour - 12 : hour;
+      ball.width = 35;
+      ball.height = 35;
+      drawHand(date.getMinutes(), false);
+
+      // 绘制时针
+      ball.width = 50;
+      ball.height = 50;
+      drawHand(hour * 5 + (date.getMinutes() / 60) * 5);
+      
+      // 绘制中心圆
+      ball.width = 10;
+      ball.height = 10;
+      ball.left = canvas.width / 2 - ball.width / 2;
+      ball.top = canvas.height / 2 - ball.height / 2;
+      ballPainter.paint(ball, context);
+    }
+
+    // 绘制钟表圆环
+    function drawClockFace() {
+      context.beginPath();
+      context.arc(canvas.width / 2, canvas.height / 2,
+        CLOCK_RADIUS, 0, Math.PI * 2, false);
+
+      context.save();
+      context.strokeStyle = 'rgba(0,0,0,0.2)';
+      context.stroke();
+      context.restore();
+    }
+
+    // Animation.....................................................
+
+    function animate() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawGrid('lightgray', 10, 10);
+      drawClock();
+
+      window.requestNextAnimationFrame(animate);
+    }
+
+    // Initialization................................................
+
+    context.lineWidth = 0.5;
+    context.strokeStyle = 'rgba(0,0,0,0.2)';
+
+    if (navigator.userAgent.indexOf('Opera') === -1)
+      context.shadowColor = 'rgba(0,0,0,0.5)';
+
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.shadowBlur = 4;
+    context.stroke();
+
+    window.requestNextAnimationFrame(animate);
+
+    drawGrid('lightgray', 10, 10);
+  </script>
+</body>
+
+</html>

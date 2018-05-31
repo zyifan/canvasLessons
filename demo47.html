@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>font属性</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        #controls{
+           position:absolute;
+           left:25px;
+           top:25px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id='canvas' width='950' height='600'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>            
+            <li>canvas 默认字形是 10px sans-serif。font-style、font-variant 与 font-weight的默认值均为 normal</li>
+            <li>font 属性的各个分量：
+                <ul>
+                    <li>font-style 可以取如下三个值：normal、italic、oblique</li>
+                    <li>font-variant 可以取这两个值：normal、small-caps</li>
+                    <li>font-weight 决定该字型的字符笔画粗细，可取如下值：normal、bold、bolder（比基准字型的笔画略粗一级）、lighter（比基准字型的笔画略细一级）、100,200,300……900。其中normal相当于数值400，而bold则相当于数值700.</li>
+                    <li>font-size 字型的大小，可如下值：xx-small、x-small、medium、large、x-large、xx-large、smaller、larger、length（使用px、cm等单位的固定量） 与 %（依照父元素的字型大小百分比）</li>
+                    <li>line-height 浏览器会将该属性强制设定为其默认值normal，如果你设定了该值，浏览器会忽略你所设定的值</li>
+                    <li>font-family 可以用两种方式来设置字体集（font family），一种方式是以“generic-family”格式来指定此属性，其值可取serif、sans-serif、monospace、cursive及fantasy等等。在设置font-family分量的时候，可以仅以family-name 或 generic-family 格式来指定其值，也可以同时使用这两种方式</li>
+                    <li>绘制环境对象的font属性也支持CSS3格式的字型语法，除了样式表（stylesheet）语法所特有的属性，例如 inherit 或 initial 等。如果你不巧刚好用到了inherit 或 initial 的话，那么浏览器在执行到那行代码时会悄然地失败，并不抛出任何异常，同时也不会将该值设定给font属性，通过Canvas来设置字型属性与通过CSS3来设置相比，还有一个区别：在Canvas中设置line-height属性时，浏览器将忽略其值，因为规范要求浏览器必须将该值设置为normal</li>
+                    <li>在以下这些网址中都可以查到网页安全字体的列表：
+                        <ul>
+                            <li>http://www.speaking-in-styles.com/web-typography/Web-Safe-Fonts</li>
+                            <li>http://www.codestyle.org/css/font-family/sampler-CombinedResultsFull.shtml</li>
+                            <li>http://www.apaddedcell.com//web-fonts</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        var LEFT_COLUMN_FONTS = [
+            '2em palatino',
+            'bolder 2em palatino',
+            'lighter 2em palatino',
+            'italic 2em palatino',
+            'oblique small-caps 24px palatino',
+            'bold 14pt palatino',
+            'xx-large palatino',
+            'italic xx-large palatino'
+        ]
+
+        var RIGHT_COLUMN_FONTS = [
+            'oblique 1.5em lucida console',
+            'x-large fantasy',
+            'italic 28px monaco',
+            'italic large copperplate',
+            '36px century',
+            '28px tahoma',
+            '28px impact',
+            '1.7em verdana'
+        ]
+
+        var LEFT_COLUMN_X = 25,
+            RIGHT_COLUMN_X = 425,
+            DELTA_Y = 50,
+            TOP_Y = 50,
+            y = 0;
+        
+        context.fillStyle = 'blue';
+        LEFT_COLUMN_FONTS.forEach(function(font){
+            context.font = font;
+            context.fillText(font,LEFT_COLUMN_X, y += DELTA_Y);
+        })
+
+        y = 0;
+        RIGHT_COLUMN_FONTS.forEach(function(font){
+            context.font = font;
+            context.fillText(font,RIGHT_COLUMN_X, y += DELTA_Y);
+        })
+            
+    </script>
+</body>
+</html>

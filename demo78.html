@@ -1,0 +1,178 @@
+<head>
+  <title>移动的风景</title>
+
+  <style>
+    body {
+      background: #dddddd;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      background: #ffffff;
+      cursor: crosshair;
+      margin-left: 10px;
+      margin-top: 10px;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    input {
+      margin-left: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='1000' height='440'>
+    Canvas not supported
+  </canvas>
+
+  <input id='animateButton' type='button' value='Animate' />
+
+  <script src='requestNextAnimationFrame.js'></script>
+
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      controls = document.getElementById('controls'),
+      animateButton = document.getElementById('animateButton'),
+
+      tree = new Image(),
+      nearTree = new Image(),
+      grass = new Image(),
+      grass2 = new Image(),
+      sky = new Image(),
+
+      paused = true,
+      lastTime = 0,
+      lastFpsUpdate = { time: 0, value: 0 },
+      fps = 60,
+
+      skyOffset = 0,
+      grassOffset = 0,
+      treeOffset = 0,
+      nearTreeOffset = 0,
+
+      // 移动速度
+      SKY_VELOCITY = 8, // 天空
+      TREE_VELOCITY = 20, // 远方的树
+      FAST_TREE_VELOCITY = 40, // 近处的树     
+      GRASS_VELOCITY = 75; // 草丛
+
+    // Functions.....................................................
+
+    // 擦除canvas
+    function erase() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function draw() {
+      context.save();
+
+      // 计算每帧 天空、树的移动像素
+      skyOffset = skyOffset < canvas.width ? skyOffset + SKY_VELOCITY / fps : 0;
+
+      grassOffset = grassOffset < canvas.width ? grassOffset + GRASS_VELOCITY / fps : 0;
+
+      treeOffset = treeOffset < canvas.width ? treeOffset + TREE_VELOCITY / fps : 0;
+
+      nearTreeOffset = nearTreeOffset < canvas.width ? nearTreeOffset + FAST_TREE_VELOCITY / fps : 0;
+
+      // 所有图像需要放满两屏画面
+      // 绘制天空(2个)
+      context.save();
+      context.translate(-skyOffset, 0);
+      context.drawImage(sky, 0, 0);
+      context.drawImage(sky, sky.width - 2, 0);
+      context.restore();
+
+      // 绘制远方的树(6个)，canvas宽度为1000px，2000px内放置6个树
+      context.save();
+      context.translate(-treeOffset, 0);
+      context.drawImage(tree, 100, 240);
+      context.drawImage(tree, 400, 240);
+      context.drawImage(tree, 700, 240);
+      context.drawImage(tree, 1100, 240);      
+      context.drawImage(tree, 1400, 240);      
+      context.drawImage(tree, 1700, 240);
+      context.restore();
+
+      // 绘制近处的树(4个)，canvas宽度为1000px，2000px内放置4个树
+      context.save();
+      context.translate(-nearTreeOffset, 0);
+      context.drawImage(nearTree, 250, 220);
+      context.drawImage(nearTree, 1250, 220);
+      context.drawImage(nearTree, 800, 220);
+      context.drawImage(nearTree, 1800, 220);
+      context.restore();
+
+      // 绘制草丛
+      context.save();
+      context.translate(-grassOffset, 0);
+      
+      context.drawImage(grass, 0, canvas.height - grass.height);
+      context.drawImage(grass, grass.width - 5, canvas.height - grass.height);
+
+      context.drawImage(grass2, 0, canvas.height - grass2.height);
+      context.drawImage(grass2, grass2.width, canvas.height - grass2.height);
+      context.restore();
+
+    }
+
+    // 计算帧速率
+    function calculateFps(now) {
+      var fps = 1000 / (now - lastTime);
+      lastTime = now;
+      return fps;
+    }
+    
+    // 动画函数
+    function animate(now) {
+      if (now === undefined) {
+        now = +new Date;
+      }
+
+      fps = calculateFps(now);
+
+      if (!paused) {
+        erase();
+        draw();
+      }
+
+      requestNextAnimationFrame(animate);
+    }
+
+    // Event handlers................................................
+    // 播放按钮事件
+    animateButton.onclick = function (e) {
+      paused = paused ? false : true;
+      if (paused) {
+        animateButton.value = 'Animate';
+      }
+      else {
+        animateButton.value = 'Pause';
+      }
+    };
+
+    // Initialization................................................
+
+    context.font = '48px Helvetica';
+
+    tree.src = 'imgs/smalltree.png';
+    nearTree.src = 'imgs/tree-twotrunks.png';
+    grass.src = 'imgs/grass.png';
+    grass2.src = 'imgs/grass2.png';
+    sky.src = 'imgs/sky.png';
+
+    sky.onload = function (e) {
+      draw();
+    };
+
+    requestNextAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,173 @@
+
+<html>
+    <head>
+      <title>自定义坐标转换</title>
+  
+      <style>
+        body {
+           background: #eeeeee;
+        }
+        #dragDiv {
+           position: absolute;
+           left: 25px;
+           top: 50px;
+        }
+        
+        #controls {
+           position: absolute;
+           left: 25px;
+           top: 25px;
+        }
+        
+        #canvas {
+           background: #ffffff;
+           margin-left: 10px;
+           margin-top: 10px;
+           -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+           -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+           box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        } 
+      </style>
+    </head>
+  
+     <body>
+        <canvas id='canvas' width='1200' height='600'>
+           Canvas not supported
+        </canvas>
+  
+      
+        <div class="info">
+            <ul>            
+                <li><span>两个可以直接操作变换矩阵的方法：</span></li>
+                <li><span>transform(a,b,c,d,e,f)，该方法可以在当前的变换矩阵上叠加运用另外的变换效果</span></li>
+                <li><span>setTransform(a,b,c,d,e,f) 它会将当前的变换矩阵设置为默认的单位矩阵，然后在单位矩阵上运用用户指定的变换效果</span></li>
+                <li><span>多次调用 transform 方法所造成的的变换效果是累积的，而每次调用 setTransform 方法，就会将上一次的变换矩阵彻底清除</span></li>
+                <li>
+                    <span>参数说明：</span>
+                    <ul>
+                        <li><span>a	水平缩放绘图</span></li>
+                        <li><span>b	水平倾斜绘图</span></li>
+                        <li><span>c	垂直倾斜绘图</span></li>
+                        <li><span>d	垂直缩放绘图</span></li>
+                        <li><span>e	水平移动绘图</span></li>
+                        <li><span>f	垂直移动绘图</span></li>
+                    </ul>
+                </li>               
+                <li><span>x' = ax + cy + e; y' = bx + dy + f;</span></li>
+                <li>
+                    <span>参考地址：</span>
+                    <ul>
+                        <li><span>http://www.zhangxinxu.com/wordpress/2012/06/css3-transform-matrix-%E7%9F%A9%E9%98%B5/</span></li>
+                        <li><span>http://www.zhangxinxu.com/wordpress/2012/09/css3-3d-transform-perspective-animate-transition/</span></li>
+                    </ul>
+                </li>
+               
+                <li><span>方程式：</span></li>
+                <li>
+                    <span>平移：</span>
+                    <ul>
+                        <li><span> x' = x + dx; </span></li>
+                        <li><span> y' = y + dy; </span></li>
+                        <li><span> a=d=1, b=c=0, e=dx, f=dy</span></li>
+                    </ul>
+                </li>
+                
+                <li>
+                    <span>缩放：</span>
+                    <ul>
+                        <li>x' = x * sx; </li>
+                        <li>y' = y * sy;</li>
+                        <li>a=sx; b=c=0; d=sy; e=f=0</li>
+                    </ul>
+                </li>
+                <li>
+                    <span>旋转：</span>
+                    <ul>
+                        <li>x' = x * cos(a) - y * sin(a); </li>
+                        <li>y' = y * cos(a) + x * sin(a);</li>
+                        <li>a=cos(a); b=sin(a); c=-sin(a); d=cos(a); e=f=0</li>
+                    </ul>
+                </li>
+                <li>
+                    <span>错切：</span>
+                    <ul>
+                        <li>x' = x + tan(a) * y; </li>
+                        <li>y' = y + tan(a) * x;</li>
+                        <li>a=d=1; b=c=tan(a); e=f=0;</li>
+                    </ul>
+                </li>
+                <li>
+                    <span>如：</span>
+                    <ul>
+                        <li>context.rotate(clockwise ? angle : -angle); </li>
+                        <li>context.scale(scale,scale); </li>
+                    </ul>
+                </li>
+                <li>
+                    <span>可以使用矩阵替换为:</span>
+                    <ul>
+                        <li><span>var sin = clockwise ? Math.sin(a) : Math.sin(-a);</span></li>
+                        <li><span>var cos = clockwise ? Math.cos(a) : Math.cos(-a);</span></li>
+                        <li><span>context.transform(cos, sin, -sin, cos, 0, 0);</span></li>
+                        <li><span>context.scale(scale, 0, 0, scale, 0, 0)</span></li>
+                    </ul>
+                    <span>也可以将transform方法调用合并起来：</span>
+                    <ul>
+                        <li>context.transform(scale*cos, sin, -sin, scale*cos, 0, 0)</li>
+                    </ul>
+                </li>                
+            </ul>
+        </div>
+      
+      <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        
+        context.font="20px Georgia";
+        // 创建渐变
+        var gradient=context.createLinearGradient(0,0,context.canvas.width,0);
+        gradient.addColorStop("0","magenta");
+        gradient.addColorStop("0.5","blue");
+        gradient.addColorStop("1.0","red");
+        // 用渐变填色
+        context.fillStyle = gradient;
+        context.fillText("原图:",50,90);
+        context.fillText("镜像:",650,90);
+
+        function drawTriangle(style){
+            context.save();
+            context.beginPath();
+            context.fillStyle = style;
+            context.lineCap = 'round';
+            context.moveTo(50,250);
+            context.lineTo(300,100);
+            context.lineTo(300,400);    
+            context.closePath(); 
+            context.stroke();
+            context.fill();
+            context.restore();
+        }
+
+        drawTriangle('orange');
+
+        context.save();
+        context.translate(canvas.width, 0);//将原点重置为右上角
+        context.scale(-1,1);//水平翻转
+        
+        drawTriangle('green');
+        
+        context.restore();
+
+      </script>
+    </body>
+  </html>

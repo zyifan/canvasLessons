@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>图像绘制</title>
+    <style>
+        body {
+            background: #eeeeee;
+        }
+        #canvas {
+            margin-left: 20px;
+            margin-right: 0;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border: thin solid #aaaaaa;
+            cursor: crosshair;
+            padding: 0;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+
+        #controls {
+            margin: 20px 0px 20px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id='controls'>
+        <input type='button' id='resetButton' value='Reset'/>
+    </div>
+
+    <canvas id='canvas' width='800' height='520'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>          
+            <li>
+               <ul>
+                    <li>drawImage(imageEl, dx, dy);</li>     
+                    <li>drawImage(imageEl, dx, dy, dw, dh);</li>
+                    <li>drawImage(imageEl, sx, sy, sw, sh, dx, dy, dw, dh);</li>     
+               </ul>
+            </li>
+            <li>
+                将图像绘制到canvas之中。如果该图像参数是一个 HTMLVideoElement 类型的视频对象，那么drawImage()方法就会将视频的当前帧绘制出来。这个图像参数也可以是另外一个HTMLCanvasElement的canvas对象。向canvas之中绘制的图像可以是一整幅，也可以是它的一部分，并且在绘制时有可能要对图像进行缩放。源图像中需要被绘制的区域通过sx、sy、sw与sh参数来确定的，浏览器会根据dw与dh参数对所绘内容进行缩放。在该方法的各种用法中，只有前三个参数是必须的。
+            </li>
+            <li>
+                drawImage()方法的使用很灵活：可以将一幅图像、一个canvas对象或一个视频帧的整体或某个部分绘制到canvas中。在绘制这些图像、canvas对象或视频帧的时候，可以任意指定其绘制位置及缩放比例。
+            </li>
+        </ul>
+    </div>
+    <script>
+    var canvas = document.getElementById('canvas'),
+        context = canvas.getContext('2d'),
+
+        resetButton = document.getElementById('resetButton'),
+
+        image = new Image(),
+        imageData,
+        imageDataCopy = context.createImageData(canvas.width, canvas.height),
+
+        mousedown = {},
+        rubberbandRectangle = {},
+        dragging = false;
+
+    // Functions.....................................................
+
+    function windowToCanvas(canvas, x, y) {
+        var canvasRectangle = canvas.getBoundingClientRect();
+        
+        return {
+                    x: x - canvasRectangle.left,
+                    y: y - canvasRectangle.top
+                };
+    }
+    //复制imageData，并设置透明度为0.5
+    function copyCanvasPixels() {
+        var i=0;
+
+        // Copy red, green, and blue components of the first pixel
+
+        for (i=0; i < 3; i++) {
+            imageDataCopy.data[i] = imageData.data[i];
+        }
+
+        // Starting with the alpha component of the first pixel,
+        // copy imageData, and make the copy more transparent
+
+        for (i=3; i < imageData.data.length - 4; i+=4) {
+            imageDataCopy.data[i]   = imageData.data[i] / 2; // Alpha: more transparent
+            imageDataCopy.data[i+1] = imageData.data[i+1]; // Red
+            imageDataCopy.data[i+2] = imageData.data[i+2]; // Green
+            imageDataCopy.data[i+3] = imageData.data[i+3]; // Blue
+        }
+    }
+    //鼠标按下时，存储canvas画面，复制canvas画面
+    function captureCanvasPixels() {
+        imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        copyCanvasPixels();
+    }
+    //将图像绘制到选框内
+    function restoreRubberbandPixels() {
+        var deviceWidthOverCSSPixels = imageData.width / canvas.width,
+            deviceHeightOverCSSPixels = imageData.height / canvas.height;
+
+        // Restore the Canvas to what it looked like when the mouse went down
+
+        context.putImageData(imageData, 0, 0);//恢复初始画面
+
+        // Put the more transparent image data into the rubberband rectangle
+        
+        context.putImageData(imageDataCopy, 0, 0,
+            (rubberbandRectangle.left + context.lineWidth),
+            (rubberbandRectangle.top + context.lineWidth),
+            (rubberbandRectangle.width - 2*context.lineWidth) * deviceWidthOverCSSPixels,
+            (rubberbandRectangle.height - 2*context.lineWidth) * deviceHeightOverCSSPixels);//从左上角，选取选框内的图像进行绘制
+    }
+
+    //鼠标移动时实时设置选框的left、top、width、height
+    function setRubberbandRectangle(x, y) {
+        rubberbandRectangle.left = Math.min(x, mousedown.x);
+        rubberbandRectangle.top = Math.min(y, mousedown.y);
+        rubberbandRectangle.width = Math.abs(x - mousedown.x),
+        rubberbandRectangle.height = Math.abs(y - mousedown.y);
+    }
+    //绘制选框
+    function drawRubberband() {
+        var deviceWidthOverCSSPixels = imageData.width / canvas.width,
+            deviceHeightOverCSSPixels = imageData.height / canvas.height;
+
+        context.strokeRect(rubberbandRectangle.left + context.lineWidth,
+                            rubberbandRectangle.top + context.lineWidth,
+                            rubberbandRectangle.width - 2*context.lineWidth,
+                            rubberbandRectangle.height - 2*context.lineWidth);
+    }
+
+    //存储初始鼠标位置
+    function rubberbandStart(x, y) {
+        mousedown.x = x;
+        mousedown.y = y;
+
+        rubberbandRectangle.left = mousedown.x;
+        rubberbandRectangle.top = mousedown.y;
+        rubberbandRectangle.width = 0;
+        rubberbandRectangle.height = 0;
+
+        dragging = true;
+
+        captureCanvasPixels();
+    }
+
+    //鼠标移动时
+    function rubberbandStretch(x, y) {
+        if (rubberbandRectangle.width > 2*context.lineWidth && rubberbandRectangle.height > 2*context.lineWidth) {
+            if (imageData !== undefined) {
+                restoreRubberbandPixels();//将图像绘制到选框内
+            }
+        }
+
+        setRubberbandRectangle(x, y); //实时设置选框位置和宽高
+
+        if (rubberbandRectangle.width > 2*context.lineWidth && rubberbandRectangle.height > 2*context.lineWidth) {
+            drawRubberband();//实时绘制方框
+        }
+    };
+    // 结束绘制
+    function rubberbandEnd() {
+        context.putImageData(imageData, 0, 0);
+
+        // Draw the canvas back into itself, scaling along the way
+        
+        context.drawImage(canvas,
+                            rubberbandRectangle.left + context.lineWidth*2,
+                            rubberbandRectangle.top + context.lineWidth*2,
+                            rubberbandRectangle.width - 4*context.lineWidth,
+                            rubberbandRectangle.height - 4*context.lineWidth,
+                            0, 0, canvas.width, canvas.height);
+
+        dragging = false;
+        imageData = undefined;
+    }
+
+    // Event handlers...............................................
+
+    canvas.onmousedown = function (e) { 
+        var loc = windowToCanvas(canvas, e.clientX, e.clientY);
+        e.preventDefault();
+        rubberbandStart(loc.x, loc.y);
+    };
+
+    canvas.onmousemove = function (e) { 
+        var loc;
+        
+        if (dragging) {
+            loc = windowToCanvas(canvas, e.clientX, e.clientY);
+            rubberbandStretch(loc.x, loc.y);
+        }
+    }
+
+    canvas.onmouseup = function (e) { 
+        rubberbandEnd();// 结束绘制
+    };
+
+    // Initialization..............................................
+    //解决canvas图片跨域问题
+    //image.crossOrigin ='anonymous';
+    //image.crossOrigin = 'http://profile.ak.fbcdn.net/crossdomain.xml';
+    //在chrome上右键-》属性-》目标-》添加 ‘ --allow-file-access-from-files’ -》应用-》确定-》重新打开chrome
+
+    image.src = 'imgs/countrypath.jpg';    
+    image.onload = function () { 
+        context.drawImage(image, 0, 0, canvas.width, canvas.height); 
+    };
+
+    resetButton.onclick = function(e) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    };
+
+    context.strokeStyle = 'navy';
+    context.lineWidth = 1.0;
+    </script>
+</body>
+</html>

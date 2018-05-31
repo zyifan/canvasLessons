@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>二次贝塞尔曲线 demo1</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+            /* width:600px;
+            height:300px; */
+        }     
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="600">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>quadraticCurveTo(cpx,cpy, x,y)创建一条二次贝塞尔曲线的路径。该方法需要传入两个点，第一个是控制点，第二个是锚点</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        // 绘制16格表盘，每隔分8个刻度，一共2*8*8个小格
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        
+        // 绘制曲线
+        context.fillStyle = 'cornflowerblue';
+        context.strokeStyle = 'yellow';
+        
+        context.shadowColor = 'rgba(50,50,50,1.0)';
+        context.shadowOffsetX = 2;
+        context.shadowOffsetY = 2;
+        context.shadowBlur = 4;
+
+        context.lineWidth = 20;
+        context.lineCap = 'round';
+
+        context.beginPath();
+        context.moveTo(120.5, 130);
+        context.quadraticCurveTo(150.8, 130, 160.6, 150.5);
+        context.quadraticCurveTo(190, 250.0, 210.5, 160.5);
+          context.quadraticCurveTo(240, 100.5, 290, 70.5);
+
+        context.stroke();
+            
+        // 绘制辅助线...
+        context.beginPath();
+        context.strokeStyle = 'red';
+        context.lineWidth = 1;
+        context.moveTo(120.5, 130);
+        context.lineTo(150.8, 130);
+        context.lineTo(160.6, 150.5);
+        context.strokeStyle = 'blue';
+        context.lineTo(190, 250.0);
+        context.lineTo(210.5, 160.5);
+        context.lineTo(240, 100.5);
+        context.lineTo(290, 70.5);
+        context.stroke();
+    
+    </script>
+</body>
+</html>

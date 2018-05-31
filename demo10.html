@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>矩形绘制</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            border:thin solid #aaa;
+        }     
+        .info{
+            position:absolute;
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="800" height="400">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>CSS3颜色规范中说道，之所以要增加HSL格式的支持，是因为以RGB方式来指定颜色，主要有两个缺陷：第一，它是以硬件为导向的。这种表述颜色的形式，是基于“阴极射线管的；第二，它不直观</span></li>
+            <li><span>与RGB格式一样，HSL格式也有三个分量，不过RGB的三个分量是红、绿、蓝，而HSL的三个分量则是色相，饱和度与亮度。HSL颜色可以通过一个颜色轮盘（color wheel）来选取。在轮盘中，红色位于0度角（同时也位于360度角），绿色位于120度角，而蓝色位于240度角</span></li>
+            <li><span>首先在颜色轮盘中要通过角度来指定HSL颜色的第一个分量值。第二个与第三个分量值表示饱和度与亮度。对于饱和度来说，100%表示完全饱和，0%则表示灰色。对于亮度来说，100%表示白色，而50%表示正常颜色。（请注意：CSS3颜色规范中将‘正常’这个词两边打上了引号，然而并未详述究竟如何才算是‘正常’）</span></li>
+            <li><span>可以很方便的将HSL格式的颜色值转换为RGB格式，反过来也是。你可以自行判断那种表述形式更直观，并选定自己所使用的格式</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        context.lineJoin = 'round';
+        context.lineWidth = 30;
+
+        context.font = '24px Helvetica';
+        context.fillText('Click anywhere to erase',175,200);
+
+        context.strokeStyle = 'goldenrod';
+        context.fillStyle = 'rgba(0,0,255,0.5)';
+
+        context.strokeRect(75,100,200,200);
+        context.fillRect(325,100,200,200);
+
+        context.canvas.onmousedown = function(e){
+            context.clearRect(0,0,canvas.width,canvas.height);
+        }
+
+       
+    </script>
+</body>
+</html>

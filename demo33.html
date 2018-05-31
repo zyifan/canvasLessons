@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>三次贝塞尔曲线demo1</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+            /* width:600px;
+            height:300px; */
+        }     
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="500" height="500">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li><span>bezierCurveTo(cpx,cpy, cpx1,cpy1, x,y)创建一条三次贝塞尔曲线的路径。该方法需要传入三个点，前两个个是控制点，第三个是锚点</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        // 绘制16格表盘，每隔分8个刻度，一共2*8*8个小格
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        
+        var endPoints = [{x:130,y:70}, {x:430,y:270}],
+            controlPoints = [{x:130,y:250}, {x:450,y:70}];
+        
+        function drawBezierCurve(){
+            context.strokeStyle = 'blue';
+            context.beginPath();
+            context.moveTo(endPoints[0].x, endPoints[0].y);
+            context.bezierCurveTo(controlPoints[0].x,controlPoints[0].y, controlPoints[1].x,controlPoints[1].y, endPoints[1].x,endPoints[1].y);
+            context.stroke();
+        }
+        
+        // 端点
+        function drawEndPoints(){
+            context.strokeStyle = 'blue';
+            context.fillStyle = 'red';
+
+            endPoints.forEach(function (point){
+                context.beginPath();
+                context.arc(point.x,point.y,5,0,Math.PI*2,false)
+                context.stroke();
+                context.fill();
+            })
+        }
+
+        // 控制点
+        function drawControlPoints(){
+            context.strokeStyle = 'yellow';
+            context.fillStyle = 'blue';
+
+            controlPoints.forEach(function (point){
+                context.beginPath();
+                context.arc(point.x,point.y,5,0,Math.PI*2,false)
+                context.stroke();
+                context.fill();
+            })
+        }
+
+        // 绘制连线
+        function drawLine(){
+            context.strokeStyle = 'coral';
+            context.beginPath();
+            context.moveTo(130,70);
+            context.lineTo(130,250);
+            context.lineTo(450,70);
+            context.lineTo(430,270);
+            context.stroke();
+        }
+
+        // Initialization......
+        drawControlPoints();
+        drawEndPoints();
+        drawLine();
+        drawBezierCurve();
+        
+        console.profileEnd();
+    
+    </script>
+</body>
+</html>

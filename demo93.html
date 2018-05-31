@@ -1,0 +1,220 @@
+<html>
+
+<head>
+  <title>墙碰撞 Bouncing off the walls</title>
+
+  <style>
+    #canvas {
+      background: lightskyblue;
+      cursor: pointer;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+    .info li{
+      font-size:13px;
+      color:#888;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='500' height='300'>
+    Canvas not supported
+  </canvas>
+
+  <div class="info">
+      <ul>
+          <li>
+            <span>碰撞检测</span>
+            <ul>
+              <li>外接图形判断法</li>
+              <li>光线投射法</li>
+              <li>分离轴定理简称SAT，又叫超平面分离定理（最小平移向量,MTV）</li>
+            </ul>
+          </li>
+          <li><span>事前碰撞检测法：可以提前探知是否会发生碰撞（可能会失效，判断准确度不高）</span></li>
+          <li><span>事后碰撞检测法：在事发之后才能检测到碰撞</span></li>
+          <li>
+            <span>一、外接矩形判断:外接矩形经常被当做物体的轮廓来参与碰撞检测，此时它称作‘边界框’</span>
+            <ul>
+              <li>外接矩形判断：外接矩形经常被当做物体的轮廓来参与碰撞检测，此时它称作‘边界框’</li>
+              <li>外接圆判别法：检测两个圆是否发生碰撞，检测两个圆的圆心之间的距离是否小于两圆半径之和，如果小于，那么两者发生了碰撞; 缺点：如果小球移动的太快，那么它就会在相邻两个动画帧之间快速穿越判定得分所用的那个圆形，导致应用程序漏判，解决这个问题，最简单的办法就是限制动画里那个小物体的移动速度。</li>
+            </ul>
+          </li>
+          <li>
+            <span>二、光线投射法</span>
+            <ul>
+              <li>画一条与物体速度向量相重合的线，然后再从另一个待检测物体出发，绘制第二条线，根据两条线的交点位置来判定是否发生碰撞</li>
+              <li>直线的斜截式：y = mx + b</li>
+              <li>寻找两条线的交点，也就是寻找一个同时满足这两个直线方程式的点，因此，我们令1号线的方程式等于2号线的方程式。然后解出x值：</li>
+              <li>两线相交的推导过程：</li>
+              <li>m1x + b1 = m2x + b2</li>
+              <li>x = (b2- b1)/(m1-m2)</li>
+            </ul>
+          </li>
+          <li>
+            <span>向量点积意义：可用于凸多边形的碰撞检测（分离轴定理）</span>
+          </li>
+          <li>
+            <span>向量叉积意义：可用于凸多边形的碰撞检测（射线检测）</span>
+            <br>
+            <span>其核心的思路是，判断这个点，和多边形每条边的位置关系。在一个多条边围成的区域，点在一条边的右侧，这个点可能在多边形内部，也可能在外部。但是如果判断完点和每一条边的左右关系，如果在右边的边是奇数个，那么点就在内部，如果是偶数，那么点就在外部。通过这个规则，就可以判断，点和多边形的碰撞关系。有两个注意点，多边行必须是凸多边形，并且如果点落在边上，我们算在左边，这样落在边上是算在内部</span>
+          </li>
+      </ul>
+  </div>
+
+  <script src='sprites.js'></script>
+  <script src='requestNextAnimationFrame.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      ball = new Sprite('ball',
+        {
+          paint: function (sprite, context) {
+            context.save();
+            context.strokeStyle = 'blue';
+            context.fillStyle = 'yellow';
+            context.beginPath();
+            context.arc(sprite.left + sprite.width / 2, sprite.top + sprite.height / 2, 10, 0, Math.PI * 2, false);
+            context.stroke();
+            context.fill();
+            context.restore();
+          }
+        }),
+      ballMoving = false,
+      lastTime = undefined,
+      velocityX = 350,
+      velocityY = 190,
+      showInstructions = true;
+
+    // Functions.....................................................
+
+    function windowToCanvas(e) {
+      var x = e.x || e.clientX,
+        y = e.y || e.clientY,
+        bbox = canvas.getBoundingClientRect();
+
+      return {
+        x: x - bbox.left * (canvas.width / bbox.width),
+        y: y - bbox.top * (canvas.height / bbox.height)
+      };
+    };
+
+    // 获取小球的位置信息
+    function getBoundingBox(ball) {
+      return {
+        left: ball.left,
+        top: ball.top,
+        width: ball.width,
+        height: ball.height
+      };
+    }
+
+    // 处理碰撞检测
+    function handleEdgeCollisions() {
+      var bbox = getBoundingBox(ball),
+        right = bbox.left + bbox.width,
+        bottom = bbox.top + bbox.height;
+
+      // 如果x超出边界
+      if (right > canvas.width || bbox.left < 0) {
+        velocityX = -velocityX;
+
+        if (right > canvas.width) {
+          ball.left -= right - canvas.width;
+        }
+
+        if (bbox.left < 0) {
+          ball.left -= bbox.left;
+        }
+      }
+
+      // 如果y超出边界
+      if (bottom > canvas.height || bbox.top < 0) {
+        velocityY = -velocityY;
+
+        if (bottom > canvas.height) {
+          ball.top -= bottom - canvas.height;
+        }
+        if (bbox.top < 0) {
+          ball.top -= bbox.top;
+        }
+      }
+    };
+
+    // 碰撞检测
+    function detectCollisions() {
+      if (ballMoving) {
+        handleEdgeCollisions();
+      }
+    };
+
+
+    function isPointInBall(x, y) {
+      return x > ball.left && x < ball.left + ball.width &&
+        y > ball.top && y < ball.top + ball.height;
+    }
+
+
+    // Event Handlers................................................
+
+    canvas.onmousedown = function (e) {
+      var location = windowToCanvas(e);
+
+      ballMoving = !ballMoving;
+
+      if (showInstructions)
+        showInstructions = false;
+    };
+
+    // Animation.....................................................
+
+    function animate(time) {
+      var elapsedTime;
+
+      if (lastTime === 0) {
+        lastTime = time;
+      } else {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (ballMoving) {
+          elapsedTime = parseFloat(time - lastTime) / 1000;
+
+          ball.left += velocityX * elapsedTime;
+          ball.top += velocityY * elapsedTime;
+
+          detectCollisions();
+        }
+
+        lastTime = time;
+
+        ball.paint(context);
+
+        if (showInstructions) {
+          context.fillStyle = 'rgba(100, 140, 230, 0.7)';
+          context.font = '24px Arial';
+          context.fillText('Click anywhere to start or stop the ball', 20, 40);
+        }
+      }
+      window.requestNextAnimationFrame(animate);
+    };
+
+
+    // Initialization................................................
+
+    ball.fillStyle = 'rgba(255,255,0,1.0)';
+    ball.left = 100;
+    ball.top = 100;
+
+    context.shadowColor = 'rgba(100,140,255,0.5)';
+    context.shadowBlur = 4;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.font = '38px Arial';
+
+    window.requestNextAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

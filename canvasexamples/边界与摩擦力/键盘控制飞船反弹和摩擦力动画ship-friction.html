@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>键盘控制飞船反弹和摩擦力动画</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="500" height="500" style="background:#000;">
+        your browser not support canvas
+    </canvas>
+    <script src="../js/utils.js"></script>
+    <script src="../js/spaceship.js"></script>
+    <script>
+        window.onload = function () {
+            var canvas = document.getElementById("canvas");
+            var context = canvas.getContext("2d");
+
+            var ship = new SpaceShip();
+            context.lineWidth = 2;
+            ship.x = canvas.width / 2;
+            ship.y = canvas.height / 2;
+
+            var f = 0.97, //摩擦力
+                // 角度增量
+                vr = 0,
+                // 速度分量
+                vx = 0,
+                vy = 0,
+                // 加速度
+                ax = 0,
+                ay = 0,
+                // 速度、角度
+                speed = 0,
+                angle = 0;
+
+            window.addEventListener("keydown", function (event) {
+                switch (event.keyCode) {
+                    case 37: //左键，角度减3度
+                        vr = -3;
+                        break;
+                    case 39: //右键，角度加3度
+                        vr = 3;
+                        break;
+                    case 38: //上键
+                        speed = 0.5;
+                        ship.showFlame = true;
+                        break;
+                }
+            }, false);
+
+            // 键盘弹起时重置角度增量vr为0，速度为0
+            window.addEventListener("keyup", function (event) {
+                vr = 0;
+                speed = 0;
+                ship.showFlame = false;
+            }, false);
+
+            (function drawFramw() {
+                window.requestAnimationFrame(drawFramw, canvas);
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                ship.rotation += vr * Math.PI / 180;
+                angle = ship.rotation;
+
+                // 加速度
+                ax = Math.cos(angle) * speed;
+                ay = Math.sin(angle) * speed;
+
+                // 速度增加
+                vx += ax;
+                vy += ay;
+
+                // 速度减去摩擦力3%
+                vx *= f;
+                vy *= f;
+
+                // 位置变动
+                ship.x += vx;
+                ship.y += vy;
+
+                // 边界反弹
+                if (ship.x + ship.width / 2 > canvas.width) {
+                    ship.x = canvas.width - ship.width;
+                    vx *= -1;
+                } else if (ship.x < ship.width / 2) {
+                    ship.x = ship.width / 2;
+                    vx *= -1;
+                }
+
+                if (ship.y + ship.height / 2 > canvas.height) {
+                    ship.y = canvas.height - ship.height / 2;
+                    vy *= -1;
+                } else if (ship.y < ship.height / 2) {
+                    ship.y = ship.height / 2;
+                    vy *= -1;
+                }
+
+                ship.draw(context);
+            }());
+        }
+    </script>
+</body>
+
+</html>

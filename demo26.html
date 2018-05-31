@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas虚线api，setLineDash()，使用虚线api完成跑马灯效果</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="600">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li><span>setLineDash([])  在画布上画一条虚线，这个参数是一个Array数组，一组描述交替绘制线段和间距（坐标空间单位）长度的数字，如果参数有一个，则表示线宽和线间距一样，如果有2个参数，则第一个参数表示虚线的线宽，第二个参数表示虚线的线与线的距离，后面一直循环看，如果参数数组元素的数量是奇数，数组的元素会被复制并重复。例如，[5,15,25]会变成[5,15,25,5,15,25]</span></li>
+            <li><span>getLineDash()  获取当前虚线的样式，它没有参数，它得到的结果就是设置虚线的线宽数组arr</span></li>
+            <li><span>lineDashOffset 是 Canvas 2D API， 设置虚线偏移量的属性</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+            var offset = 0;
+
+            function draw() {
+              context.clearRect(0,0, canvas.width, canvas.height);
+              context.setLineDash([4, 2]);
+              context.lineDashOffset = -offset;
+              context.strokeRect(50,50, 200, 200);
+            }
+            
+            function march() {
+              offset++;
+              if (offset > 16) {
+                offset = 0;
+              }
+              draw();
+              setTimeout(march, 20);
+            }
+            
+            march();
+
+    </script>
+</body>
+</html>

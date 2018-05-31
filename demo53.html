@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>闪烁的光标</title>
+    <style>
+        body {
+            background: #eeeeee;
+        }
+        #canvas {
+            background: #ffffff;
+            cursor: pointer;
+            margin-left: 10px;
+            margin-top: 10px;
+            -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id='canvas' width='950' height='600'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>          
+            <li>
+                context.putImageData(imgData,x,y,dirtyX,dirtyY,dirtyWidth,dirtyHeight):
+                <ul>
+                    <li>imgData: 规定要放回画布的 ImageData 对象</li>
+                    <li>x, y: 在画布上开始绘制的起始位置，左上角的 x ，y坐标，以像素计</li>
+                    <li>dirtyX, dirtyY: 可选。水平值（x,y），以像素计，在画布上放置图像的位置</li>
+                    <li>dirtyWidth, dirtyHeight: 可选。在画布上绘制图像所使用的宽度/高度</li>
+                </ul>
+            </li>
+            <li>textBaseline 该属性决定了文本在垂直方向上的对齐方式。有效取值是：top、bottom、middle、alphabetic、ideographic 及 hanging。默认值是alphabetic，该值用于绘制由基于拉丁字母的语言所组成的字符串。ideographic值则用于绘制日文或中文字符串，hanging值用于绘制各种印度语字符串。top、bottom、middle这三个值与特定的语言不相关，它们代表文本周围的边界框之内的某个位置，这个边界框也叫做“字符方框”</li>
+            <li>measureText(txt) 返回一个TextMetrics对象，该对象包含width属性代表传入文本的像素宽度。该宽度是基于当前的字型而计算出来的，measureText返回的文本宽度并不精确</li>
+        </ul>
+    </div>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            drawingSurfaceImageData,
+            
+            blinkingInterval,
+            BLINK_ON = 500,
+            BLINK_OFF = 500;
+
+        function windowToCanvas(canvas, x, y){
+            var bbox = canvas.getBoundingClientRect();
+            return {
+                x: (x - bbox.left) * (canvas.width/bbox.width),
+                y: (y - bbox.top) * (canvas.height/bbox.height)
+            }
+        }
+        // 保存图像
+        function saveDrawingSurface() {
+            drawingSurfaceImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        }
+        // 恢复图像
+        function restoreDrawingSurface() {
+            context.putImageData(drawingSurfaceImageData, 0, 0);
+        }
+
+        //定义光标对象
+        var TextCursor = function (width,fillStyle){
+            this.fillStyle = fillStyle || 'rgba(0,0,0,0.5)';
+            this.width = width || 2;
+            this.left = 0;
+            this.top = 0;
+        }
+        TextCursor.prototype = {
+            //获取文字高度
+            getHeight : function () {
+                var h = context.measureText('W').width;
+                return h + h/6;
+            },
+            //绘制光标
+            createPath: function(){
+                context.beginPath();
+                context.rect(this.left, this.top, this.width, this.getHeight(context));
+            },
+            draw: function(context, left, bottom){
+                context.save();
+                this.left = left;
+                this.top = bottom - this.getHeight(context);
+
+                this.createPath(context);
+                context.fillStyle = this.fillStyle;
+                context.fill();
+
+                context.restore();
+            },
+            erase: function (context, imageData){
+                context.putImageData(imageData, 0, 0, this.left, this.top, this.width, this.getHeight(context)+1);//将图像放到(0,0)，取(left,top)位置的(width,height)大小的图像进行绘制
+            }
+        }
+
+        var cursor = new TextCursor();
+
+        function blinkCursor(loc){
+            blinkingInterval = setInterval(function(e){
+                cursor.erase(context, drawingSurfaceImageData);//500毫秒擦除
+
+                setTimeout(function(e){//500毫秒画线
+                    cursor.draw(context, cursor.left, cursor.top + cursor.getHeight(context));
+                },BLINK_OFF);
+
+            },BLINK_ON + BLINK_OFF);
+        }
+
+        function moveCursor (loc){
+            cursor.erase(context, drawingSurfaceImageData);//擦除光标
+            cursor.draw(context, loc.x, loc.y);
+
+            if(!blinkingInterval){
+                blinkCursor(loc);
+            }
+        }
+
+        canvas.onmousedown = function(e){
+            var loc = windowToCanvas(canvas, e.clientX, e.clientY);
+            moveCursor(loc);
+        }
+
+        //Initialization...
+        saveDrawingSurface();//保存初始画面，获得drawingSurfaceImageData
+
+       
+    </script>
+</body>
+</html>

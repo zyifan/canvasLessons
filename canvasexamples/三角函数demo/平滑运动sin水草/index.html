@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Aquatic plant</h1>
+
+    <canvas id="canvas" style="background: #5A92AF;"></canvas>
+
+    <script>
+        // 水草  
+        function Aqu(color, num, amp) {
+            this.startPoint = [];
+            this.endPointX = [];
+            this.endPointY = [];
+            this.amp = [];
+            this.beta = 0;
+            this.color = (color == undefined) ? "#3b154e" : color;
+            this.num = (num == undefined) ? 80 : num;
+        }
+
+        Aqu.prototype.init = function () {
+            for (var i = 0; i < this.num; i++) {
+                this.startPoint[i] = Math.random() * 20 + i * 10;//[0,20)、[10,30)、[20,40).....
+                this.endPointX[i] = this.startPoint[i];
+                this.endPointY[i] = canvas.height / 1.5 - Math.random() * 50;
+                this.amp[i] = Math.random() * 10 + 40;//[40,50)               
+            }
+            // console.log(this.startPoint[0],this.endPointX[0],this.endPointY[0],this.amp[0]);
+        }
+
+        Aqu.prototype.draw = function (ctx) {
+            ctx.save();
+            ctx.lineWidth = 14; //线宽度为14px;
+            ctx.lineCap = "round";
+            // ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = 0.8; //透明度为0.8
+            ctx.strokeStyle = this.color;
+
+            this.beta += del * 0.0012; // 帧耗时 * 0.0012 (毫秒/1000 * 12/10)
+            var l = Math.sin(this.beta);
+
+            for (var i = 0; i < this.num; i++) {
+                ctx.beginPath();
+                ctx.moveTo(this.startPoint[i], canvas.height);
+                
+                this.endPointX[i] = this.startPoint[i] + l * this.amp[i]
+                ctx.quadraticCurveTo(this.startPoint[i], canvas.height - 120, this.endPointX[i], this.endPointY[i]); //绘制一条二次贝塞尔曲线
+                ctx.stroke();
+            }
+            ctx.restore();
+
+        }
+
+        var canvas = document.getElementById('canvas'),
+            ctx = canvas.getContext('2d');
+
+        canvas.height = 400;
+        canvas.width = 800;
+
+        var oAqu = new Aqu();
+        oAqu.init();
+
+        var oldTime = new Date().getTime(),
+            del = null,
+            newTime = null;
+
+
+        (function drawFrmae() {
+            window.requestAnimationFrame(drawFrmae);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            newTime = new Date().getTime();
+            del = new Date().getTime() - oldTime; //帧耗时
+            oldTime = newTime;
+
+            oAqu.draw(ctx);
+        }())
+    </script>
+</body>
+
+</html>

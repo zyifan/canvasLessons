@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas元素大小与绘图表面大小</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+            width:600px;
+            height:300px;
+        }
+        #canvas1{
+            margin:20px;
+            margin-top:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <!-- 使用css设置width、height -->
+        <canvas id="canvas">
+            canvas not support
+        </canvas>
+        <!-- 使用属性设置width、height -->
+        <canvas id="canvas1" width="600" height="300">
+            canvas not support
+        </canvas>
+    </div>
+  
+
+    <div class="info">
+        <ul>
+            <li><span>通过canvas的属性width、height设置时，实际上是改变了该元素本身的大小和元素绘图表面的大小。</span></li>
+            <li><span>通过css设置canvas元素的大小，只会改变元素本身的大小，而不会影响绘图表面，这是，canvas和绘图表面默认都是300*150大小，使用css设置元素大小为600*300时，绘图表面的大小仍然是300*150像素，这时浏览器会对绘图表面进行缩放，使其符合元素的大小</span></li>
+        </ul>
+    </div>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        context.font = '38pt Arial';
+        context.fillStyle = 'cornflowerblue';
+        context.strokeStyle = 'blue';
+        context.fillText('Hello Canvas',canvas.width/2-150,canvas.height/2+15);
+        context.strokeText('Hello Canvas',canvas.width/2-150,canvas.height/2+15);
+        console.log('canvas绘图面积大小：canvas.width、canvas.height......')
+        console.log(canvas.width +':'+canvas.height);
+        console.log('canvas本身大小：canvas bouding width 、canvas bounding height......')
+        let bound = canvas.getBoundingClientRect();
+        console.log(bound.width+':'+bound.height);
+
+        var canvas1 = document.getElementById('canvas1'),
+            context1 = canvas1.getContext('2d');
+        context1.font = '38pt Arial';
+        context1.fillStyle = 'cornflowerblue';
+        context1.strokeStyle = 'blue';
+        context1.fillText('Hello Canvas',canvas1.width/2-150,canvas1.height/2+15);
+        context1.strokeText('Hello Canvas',canvas1.width/2-150,canvas1.height/2+15);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas 鼠标事件</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            margin:20px;            
+            background:#fff;
+            border:thin inset rgba(100,150,230,0.5);
+            cursor:pointer;
+        }     
+        #readout{
+            margin-top:10px;
+            margin-left:15px;
+            color:blue;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+    <div id="readout"></div>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="500" height="250">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>canvas.width 视图宽度，canvas.getBoundingClienntReact().width 真实宽度</span></li>
+        </ul>
+    </div>
+    <script>
+
+        var canvas = document.getElementById('canvas'),
+            readout = document.getElementById('readout'),
+            context = canvas.getContext('2d'),
+            spritesheet = new Image();
+
+        // 将window坐标转换为canvas坐标，并禁用视图自动缩放功能
+        function windowToCanvas(canvas,x,y){
+           var bbox = canvas.getBoundingClientRect();
+           return {
+               x: x - bbox.left * (canvas.width /bbox.width), //将x坐标，根据 (canvas视图宽度/canvas实际宽度) 比例进行缩放
+               y: y - bbox.top * (canvas.height /bbox.height) //将y坐标，根据 (canvas视图高度/canvas实际高度) 比例进行缩放
+           }
+        }
+
+        // 绘制背景横线
+        function drawBackground(){
+            var VERTICAL_LINE_SPACING = 12, //垂直间隔
+                i = context.canvas.height; //canvas的高度
+            context.clearRect(0,0,canvas.width,canvas.height); //清空canvas画布
+            context.strokeStyle = 'lightgray'; //用于笔触的颜色、渐变或模式,color|gradient|pattern;
+            context.lineWidth = 0.5;
+            
+            while(i > VERTICAL_LINE_SPACING*4){
+                context.beginPath();
+                context.moveTo(0,i);
+                context.lineTo(context.canvas.width,i); //绘制横线
+                context.stroke();
+                i -= VERTICAL_LINE_SPACING;
+            }
+        }
+
+        // 绘制图片
+        function drawSpritsheet(){
+            context.drawImage(spritesheet,0,0);
+        }
+
+        // 绘制横线
+        function drawHorizontalLine(y){
+            context.beginPath();
+            context.moveTo(0,y+0.5);
+            context.lineTo(context.canvas.width,y+0.5);
+            context.stroke();
+        }
+
+        // 绘制纵线
+        function drawVerticalLine(x){
+            context.beginPath();
+            context.moveTo(x+0.5,0);
+            context.lineTo(x+0.5,context.canvas.height);
+            context.stroke();
+        }
+
+        // 绘制网格
+        function drawGuidelines(x,y){
+            context.strokeStyle = 'rgba(0,0,230,0.8)';
+            context.lineWidth = 0.5;
+            drawVerticalLine(x);
+            drawHorizontalLine(y);
+        }
+
+        // 输出
+        function updateReadout(x,y){
+            readout.innerText = '(' + x.toFixed(0) +', '+ y.toFixed(0) + ')';
+        }
+
+        //event handler....
+        canvas.onmousemove = function(e){
+            var loc = windowToCanvas(canvas,e.clientX,e.clientY);
+
+            drawBackground();
+            drawSpritsheet();
+            drawGuidelines(loc.x,loc.y);
+            updateReadout(loc.x,loc.y);
+        }
+
+        //Initialization...
+        spritesheet.src = './imgs/3.jpg';
+        spritesheet.onload = function(e){
+            drawSpritsheet();
+        }
+     
+        drawBackground();
+    </script>
+</body>
+</html>

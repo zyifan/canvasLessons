@@ -1,0 +1,151 @@
+<html>
+   <head>
+     <title>canvas音频处理</title>
+      <style> 
+        body {
+            background: #dddddd;
+        }
+        .floatingControls {
+            position: absolute;
+            left: 175px;
+            top: 290px;
+        }
+        #canvas {
+            background: #ffffff;
+            border: thin solid #aaaaaa;
+            margin: 10px;
+        }
+        #video {
+            display: none;
+        }
+      </style>
+   </head>
+
+   <body id='body'>
+    <video id='video' controls src='video/mov.mp4'></video>
+
+    <canvas id='canvas' width='480' height='260'>
+        Canvas not supported
+    </canvas>
+
+    <div id='controls' class='floatingControls'>
+        <input id='controlButton' type='button' value='Play'/>
+        <input id='colorCheckbox' type='checkbox' checked> <span style='font-size:1.15em'>Color</span>
+        <input id='flipCheckbox' type='checkbox'> <span style='font-size:1.15em'>Flip</span>
+    </div>
+
+    <script src='requestNextAnimationFrame.js'></script>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+
+            // 离屏canvas
+            offscreenCanvas = document.createElement('canvas'),
+            offscreenContext = offscreenCanvas.getContext('2d'),
+            
+            // 视频对象
+            video = document.getElementById('video'),
+
+            // 控制按钮
+            controlButton = document.getElementById('controlButton'),
+            flipCheckbox = document.getElementById('flipCheckbox'),
+            colorCheckbox = document.getElementById('colorCheckbox'),
+
+            imageData,
+            poster = new Image(); // 初始图像
+
+        // Functions.....................................................
+
+        // 过滤视频颜色
+        function removeColor() {
+            var data,
+                width,
+                average;
+
+            imageData = offscreenContext.getImageData(0, 0,
+                            offscreenCanvas.width, offscreenCanvas.height);
+
+            data = imageData.data;
+            width = data.width;
+
+            for (i=0; i < data.length-4; i += 4) {
+                average = (data[i] + data[i+1] + data[i+2]) / 3;
+                data[i]   = average;
+                data[i+1] = average;
+                data[i+2] = average;
+            }
+
+            offscreenContext.putImageData(imageData, 0, 0);
+        }
+
+        function drawFlipped() {
+            context.save();
+
+            context.translate(canvas.width/2, canvas.height/2);
+            context.rotate(Math.PI);
+            context.translate(-canvas.width/2, -canvas.height/2);
+            context.drawImage(offscreenCanvas, 0, 0);
+
+            context.restore();
+        }
+
+        function nextVideoFrame() {
+            if (video.ended) {
+                controlButton.value = 'Play';
+            } else {
+                offscreenContext.drawImage(video, 0, 0, context.canvas.width, context.canvas.height);
+
+                // 是否过滤颜色
+                if (!colorCheckbox.checked){
+                    removeColor();
+                }
+
+                // 是否翻转视频
+                if (flipCheckbox.checked){
+                    drawFlipped();}
+                else{
+                    context.drawImage(offscreenCanvas, 0, 0);
+                }
+
+                requestNextAnimationFrame(nextVideoFrame);
+            }
+        }
+
+        // 开始播放
+        function startPlaying() {
+            requestNextAnimationFrame(nextVideoFrame);
+            video.play();
+        }
+
+        // 暂停播放
+        function stopPlaying() {
+            video.pause();
+        }
+
+        // Event handlers...............................................
+        // 控制按钮，播放/暂停
+        controlButton.onclick = function(e) {
+            if (controlButton.value === 'Play') {
+                startPlaying();
+                controlButton.value = 'Pause';
+            }
+            else {
+                stopPlaying();
+                controlButton.value = 'Play';
+            }
+        }
+
+        poster.onload = function() { 
+            context.drawImage(poster,0, 0, context.canvas.width, context.canvas.height);
+        };
+
+        // Initialization................................................
+
+        poster.src = 'imgs/bg.jpg';
+
+        offscreenCanvas.width = canvas.width;
+        offscreenCanvas.height = canvas.height;
+
+      </script>
+   </body>
+</html>

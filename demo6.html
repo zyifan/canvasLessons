@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>在 canvas 中显示html控件</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin-left:10px;
+            margin-top:10px;         
+            background:#fff;
+            border:thin solid #aaa;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #glasspanel{
+            position:absolute;
+            left:50px;
+            top:50px;
+            padding:0 20px 10px 10px;
+            background:rgba(0,0,0,0.3);
+            border:thin solid rgba(0,0,0,0.6);
+            color:#eee;
+            font-family: Droid Sans,Arial,Helvetica,sans-serif;
+            font-size:12px;
+            cursor:pointer;
+            -webkit-box-shadow:rgba(0,0,0,0.5) 5px 5px 20px;
+            -moz-box-shadow:rgba(0,0,0,0.5) 5px 5px 20px;
+            box-shadow:rgba(0,0,0,0.5) 5px 5px 20px;
+        }
+        #glasspanel h2{
+            font-weight: normal;
+        }
+        #glasspanel .title{
+            font-size: 2em;
+            color:rgba(255,255,0,0.8);
+        }
+        #glasspanel a:hover{
+            color:yellow;
+        }
+        #glasspanel a{
+            text-decoration: none;
+            color:#ccc;
+            font-size:3.5em;
+        }
+        #glasspanel p{
+            margin:10px;
+            color:rgba(65,65,220,1.0);
+            font-size:12pt;
+            font-family: Palatino,Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="glasspanel">
+        <h2 class="title">Bouncing Balls</h2>
+        <p>One hundred balls bouncing</p>
+        <a id="startButton">Start</a>
+    </div>
+
+    <canvas id="canvas" width="750" height="500">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>浮动在canvas元素之上的半透明的html（如 div）元素，叫做‘玻璃窗格’（glass pane），因为它看起来像是一个浮动在canvas元素之上的玻璃板</span></li>
+        </ul>
+    </div>
+    <script>
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        // 将window坐标转换为canvas坐标，并禁用视图自动缩放功能
+        function windowToCanvas(canvas,x,y){
+           var bbox = canvas.getBoundingClientRect();
+           return {
+               x: x - bbox.left * (canvas.width /bbox.width), //将x坐标，根据 (canvas视图宽度/canvas实际宽度) 比例进行缩放
+               y: y - bbox.top * (canvas.height /bbox.height) //将y坐标，根据 (canvas视图高度/canvas实际高度) 比例进行缩放
+           }
+        }
+
+       var startButton = document.getElementById('startButton'),
+            glasspanel = document.getElementById('glasspanel'),
+            paused = false;
+            //...
+        
+        startButton.onclick = function(e){
+            e.preventDefault();
+            paused = !paused;
+            startButton.innerHTML = paused ? 'Start':'Stop';
+        }
+
+        // ...
+
+        glasspanel.onmousedown = function(e){
+            e.preventDefault();
+        }
+
+    </script>
+</body>
+</html>

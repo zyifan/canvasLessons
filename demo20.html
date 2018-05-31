@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>线段</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            /* border:thin solid #aaa; */
+        }     
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="1920" height="650">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li><span>moveTo(x,y)，当向前路径中增加一条子路径，该子路径只包含一个点，就是由参数传入的那个点。该方法并不会从当前路径中清除任何子路径</span></li>
+            <li><span>lineTo(x,y)，如果当前路径中没有了子路径，那么这个方法行为与moveTo()方法一样：它会创建一条新的子路径，其中包含了经由参数所传入的那个点。如果当前路径中存在子路径，那么该方法会将你所指定的那个点加入子路径中</span></li>           
+            <li>lineWidth 设置的是1 ，上边的线画出来确是 2px：如果在像素边界处绘制一条1像素框的垂直线段，那么canvas的绘图环境对象会试着将半个像素画在边界线右边，将另外半个像素画在边界中线的左边。然而，在一整个像素范围内绘制半个像素宽的线段是不可能的，所以左右两个方向上的半像素都被扩展为1个像素。</li>
+            <li><span>建议:在实际应用中，如果想得到更好的体验，精确的像素值，如果线段的宽度是奇数像素，绘制时以n.5，即半数像素作为中轴线，如果线段的宽度为偶数像素，绘制时以n.0，即整数像素作为中轴线</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');       
+
+            context.lineWidth = 1;
+            context.beginPath();
+            context.moveTo(50,10);
+            context.lineTo(450,10);
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(50.5,50.5);
+            context.lineTo(450.5,50.5);
+            context.stroke();
+        
+    </script>
+</body>
+</html>

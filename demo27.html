@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas线段端点与连接点的绘制</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="600">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li><span>lineWidth 以像素为单位的线段宽度</span></li>
+            <li><span>lineCap 该值决定浏览器如何绘制线段的端点，butt、round、square</span></li>
+            <li><span>lineJoin 该值决定浏览器如何绘制线段的连接点 round、bevel、miter</span></li>
+            <li><span>miterLimit 斜接线长度与二分之一线宽的比值。如果斜接线的长度超过了该值，浏览器就会以bevel方式来绘制线段的连接点。斜接长度指的是在两条线交汇处内角和外角之间的距离。边角的角度越小，斜接长度就会越大。为了避免斜接长度过长，我们可以使用 miterLimit 属性。如果斜接长度超过 miterLimit 的值，边角会以 lineJoin 的 "bevel" 类型来显示</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        context.lineWidth = 10;
+        context.lineCap = 'butt';//默认值
+        context.moveTo(20,20);
+        context.lineTo(context.canvas.width-20,20);
+        context.stroke();
+
+        context.beginPath();
+        context.lineCap = 'round';//给线段端点处多画一个半圆
+        context.moveTo(20,40);
+        context.lineTo(context.canvas.width-20,40);
+        context.stroke();
+
+        context.beginPath();
+        context.lineCap = 'square';//给线段端点处多画一个正方形
+        context.moveTo(20,60);
+        context.lineTo(context.canvas.width-20,60);
+        context.stroke();
+
+        context.beginPath();
+        context.lineJoin="round";
+        context.moveTo(20,80);
+        context.lineTo(140,80);
+        context.lineTo(140,200);
+        context.stroke();
+
+        context.beginPath();
+        context.lineJoin="bevel";
+        context.moveTo(160,80);
+        context.lineTo(280,80);
+        context.lineTo(280,200);
+        context.stroke();
+
+        context.beginPath();
+        context.lineJoin="miter";
+        context.moveTo(300,80);
+        context.lineTo(420,80);
+        context.lineTo(420,200);
+        context.stroke();
+
+        context.beginPath();
+        context.lineJoin="miter";
+        context.miterLimit = 5;
+        context.moveTo(20,250);
+        context.lineTo(220,250);
+        context.lineTo(20,320);
+        context.stroke();
+
+    </script>
+</body>
+</html>

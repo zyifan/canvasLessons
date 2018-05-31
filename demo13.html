@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>放射性渐变</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            /* border:thin solid #aaa; */
+        }     
+        .info{
+            position:absolute;
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="300" height="300">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>context.createLinearGradient(x,y,x1,y1)，创建线性渐变。传入该方法的参数表示渐变线的两个端点。该方法返回一个CanvasGrandient实例，可以通过CanvasGrandient.addColorStop()向该渐变色增加颜色停止点</span></li>
+            <li><span>context.createRadialGradient(x,y,r,x1,y1,r1)，创建放射性渐变。该方法的参数代表位于圆锥形渐变区域两端的圆形。与createLinearGradient方法一样，该方法也返回一个CanvasGrandient实例</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        var gradient = context.createRadialGradient(canvas.width/2,canvas.height,10, canvas.width/2,0,100);
+
+        gradient.addColorStop(0,'blue');
+        gradient.addColorStop(0.25,'white');
+        gradient.addColorStop(0.5,'purple');
+        gradient.addColorStop(0.75,'red');
+        gradient.addColorStop(1,'yellow');
+
+        context.fillStyle = gradient;
+        context.rect(0,0,canvas.width,canvas.height);
+        context.stroke();
+        context.fill();
+
+        canvas.onmousedown = function(e){
+            context.clearRect(0,0,canvas.width,canvas.height);
+        }
+       
+    </script>
+</body>
+</html>

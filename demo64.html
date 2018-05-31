@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>浮雕滤镜</title>
+    <style>
+        body {
+            background: rgba(100, 145, 250, 0.3);
+        }
+        #canvas {
+            margin-left: 20px;
+            margin-right: 0;
+            margin-bottom: 20px;
+            border: thin solid #aaaaaa;
+            cursor: crosshair;
+            padding: 0;
+        }
+        #controls {
+            margin: 20px 0px 20px 20px;
+        }
+        a {
+            font: 18px Times Roman;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+    <div id='controls'>
+        <input type='button' id='embossButton' value='Emboss浮雕'/>
+    </div>
+      
+    <canvas id='canvas' width='800' height='520'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>          
+            <li>
+              设备像素和css像素的对比：
+            </li>  
+            <li>
+                为了使所绘图像更加逼真，浏览器可能会用多个设备像素来表现一个css像素，比如，有一个边长为200显示的canvas，那么它总共就含有40000个css像素。然而，若是浏览器在横竖两个方向都用两个设备像素来表示每个css像素的话，那么总共就会有160000（400*400）个设备像素。可以通过ImageData对象的width和height属性来查看canvas所含设备像素的数量。
+            </li>
+        </ul>
+    </div>
+    <script>
+       var image = new Image(),
+            canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            embossButton = document.getElementById('embossButton'),
+            embossed = false;
+
+        // Functions.....................................................   
+        // 浮雕算法 (128 + 临近像素点的差值)，只有差值大的才会突出，一般都临近128
+        function emboss() {
+            var imagedata, data, length, width, index=3;
+
+            imagedata = context.getImageData(0, 0, canvas.width, canvas.height);
+            
+            data = imagedata.data;//图像数据
+            width = imagedata.width;//图像宽度
+            length = data.length;//图像数据长度(length = 4 * w * h),一个像素占4个配置点(rgba)
+
+            // 循环所有数据
+            for (i=0; i < length; i++) { 
+
+                //如果不是最后一行
+                if (i <= length-width*4) {
+                    // 如果不是透明度a
+                    if ((i+1) % 4 !== 0) {
+                        // 如果是一行的最后一个像素点，则该像素右侧没有像素点，则直接复制前一个像素的值
+                        if ((i+4) % (width*4) == 0) {
+                            data[i] = data[i-4];
+                            data[i+1] = data[i-3];
+                            data[i+2] = data[i-2];
+                            data[i+3] = data[i-1];
+                            i+=4;
+                        } else { // not the last pixel in the row
+                            // 当前点计算方法： 255/2 + (curPixelData - nextPixelData) + (curPixelData - underneathPixel)
+                            data[i] = 255/2         // Average value
+                                        + 2*data[i]   // current pixel
+                                        - data[i+4]   // next pixel
+                                        - data[i+width*4]; // pixel underneath
+                        }
+                    }
+                } else { //如果是最后一行，下方没有像素，则直接复制上一行的像素值                    
+                    //如果不是透明度a
+                    if ((i+1) % 4 !== 0) { 
+                        data[i] = data[i-width*4]; //复制上一行的数据
+                    }
+                }
+            }
+
+            context.putImageData(imagedata, 0, 0); 
+        }
+
+        function drawOriginalImage() {
+            context.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
+        }
+
+        embossButton.onclick = function() {
+            if (embossed) {
+                embossButton.value = 'Emboss 浮雕';
+                drawOriginalImage();
+                embossed = false;
+            } else {
+                embossButton.value = 'Original image 初始图像';
+                emboss();
+                embossed = true;
+            }
+        };
+
+        // Initialization................................................   
+
+        image.src = 'imgs/countrypath.jpg';
+        image.onload = function() {
+            drawOriginalImage();
+        };
+    </script>
+</body>
+</html>

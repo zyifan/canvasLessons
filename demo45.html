@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>文本的描边与填充</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        #controls{
+           position:absolute;
+           left:25px;
+           top:25px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+         fillCheckbox <input type="checkbox" id="fillCheckbox">
+         strokeCheckbox <input type="checkbox" id="strokeCheckbox">
+         shadowCheckbox <input type="checkbox" id="shadowCheckbox">
+    </div>
+
+    <canvas id='canvas' width='950' height='600'>
+        Canvas not supported
+     </canvas>
+
+     
+
+    <div class="info">
+        <ul>            
+            <li>剪辑区域 clipping region，是在canvas之中有路径所定义的一块区域，浏览器会将所有的绘图操作都限制在本区域内执行。默认，剪辑区域的大小与canvas一致。除非你通过创建路径并调用Canvas绘图环境对象的clip()方法来显示地设定剪辑区域，否则默认的剪辑区域不会影响canvas之中所绘制的内容。然而，一旦设置好剪辑区域，那么你在canvas之中绘制的所有内容都将局限在该区域内，这意味着在剪辑区域以外进行绘制是没有任何效果的。</li>
+            <li>clip()方法总是在上一次的剪辑区域基础上进行操作，所以，一般clip()方法一般要嵌入到save()和restore()方法中使用</li>
+            <li>clip()方法，将剪辑区域设置为当前剪辑区域与当前路径的交集。第一次调用clip()方法之前，剪辑区域的大小与整个canvas一致。因为clip()方法会将剪辑区域设置为当前剪辑区域与当前路径的交集，所以对该方法的调用一般都是嵌入save()和restore()方法之间的。否则剪辑区域将会越来越小，这通常不是我们想要的结果</li>
+        </ul>
+    </div>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            fillCheckbox = document.getElementById('fillCheckbox'),
+            strokeCheckbox = document.getElementById('strokeCheckbox'),
+            shadowCheckbox = document.getElementById('shadowCheckbox'),
+            text = 'HTML5';
+
+        //Functions......
+        // 绘制文本和背景
+        function draw(){
+            context.clearRect(0,0,canvas.width,canvas.height);
+            drawBackground();
+
+            if(shadowCheckbox.checked){
+                turnShadowsOn();
+            }else{
+                turnShadowsOff();
+            }
+
+            drawText();
+        }
+        // 绘制背景
+        function drawBackground(){
+            var STEP_Y = 12,
+                TOP_MARGIN = STEP_Y * 4,
+                LEFT_MARGIN = STEP_Y * 3,
+                i = context.canvas.height;
+            
+            //Horizon lines
+            context.strokeStyle = 'lightgray';
+            context.lineWidth = 0.5;
+
+            while(i > TOP_MARGIN){
+                context.beginPath();
+                context.moveTo(0,i);
+                context.lineTo(context.canvas.width,i);
+                context.stroke();
+                i -= STEP_Y;
+            }
+
+            //Vertical lines
+            context.strokeStyle = 'rgba(100,0,0,0.3)';
+            context.lineWidth = 1;
+            context.beginPath();
+
+            context.moveTo(LEFT_MARGIN,0);
+            context.lineTo(LEFT_MARGIN,context.canvas.height);
+            context.stroke();
+        }
+        // 开启阴影
+        function turnShadowsOn(){
+            context.shadowColor = 'rgba(0,0,0,0.8)';
+            context.shadowOffsetX = 5;
+            context.shadowOffsetY = 5;
+            context.shadowBlur = 10;
+        }
+        // 关闭阴影
+        function turnShadowsOff(){
+            context.shadowColor = undefined;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+            context.shadowBlur = 0;
+        }        
+        // 绘制文本
+        function drawText(){
+            var TEXT_X = 65,
+                TEXT_Y = canvas.height/2 + 35;
+
+            context.strokeStyle = 'blue';
+
+            if(fillCheckbox.checked){
+                context.fillText(text, TEXT_X, TEXT_Y);
+            }
+            if(strokeCheckbox.checked){
+                context.strokeText(text, TEXT_X, TEXT_Y)
+            }
+        }
+
+       //Event handlers
+       fillCheckbox.onchange = draw;
+       strokeCheckbox.onchange = draw;
+       shadowCheckbox.onchange = draw;
+
+       //Initialization...
+       context.font = '128px Palatino';
+       context.lineWidth = 1.0;
+       context.fillStyle = 'cornflowerblue';
+
+       turnShadowsOn();//开启阴影
+       draw();//绘制图片
+        
+    </script>
+</body>
+</html>

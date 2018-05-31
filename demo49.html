@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>font文本居中</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        #controls{
+           position:absolute;
+           left:25px;
+           top:25px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id='canvas' width='950' height='600'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>          
+            <li>textAlign 该属性决定了文本在水平方向的对齐方式。有效取值为 start、left、center、right、end。默认值是start。当canvas元素的 dir 属性是 ltr 时，也就是说浏览器是按照由左至右的方向来显示文本时，left的效果与start效果相同，而right的效果则与end相同。同理，如果dir属性的值是rtl，也就是说浏览器是从右至左来显示文本的，那么right的效果则与start一致，而left则与end一致。</li>
+            <li>textBaseline 该属性决定了文本在垂直方向上的对齐方式。有效取值是：top、bottom、middle、alphabetic、ideographic 及 hanging。默认值是alphabetic，该值用于绘制由基于拉丁字母的语言所组成的字符串。ideographic值则用于绘制日文或中文字符串，hanging值用于绘制各种印度语字符串。top、bottom、middle这三个值与特定的语言不相关，它们代表文本周围的边界框之内的某个位置，这个边界框也叫做“字符方框”</li>
+            <li>measureText(txt) 返回一个TextMetrics对象，该对象包含width属性代表传入文本的像素宽度。该宽度是基于当前的字型而计算出来的，measureText返回的文本宽度并不精确</li>
+        </ul>
+    </div>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        
+        var text = 'CenterText';
+        var tW;
+
+        context.font = '80px palatino';
+
+        function drawText(){
+            context.fillStyle = 'blue';
+            context.strokeStyle = 'yellow';
+            context.fillText(text,canvas.width/2,canvas.height/2);
+            context.strokeText(text,canvas.width/2,canvas.height/2);
+        }
+
+        context.textAlign = 'center';
+        context.textBaseLine = 'middle';
+
+        drawText();
+
+        tW = context.measureText(text).width;
+        
+        context.font = '16px palatino';
+        context.textAlign = 'start';
+        context.textBaseLine = 'alphabetic';
+        context.fillText('CenterText 文本宽度为：'+ tW,20,500)
+            
+    </script>
+</body>
+</html>

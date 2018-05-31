@@ -1,0 +1,119 @@
+<html>
+
+<head>
+    <title>Ungame</title>
+    <link rel='stylesheet' type='text/css' href='ungame.css' />
+</head>
+
+<body>
+    <!-- Game canvas 用于显示游戏背景及滚动的云彩........................................................... -->
+    <canvas id='gameCanvas' width='550' height='750'>
+        Canvas not supported
+    </canvas>
+
+    <!-- Loading Toast 加载中，信息弹框......................................................... -->
+    <div id='loadingToast' class='toast'>
+        <span id='loadingToastTitle' class='title'>Ungame介绍</span>
+
+        <span id='loadingToastBlurb' class='blurb'>
+            <p>ungame游戏, 就像‘不死游戏’: ‘不死’并不是真的死了, 这并不是一个真正的游戏; 然而，它实现了大多数游戏的基本功能</p>
+
+            <p>这个游戏原型程序包含大多数游戏所共有的特性：</p>
+
+            <ul>
+                <li>资源加载画面</li>
+                <li>游戏资源管理</li>
+                <li>声音播放</li>
+                <li>具有视差效果的滚动背景</li>
+                <li>生命数量显示</li>
+                <li>高分榜</li>
+                <li>按键处理</li>
+                <li>暂停功能与自动暂停机制</li>
+                <li>对游戏结束的流程处理</li>
+            </ul>
+
+            <p>ungame由一个200行的js游戏引擎启动执行.</p>
+            <p>游戏原型有两个canvas：一个用于显示游戏背景及滚动的云彩，另一个用于在游戏画面右上方显示玩家当前的声明数</p>
+
+        </span>
+
+        <!-- 加载图片按钮 -->
+        <span id='loadButtonSpan'>
+            <input type='button' id='loadButton' value='Load Game...' autofocus='true' />
+            <span id='loadingMessage'>Loading...</span>
+        </span>
+
+        <!-- 进度条 -->
+        <div id='progressDiv'></div>
+    </div>
+
+    <!-- Scores 得分，信息弹框................................................................ -->
+    <div id='scoreToast' class='toast'></div>
+
+    <!-- Lives canvas位于游戏画面右上方显示玩家当前的生命数量................................................................. -->
+    <canvas id='livesCanvas' width='90' height='40'>
+        Canvas not supported
+    </canvas>
+
+    <!-- Paused 暂停，信息弹框................................................................ -->
+    <div id='pausedToast' class='toast'>
+        <p class='title' style='margin-left: 45px;'>Paused</p>
+        <p>Click anywhere to start</p>
+    </div>
+
+    <!-- Game Over 游戏结束，信息弹框............................................................. -->
+    <div id='gameOverToast' class='toast'>
+        <p class='title'>Game Over</p>
+        <br/>
+        <p>
+            <input id='clearHighScoresCheckbox' type='checkbox' /> clear high scores</p>
+        <input id='newGameButton' type='button' value='new game' autofocus='true' />
+    </div>
+
+    <!-- High scores 高分榜，信息弹框........................................................... -->
+    <p id='highScoreParagraph'></p>
+
+    <div id='highScoreToast' width='400' style='display: none'>
+        <p class='title'>High score!</p>
+
+        <p>What's your name?</p>
+
+        <input id='nameInput' type='text' autofocus='true'>
+        <input id='addMyScoreButton' type='button' value='add my score' disabled='true'>
+        <input id='newGameFromHighScoresButton' type='button' value='new game'>
+
+        <p class='title' id='previousHighScoresTitle' display='none'>
+            Previous High Scores
+        </p>
+
+        <!-- The following ordered list is populated by JavaScript in ungame.js -->
+        <ol id='highScoreList'></ol>
+    </div>
+
+    <!-- Lose Life 失去生命，信息弹框.............................................................. -->
+    <div id='loseLifeToast' class='toast'>
+        <input id='loseLifeButton' type='button' value='Lose a life' autofocus='true' />
+    </div>
+
+    <!-- Sounds 音乐列表................................................................. -->
+    <audio id='pop' preload='auto'>
+        <source src='sounds/pop.ogg' type='audio/ogg'>
+        <source src='sounds/pop.mp3' type='audio/mp3'>
+    </audio>
+    <audio id='whoosh' preload='auto'>
+        <source src='sounds/whoosh.ogg' type='audio/ogg'>
+        <source src='sounds/whoosh.mp3' type='audio/mp3'>
+    </audio>
+
+    <!-- window.requestAnimationFrame 兼容写法 -->
+    <script src='../../requestNextAnimationFrame.js'></script>
+    <!-- 圆角矩形对象 -->
+    <script src='../../roundedRectangle.js'></script>
+    <!-- 进度条 -->
+    <script src='progressbar.js'></script>
+    <!-- 游戏引擎 -->
+    <script src='../../gameEngine.js'></script>
+    <script src='ungame.js'></script>
+</body>
+
+</html>

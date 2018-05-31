@@ -1,0 +1,98 @@
+
+<html>
+    <head>
+      <title>镜像</title>
+  
+      <style>
+        body {
+           background: #eeeeee;
+        }
+        #dragDiv {
+           position: absolute;
+           left: 25px;
+           top: 50px;
+        }
+        
+        #controls {
+           position: absolute;
+           left: 25px;
+           top: 25px;
+        }
+        
+        #canvas {
+           background: #ffffff;
+           margin-left: 10px;
+           margin-top: 10px;
+           -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+           -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+           box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        } 
+      </style>
+    </head>
+  
+     <body>
+        <canvas id='canvas' width='1200' height='600'>
+           Canvas not supported
+        </canvas>
+  
+      
+        <div class="info">
+            <ul>            
+                <li><span>rotate(angle) 按照给定的角度来旋转坐标系（π = 180°）</span></li>
+                <li><span>scale(x,y) 在X与Y方向上分别按照给定的数值来缩放坐标系；可以使用scale(-1,1)绘制水平镜像，使用scale(1,-1)来绘制垂直镜像</span></li>
+                <li><span>translate(x,y) 将坐标系平移到给定的X、Y坐标处</span></li>
+            </ul>
+        </div>
+      
+      <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        
+        context.font="20px Georgia";
+        // 创建渐变
+        var gradient=context.createLinearGradient(0,0,context.canvas.width,0);
+        gradient.addColorStop("0","magenta");
+        gradient.addColorStop("0.5","blue");
+        gradient.addColorStop("1.0","red");
+        // 用渐变填色
+        context.fillStyle = gradient;
+        context.fillText("原图:",50,90);
+        context.fillText("镜像:",650,90);
+
+        function drawTriangle(style){
+            context.save();
+            context.beginPath();
+            context.fillStyle = style;
+            context.lineJoin = 'round';
+            context.moveTo(50,250);
+            context.lineTo(300,100);
+            context.lineTo(300,400);    
+            context.closePath(); 
+            context.stroke();
+            context.fill();
+            context.restore();
+        }
+
+        drawTriangle('orange');
+
+        context.save();
+        context.translate(canvas.width, 0);//将原点重置为右上角
+        context.scale(-1,1);//水平翻转
+        
+        drawTriangle('green');
+        
+        context.restore();
+
+      </script>
+    </body>
+  </html>

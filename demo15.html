@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas阴影、内嵌阴影</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            /* border:thin solid #aaa; */
+        }     
+        .info{
+            position:absolute;
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="450" height="275">
+        canvas not support
+    </canvas>   
+
+    <div id="radios">
+        <input type="radio" id="repeatRadio" name='patternRadio' checked>repeat
+        <input type="radio" id="repeatXRadio" name='patternRadio'>repeat-x
+        <input type="radio" id="repeatYRadio" name='patternRadio'>repeat-y
+        <input type="radio" id="noRepeatRadio" name='patternRadio'>no-repeat
+    </div>
+
+    <div class="info">
+        <ul>
+            <li><span>该demo仅做学习，实际无法运行</span></li>
+            <li><span>shadowBlur 表示阴影效果如何延伸的double值。浏览器在阴影之上运用高斯模糊时，将会用到该值。它与像素无关，只会被用在高斯模糊方程之中。其默认值为0</span></li>
+            <li><span>shadowcolor CSS格式的颜色字串。默认值为rgba(0,0,0,0)，意思就是完全透明的黑色</span></li>
+            <li><span>shadowOffsetX 阴影在X轴方向的偏移量，以像素为单位。默认值是0</span></li>
+            <li><span>shadowOffsetY 阴影在y轴方向的偏移量，以像素为单位。默认值是0</span></li>
+            <li><span>如果满足以下条件，那么使用Canvas的绘图环境对象就可以绘制出阴影效果了：</span></li>
+            <li><span>指定的shadowColor值不是全透明的</span></li>
+            <li><span>在其余的阴影属性(shadowBlur/ShadowOffsetX/ShadowOffsetY)之中，存在一个非0的值</span></li>
+            <li><span>注意：阴影效果的绘制可能很耗时</span></li>
+            <li><span>为了绘制阴影，浏览器需要将阴影先渲染到一个辅助的位图之中，最后这个辅助位图中的内容会与屏幕中的canvas之中的内容进行图像合成。由于使用了这种辅助位图，所有绘制阴影可能是一项很耗时的操作。</span></li>
+            <li><span>如果你要绘制的是简单的图形、文本或图像，那么其阴影的绘制可能并不会带来性能问题。然而，如果你对canvas之中的动画对象运用阴影效果的话，那么其性能肯定比不用阴影效果时要差一些。</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        var SHADOW_COLOR = 'rgba(0,0,0,0.7)';
+
+        function setIconShadow(){
+            iconContext.shadowColor = SHADOW_COLOR;
+            iconContext.shadowOffsetX = 1;
+            iconContext.shadowOffsetY = 1;
+            iconContext.shadowBlur = 2;
+        }
+
+        function setSelectedIconShadow(){
+            iconContext.shadowColor = SHADOW_COLOR;
+            iconContext.shadowOffsetX = 4;
+            iconContext.shadowOffsetY = 4;
+            iconContext.shadowBlur = 5;
+        }
+
+        // 内嵌阴影示例
+        var drawingContext = document.getElementById('drawingCanvas').getContext('2d'),
+
+        ERASER_LINE_WIDTH = 1,
+        ERASER_SHADOW_STYLE = 'blue',
+        ERASER_STROKE_STYLE = 'rgba(0,0,255,,0.6)',
+        ERASER_SHADOW_OFFSET = -5,
+        ERASER_SHADOW_BLUR = 20,
+        ERASER_RADIUS = 60;
+
+        // eraser......
+        function setEraserAttributes(){
+            drawingContext.lineWidth = ERASER_LINE_WIDTH;
+            drawingContext.shadowColor = ERASER_SHADOW_STYLE;
+            drawingContext.shadowOffsetX = ERASER_SHADOW_OFFSET;
+            drawingContext.shadowOffsetY = ERASER_SHADOW_OFFSET;
+            drawingContext.shadowBlur = ERASER_SHADOW_BLUR;
+            drawingContext.strokeStyle = ERASER_STROKE_STYLE;
+        }
+
+        function drawEraser(loc){
+            drawingContext.save();
+            setEraserAttributes();
+            
+            drawingContext.beginPath();
+            drawingContext.arc(loc.x,loc.y,ERASER_RADIUS,0,Math.PI*2,false);
+            drawingContext.clip();//程序在绘图环境中调用 clip 方法，该方法使得后续被调用的stroke方法以及此方法所生成的阴影，都被局限在这个圆形范围之内
+            drawingContext.stroke();
+
+            drawingContext.restore();
+        }
+       
+    </script>
+</body>
+</html>

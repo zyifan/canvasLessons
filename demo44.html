@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>伸缩式动画，剪辑区域 clipping region</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        #controls{
+           position:absolute;
+           left:25px;
+           top:25px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id='canvas' width='950' height='600'>
+        Canvas not supported
+     </canvas>
+
+    <div class="info">
+        <ul>            
+            <li>剪辑区域 clipping region，是在canvas之中有路径所定义的一块区域，浏览器会将所有的绘图操作都限制在本区域内执行。默认，剪辑区域的大小与canvas一致。除非你通过创建路径并调用Canvas绘图环境对象的clip()方法来显示地设定剪辑区域，否则默认的剪辑区域不会影响canvas之中所绘制的内容。然而，一旦设置好剪辑区域，那么你在canvas之中绘制的所有内容都将局限在该区域内，这意味着在剪辑区域以外进行绘制是没有任何效果的。</li>
+            <li>clip()方法总是在上一次的剪辑区域基础上进行操作，所以，一般clip()方法一般要嵌入到save()和restore()方法中使用</li>
+            <li>clip()方法，将剪辑区域设置为当前剪辑区域与当前路径的交集。第一次调用clip()方法之前，剪辑区域的大小与整个canvas一致。因为clip()方法会将剪辑区域设置为当前剪辑区域与当前路径的交集，所以对该方法的调用一般都是嵌入save()和restore()方法之间的。否则剪辑区域将会越来越小，这通常不是我们想要的结果</li>
+        </ul>
+    </div>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        //Functions......
+        // 绘制htm5文字
+        function drawText(){
+            context.save();
+            context.shadowColor = 'rgba(100,100,150,0.8)';
+            context.shadowOffsetX = 5;
+            context.shadowOffsetY = 5;
+            context.shadowBlur = 10;
+
+            context.fillStyle = 'cornflowerblue';
+            context.fillText('HTML5',20,250);
+            context.strokeStyle = 'yellow';
+            context.strokeText('HTML5',20,250);
+            context.restore();
+        }
+        // 绘制剪辑区域
+        function setClippingRegion(radius){
+            context.beginPath();
+            context.arc(canvas.width/2,canvas.height/2,radius,0,2*Math.PI,false);
+            context.clip();
+        }
+        //绘制全屏深灰色方块
+        function fillCanvas(color){
+            context.fillStyle = color;
+            context.fillRect(0,0,canvas.width,canvas.height);
+        }
+        // 恢复动画的初始状态
+        function endAnimation(loop){
+            clearInterval(loop);//清除动画定时器
+            setTimeout(function(e){
+                context.clearRect(0,0,canvas.width,canvas.height);//清空画布
+                drawText();//绘制文本
+            },1000)
+        }
+        // 添加剪辑区域，并在剪辑区域内绘制灰色背景和文本
+        function drawAnimationFrame(radius){
+            setClippingRegion(radius);// 绘制剪辑区域
+            // 在剪辑区域内绘制浅灰色背景和文字
+            fillCanvas('lightgray');//绘制全屏浅灰色灰色方块
+            drawText();//绘制文本
+        }
+        // 动画
+        function animate(){
+            var radius = canvas.width/2;
+            var loop;
+
+            loop = window.setInterval(function(){
+                radius -= canvas.width/100;
+                fillCanvas('charcoal');//绘制全屏深灰色方块背景
+                if(radius>0){
+                    context.save();
+                    drawAnimationFrame(radius);//添加剪辑区域，并在剪辑区域内绘制灰色背景和文本
+                    context.restore();
+                }else{
+                    endAnimation(loop);//结束动画, 恢复动画的初始状态
+                }
+            },16)
+        }
+
+        //Event handlers......
+        canvas.onmousedown = function(e){
+            // 鼠标按下时开始动画
+            animate();
+        }
+
+        //Initiallization......
+        context.lineWidth = 0.5;
+        context.font = '128pt Comic-sans';
+        drawText();
+        
+    </script>
+</body>
+</html>

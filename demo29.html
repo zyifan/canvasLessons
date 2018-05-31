@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>绘制弧线 arcTo()，圆角矩形demo</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        #controls{
+           position:absolute;
+           left:25px;
+           top:25px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="400">
+        canvas not support
+    </canvas>
+    
+    <div class="info">
+        <ul>            
+            <li><span>arcTo(x1,x2,y1,y2,radius) ,参考(x1,y1)与(x2,y2)两个点，创建一条以radius为半径的圆弧路径，该圆弧与当前点到(x1,y1)点的路径连线相切，同时也与(x1,y1)到(x2,y2)的连线相切</span></li>      
+            <li>与arc()方法一样，如果在调用该方法时，当前路径中有子路径存在，那么浏览器将会从子路径的终点向圆弧路径的起点处画一条线段</li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+       function roundedRect(cornerX,cornerY,width,height,cornerRadius){
+           // 起点
+           if(width > 0){
+                context.moveTo(cornerX + cornerRadius,cornerY);
+           }else{
+                context.moveTo(cornerX - cornerRadius,cornerY);
+           }
+           
+           context.arcTo(cornerX + width, cornerY, 
+                         cornerX + width, cornerY + height, cornerRadius);//右侧竖线
+           
+           //以上一个弧线的终点为起点，从该起点绘制到(x1,y1)的切线，和(x1,y1)到(x2,y2)的切线
+           context.arcTo(cornerX + width, cornerY + height, 
+                         cornerX, cornerY + height, cornerRadius);//下方横线
+           context.arcTo(cornerX, cornerY + height, cornerX, cornerY, cornerRadius);//左侧竖线
+
+           // 尾线
+           if(width > 0){
+                context.arcTo(cornerX, cornerY, cornerX + cornerRadius, cornerY, cornerRadius);
+           }else{
+                context.arcTo(cornerX, cornerY, cornerX - cornerRadius, cornerY, cornerRadius);
+           }
+
+       }
+
+       function drawRoundedRect(strokeStyle,fillStyle,cornerX,cornerY,width,height,cornerRadius){
+           context.beginPath();
+
+           roundedRect(cornerX,cornerY,width,height,cornerRadius);
+
+           context.strokeStyle = strokeStyle;
+           context.fillStyle = fillStyle;
+
+           context.stroke();
+           context.fill();
+       }
+
+       //Initialization......
+       drawRoundedRect('blue','yellow',50,40,100,100,10);
+       drawRoundedRect('purple','green',275,40,-100,100,20);
+       drawRoundedRect('red','white',300,140,100,-100,30);
+       drawRoundedRect('purple','green',525,140,-100,-100,40);
+        
+    </script>
+</body>
+</html>

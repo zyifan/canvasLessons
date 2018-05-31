@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="500" height="500" style="background:#000;">
+        your browser not support canvas!
+    </canvas>
+    <script src="../js/utils.js"></script>
+    <script src="../js/ball.js"></script>
+    <script>
+        window.onload = function () {
+            var canvas = document.getElementById('canvas'),
+                context = canvas.getContext('2d');
+
+            // 位于左侧中心 
+            var ballA = new Ball(20, "red");
+            ballA.x = ballA.radius;
+            ballA.y = canvas.width / 2;
+            ballA.vx = 1;
+
+            // 位于右侧中心
+            var ballB = new Ball(20, "orange");
+            ballB.x = canvas.width - ballB.radius;
+            ballB.y = canvas.height / 2;
+            ballB.vx = -1;
+
+
+            (function drawFrame() {
+                window.requestAnimationFrame(drawFrame, canvas);
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 向左向右移动
+                ballA.x += ballA.vx;
+                ballB.x += ballB.vx;
+
+                // 小球间距
+                var dx = ballB.x - ballA.x,
+                    dy = ballB.y - ballA.y,
+                    dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // dist < r1 + r2 方向反转
+                if (dist < ballA.radius + ballB.radius) {
+                    ballA.vx *= -1;
+                    ballB.vx *= -1
+                }
+
+                if(ballA.x - ballA.radius < 0){
+                    ballA.vx *= -1;
+                }
+
+                if(ballB.x + ballB.radius > canvas.width){
+                    ballB.vx *= -1;
+                }
+
+                ballA.draw(context);
+                ballB.draw(context);
+            }())
+
+        }
+    </script>
+</body>
+
+</html>

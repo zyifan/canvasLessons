@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>负片滤镜</title>
+    <style>
+        body {
+            background: rgba(100, 145, 250, 0.3);
+        }
+        #canvas {
+            margin-left: 20px;
+            margin-right: 0;
+            margin-bottom: 20px;
+            border: thin solid #aaaaaa;
+            cursor: crosshair;
+        }
+        #controls {
+            margin: 20px 0px 20px 20px;
+        }
+        a {
+            font: 18px Times Roman;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+    <div id='controls'>
+        <input type='button' id='negativeButton' value='Negative 滤镜'/>
+    </div>
+      
+    <canvas id='canvas' width='800' height='520'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>          
+            <li>
+              设备像素和css像素的对比：
+            </li>  
+            <li>
+                为了使所绘图像更加逼真，浏览器可能会用多个设备像素来表现一个css像素，比如，有一个边长为200显示的canvas，那么它总共就含有40000个css像素。然而，若是浏览器在横竖两个方向都用两个设备像素来表示每个css像素的话，那么总共就会有160000（400*400）个设备像素。可以通过ImageData对象的width和height属性来查看canvas所含设备像素的数量。
+            </li>
+        </ul>
+    </div>
+    <script>
+        var image = new Image(),
+            canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            negativeButton = document.getElementById('negativeButton');
+
+        //滤镜效果
+        negativeButton.onclick = function() {
+            var imagedata = context.getImageData(0, 0, canvas.width, canvas.height),
+                data = imagedata.data;
+
+            for(i=0; i <= data.length - 4; i+=4) {
+                data[i]   = 255 - data[i]
+                data[i+1] = 255 - data[i+1];
+                data[i+2] = 255 - data[i+2];
+            }
+            context.putImageData(imagedata, 0, 0);
+        };
+
+        //绘制图像
+        image.src = 'imgs/countrypath.jpg';
+        image.onload = function() {
+            context.drawImage(image, 0, 0, image.width, image.height, 0, 0,  context.canvas.width, context.canvas.height);
+        };
+    </script>
+</body>
+</html>

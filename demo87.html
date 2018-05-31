@@ -1,0 +1,129 @@
+<head>
+  <title>Sprite Animators 爆炸动画,精灵动画制作器</title>
+
+  <style>
+    body {
+      background: #eeeeee;
+    }
+
+    #canvas {
+      position: absolute;
+      left: 0px;
+      top: 20px;
+      margin-left: 10px;
+      background: lightskyblue;
+      border: thin solid rbga(0, 0, 0, 1.0);
+      -webkit-box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+      -moz-box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+      box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+    }
+
+    #explosionButton {
+      position: absolute;
+      left: 50px;
+      top: 50px;
+      padding-left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='500' height='500'>
+    Canvas not supported
+  </canvas>
+
+  <input id='explosionButton' type='button' value='kaboom' />
+
+  <script src='stopwatch.js'></script>
+  <script src='animationTimer.js'></script>
+  <script src='requestNextAnimationFrame.js'></script>
+  <script src='sprites.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      explosionButton = document.getElementById('explosionButton'),
+
+      BOMB_LEFT = 100,
+      BOMB_TOP = 80,
+      BOMB_WIDTH = 380,
+      BOMB_HEIGHT = 261,
+
+      NUM_EXPLOSION_PAINTERS = 9,
+      NUM_FUSE_PAINTERS = 9,
+
+      // Painters..................................................
+
+      bombPainter = new ImagePainter('imgs/bomb.png'),
+      bombNoFusePainter = new ImagePainter('imgs/bomb-no-fuse.png'),
+
+      fuseBurningPainters = [],//炸弹数组
+      explosionPainters = [],//爆炸图片数组
+
+      // Animators 精灵动画制作器.................................................
+
+      fuseBurningAnimator = new SpriteAnimator(
+        fuseBurningPainters,
+        function () { bomb.painter = bombNoFusePainter; });
+
+    var explosionAnimator = new SpriteAnimator(
+      explosionPainters,
+      function () { bomb.painter = bombPainter; });
+      // function () { bomb.painter = bombNoFusePainter; });
+
+    // Bomb......................................................
+
+    var bomb = new Sprite('bomb', bombPainter); //绘制炸弹初始像
+
+    // Event Handlers................................................
+
+    explosionButton.onclick = function (e) {
+      if (bomb.animating) // not now...
+        return;
+
+      // burn fuse for 2 seconds 燃烧2s，2s内不断切换bomb的painer函数
+
+      fuseBurningAnimator.start(bomb, 2000);
+
+      // wait for 3 seconds, then explode for 1 second
+
+      setTimeout(function () {
+        explosionAnimator.start(bomb, 1000);
+
+        // wait for 2 seconds, then reset to the original bomb image. 2s之后恢复到初始状态
+
+        // setTimeout(function () {
+        //   bomb.painter = bombPainter;
+        // }, 2000);
+
+      }, 3000);
+
+    };
+
+    // Animation.....................................................
+
+    function animate(now) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      bomb.paint(context);
+      window.requestNextAnimationFrame(animate);
+    }
+
+    // Initialization................................................
+
+    bomb.left = BOMB_LEFT;
+    bomb.top = BOMB_TOP;
+    bomb.width = BOMB_WIDTH;
+    bomb.height = BOMB_HEIGHT;
+
+    for (var i = 0; i < NUM_FUSE_PAINTERS; ++i) {
+      fuseBurningPainters.push(new ImagePainter('imgs/fuse-0' + i + '.png'));
+    }
+
+    for (var i = 0; i < NUM_EXPLOSION_PAINTERS; ++i) {
+      explosionPainters.push(new ImagePainter('imgs/explosion-0' + i + '.png'));
+    }
+
+    window.requestNextAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

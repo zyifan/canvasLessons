@@ -1,0 +1,6 @@
+
+解决canvas在chrome中跨域问题：
+
+1、在chrome上右键，选择‘快捷方式’
+2、在‘目标’后面添加 --allow-file-access-from-files
+3、点击应用、确定

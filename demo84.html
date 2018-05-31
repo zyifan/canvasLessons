@@ -1,0 +1,60 @@
+<head>
+  <title>Image Painters 使用图像绘制器来构建精灵对象</title>
+
+  <style>
+    body {
+      background: #eeeeee;
+    }
+
+    #canvas {
+      position: absolute;
+      left: 0px;
+      top: 20px;
+      margin-left: 10px;
+      background: lightskyblue;
+      border: thin solid rbga(0, 0, 0, 1.0);
+      -webkit-box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+      -moz-box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+      box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='600' height='575'>
+    Canvas not supported
+  </canvas>
+
+  <script src='requestNextAnimationFrame.js'></script>
+  <script src='sprites.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      bomb = new Sprite('bomb', new ImagePainter('imgs/bomb.png')),
+
+      BOMB_LEFT = 220,
+      BOMB_TOP = 80,
+      BOMB_WIDTH = 180,
+      BOMB_HEIGHT = 130;
+
+    function paint() {
+      bomb.paint(context);
+    }
+
+    function animate(now) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      paint();
+      window.requestNextAnimationFrame(animate);
+    }
+
+    bomb.left = BOMB_LEFT;
+    bomb.top = BOMB_TOP;
+    bomb.width = BOMB_WIDTH;
+    bomb.height = BOMB_HEIGHT;
+
+    window.requestNextAnimationFrame(animate);
+
+  </script>
+</body>
+
+</html>

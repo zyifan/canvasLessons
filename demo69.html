@@ -1,0 +1,718 @@
+<html>
+   <head>
+     <title>放大镜</title>
+      <style> 
+         body {
+            background: -webkit-gradient(
+              radial, 325 50%, 10, 325 50%, 640, from(rgba(205,205,0,0.75)), to(rgba(80, 140, 230,0.75)));
+            background-image: -webkit-radial-gradient(center, circle farthest-side, rgba(205, 205, 0, 0.75), rgba(80,140,230, 0.75));
+            background-image: -moz-radial-gradient(center, circle farthest-side, rgba(205, 205, 0, 0.75), rgba(80, 140, 230, 0.75));
+            background-image: -o-radial-gradient(center, circle farthest-side, rgba(205, 205, 0, 0.75), rgba(80, 140, 230, 0.75));
+            background-image: radial-gradient(center, circle farthest-side, rgba(205, 205, 0, 0.75), rgba(80, 140, 230, 0.75));
+            height: 100%;
+         }
+         #backdrop {
+            background: blue;
+         }
+         
+         #controls {
+            position: absolute;
+            left: 60px;
+            top: 0px;
+         }
+         @media all and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
+            #canvas {
+               position: absolute;
+               left: 30px;
+               top: 100px;
+               -webkit-box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               -moz-box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               border: 1px solid rgb(52, 72, 35);
+               cursor: pointer;
+            }
+            #controls {
+               position: absolute;
+               left: 60px;
+               margin-top: 30px;
+            }
+         }
+         @media all and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape) {
+            #canvas {
+               position: absolute;
+               left: 35px;
+               top: 100px;
+               -webkit-box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               -moz-box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               border: 1px solid rgb(52, 72, 35);
+               cursor: pointer;
+            }
+            #controls {
+               position: absolute;
+               left: 60px;
+               margin-top: 30px;
+            }
+         }
+         @media all and (min-device-width: 1025px) {
+            #canvas {
+               position: absolute;
+               top: 60px;
+               left: 35px;
+               -webkit-box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               -moz-box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               box-shadow: rgba(60, 60, 70, 0.7) 4px 4px 8px;
+               border: 1px solid rgb(52, 72, 35);
+               cursor: pointer;
+            }
+         
+            #controls {
+               margin-top: 5px;
+               position: absolute;
+               left: 60px;
+            }
+         }
+         #glassSizeSliderDiv {
+            position: absolute;
+            left: 290px;
+            top: -5px;
+            margin-left: 10px;
+            display: inline;
+            width: 200px;
+            height: 37px;
+         }
+         #magnificationSliderDiv {
+            position: absolute;
+            left: 30px;
+            top: -5px;
+            margin-left: 10px;
+            display: inline;
+            width: 200px;
+            height: 37px;
+         }
+         #glassSizeCanvas {
+            position: absolute;
+            left: 260px;
+         }
+         
+         #scaleOutput {
+            position: absolute;
+            left: -20px;
+            vertical-align: center;
+            color: rgb(32, 42, 15);
+            color: rgb(60, 120, 230);
+            font: 17px Helvetica;
+            text-shadow: 1px 1px 1px rgb(0,0,158);
+         }
+         #image-panning-alpha-span {
+            position: absolute;
+            text-shadow: 1px 1px 1px rgba(200,200,135,0.7);
+         }
+         #instructionsButton {
+            position: absolute;
+            left: 790px;
+         }
+         
+         .slider {
+            margin-top: 5px;
+         }
+      </style>
+   </head>
+
+   <body id='body'>
+      <div id='backdrop'>
+        <div id='controls'>
+            <!--放大倍数文本-->
+            <span id='scaleOutput'>1.5</span>
+            <!--滑竿-->
+            <div id='magnificationSliderDiv' class='slider'></div> 
+
+            <!--放大镜大小，放大镜图标-->
+            <canvas id='glassSizeCanvas' width='40' height='40'>
+                Canvas not supported
+            </canvas>
+            <!--滑竿-->
+            <div id='glassSizeSliderDiv' class='slider'></div>
+   
+        </div>
+     
+        <canvas id='canvas' width='955' height='611'>
+           Canvas not supported
+        </canvas>
+      </div>
+
+      <script src='./roundedRectangle.js'></script>
+      <script src='./slider.js'></script>
+      <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+
+            image = new Image(),
+            imageData = null, 
+            dragging = false,
+
+            glassSizeCanvas = document.getElementById('glassSizeCanvas'),
+            glassSizeContext = glassSizeCanvas.getContext('2d'),
+
+            MAXIMUM_SCALE = 4.0,
+            scaleOutput = document.getElementById('scaleOutput'),
+
+            magnifyingGlassRadius = 120, // 放大镜半径
+            magnificationScale = scaleOutput.innerHTML, //放大倍数
+            magnifyRectangle = {},
+
+            MAX_GLASS_RADIUS = 350, // 半径最大值
+
+            magnifyingGlassX = 512, // 放大镜x坐标
+            magnifyingGlassY = 340, // 放大镜y坐标
+
+            magnifyZoomSlider  = new COREHTML5.Slider('navy',
+                                                    'rgb(80, 140, 230)',
+                                                    0.25, // knob percent
+                                                    90,   // take up % of width
+                                                    55),  // take up % of height
+
+            //参数依次是：strokestyle、fillstyle、滑竿按钮位置比例、滑竿宽度比例，滑竿高度比例
+            glassSlider = new COREHTML5.Slider('navy', 'rgb(80, 140, 230)', 0.50, 90, 55),
+
+            animating = false,
+            animationLoop = null,
+
+            mousedown = null,
+            mouseup = null,
+
+            canvasRatio = canvas.height / canvas.width,
+            pinchRatio;
+
+        // Functions...................................................
+
+        function windowToCanvas(x, y) {
+            var bbox = canvas.getBoundingClientRect();
+            return { x: x - bbox.left * (canvas.width  / bbox.width),
+                        y: y - bbox.top  * (canvas.height / bbox.height)
+                    };
+        };
+
+        // 实时计算放大镜的位置及宽高信息
+        function calculateMagnifyRectangle(mouse) { 
+            var top,
+                left,
+                bottom,
+                right;
+            
+            magnifyRectangle.x = mouse.x - magnifyingGlassRadius;
+            magnifyRectangle.y = mouse.y - magnifyingGlassRadius;
+            magnifyRectangle.width = magnifyingGlassRadius*2 + 2*context.lineWidth;
+            magnifyRectangle.height = magnifyingGlassRadius*2 + 2*context.lineWidth;
+
+            top = magnifyRectangle.y;
+            left = magnifyRectangle.x;
+            bottom = magnifyRectangle.y + magnifyRectangle.height;
+            right = magnifyRectangle.x + magnifyRectangle.width;
+            
+            if (left < 0) {
+                magnifyRectangle.width += left;
+                magnifyRectangle.x = 0;
+            }
+            else if (right > canvas.width) {
+                magnifyRectangle.width -= right - canvas.width;
+            }
+
+            if (top < 0) {
+                magnifyRectangle.height += magnifyRectangle.y;
+                magnifyRectangle.y = 0;
+            }
+            else if (bottom > canvas.height) {
+                magnifyRectangle.height -= bottom - canvas.height;
+            }
+        }
+        /*
+        function drawMagnifyingGlassCircle(mouse) {
+            context.save();
+            context.lineWidth = 3;
+            context.strokeStyle = 'rgba(0, 0, 255, 0.3)';
+            context.shadowColor = 'rgba(0, 0, 155, 1)';
+            context.shadowOffsetX = '-10';
+            context.shadowOffsetY = '-10';
+            context.shadowBlur = '20';
+            context.beginPath();
+            context.arc(mouse.x, mouse.y,
+                        magnifyingGlassRadius, 0, Math.PI*2, false);
+            context.clip();
+            context.shadowColor = 'cornflowerblue';
+            context.strokeStyle = 'skyblue';
+            context.stroke();
+            context.beginPath();
+            context.lineWidth = 1;
+            context.strokeStyle = 'rgba(100, 149, 240, 0.7)';
+            context.arc(mouse.x, mouse.y,
+                        magnifyingGlassRadius-1, 0, Math.PI*2, false);
+            context.stroke();
+            context.beginPath();
+            context.strokeStyle = 'rgba(100, 149, 240, 0.5)';
+            context.lineWidth = 2;
+            context.arc(mouse.x, mouse.y,
+                        magnifyingGlassRadius-1, 0, Math.PI*2, false);
+            context.stroke();
+            context.beginPath();
+            context.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+            context.lineWidth = 1;
+            context.arc(mouse.x, mouse.y,
+                        magnifyingGlassRadius-3, 0, Math.PI*2, false);
+            context.stroke();
+            context.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            context.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            context.shadowOffsetX = '10';
+            context.shadowOffsetY = '10';
+            context.shadowBlur = '20';
+            context.lineWidth = 4;
+            context.stroke();
+            context.lineWidth = 2;
+            context.strokeStyle = 'silver';
+            context.shadowColor = 'goldenrod';
+            context.stroke();
+            context.restore();
+        }
+        */
+        
+        // 设置剪辑区域
+        function setClip() {
+            context.beginPath();
+            /*
+            context.strokeStyle = 'blue';
+            context.lineWidth = 0.5;
+            context.strokeRect(magnifyingGlassX-magnifyingGlassRadius, magnifyingGlassY-magnifyingGlassRadius, magnifyingGlassRadius*2+3, magnifyingGlassRadius*2+3);
+            */   
+            //context.beginPath();
+            context.arc(magnifyingGlassX, magnifyingGlassY, magnifyingGlassRadius, 0, Math.PI*2, false);
+
+            context.clip();
+        }
+        // 绘制放大镜边框
+        function drawMagnifyingGlassCircle(mouse) {
+            var gradientThickness = this.magnifyingGlassRadius / 7;
+
+            gradientThickness = gradientThickness < 10 ? 10 : gradientThickness;
+            gradientThickness = gradientThickness > 40 ? 40 : gradientThickness;
+
+            gradientThickness = 10;
+            this.context.save();
+            this.context.lineWidth = gradientThickness;
+            this.context.strokeStyle = 'rgb(0, 0, 255, 0.3)';
+
+            this.context.beginPath();
+            this.context.arc(mouse.x, mouse.y, this.magnifyingGlassRadius, 0, Math.PI*2, false); // 绘制剪辑区域
+            this.context.clip();
+
+            // 绘制边框
+            var gradient = this.context.createRadialGradient(
+                                mouse.x, mouse.y, this.magnifyingGlassRadius-gradientThickness,
+                                mouse.x, mouse.y, this.magnifyingGlassRadius);
+            gradient.addColorStop(0,   'rgba(0,0,0,0.2)');
+            gradient.addColorStop(0.80, 'rgb(235,237,255)');
+            gradient.addColorStop(0.90, 'rgb(235,237,255)');
+            gradient.addColorStop(1.0, 'rgba(150,150,150,0.9)');
+
+            this.context.shadowColor = 'rgba(52, 72, 35, 1.0)';
+            this.context.shadowOffsetX = 2;
+            this.context.shadowOffsetY = 2;
+            this.context.shadowBlur = 20;
+
+            this.context.strokeStyle = gradient;
+            this.context.stroke();
+
+            this.context.beginPath();
+            this.context.arc(mouse.x, mouse.y, this.magnifyingGlassRadius-gradientThickness/2, 0, Math.PI*2, false);
+            this.context.clip();
+
+            this.context.lineWidth = gradientThickness;
+            this.context.strokeStyle = 'rgba(0,0,0,0.06)';
+            this.context.stroke();
+            
+            this.context.restore();
+        };
+        // 绘制放大镜
+        function drawMagnifyingGlass(mouse) { 
+            var scaledMagnifyRectangle;
+
+            if (window.netscape && netscape.security.PrivilegeManager)
+                netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
+            magnifyingGlassX = mouse.x;
+            magnifyingGlassY = mouse.y;
+            
+            calculateMagnifyRectangle(mouse);
+
+            imageData = context.getImageData(magnifyRectangle.x,
+                                                magnifyRectangle.y,
+                                                magnifyRectangle.width,
+                                                magnifyRectangle.height); // 存储放大镜位置处的图像
+            context.save();
+
+            scaledMagnifyRectangle = {
+                width:  magnifyRectangle.width  * magnificationScale,
+                height: magnifyRectangle.height * magnificationScale
+            };
+
+            setClip();
+
+            context.drawImage(canvas,
+                magnifyRectangle.x, magnifyRectangle.y,
+                magnifyRectangle.width, magnifyRectangle.height,
+
+                magnifyRectangle.x + magnifyRectangle.width/2 - scaledMagnifyRectangle.width/2,
+                magnifyRectangle.y + magnifyRectangle.height/2 - scaledMagnifyRectangle.height/2,
+
+                scaledMagnifyRectangle.width,
+                scaledMagnifyRectangle.height);
+
+            context.restore();
+
+            drawMagnifyingGlassCircle(mouse);
+        }
+
+        // 恢复放大镜位置处的图像
+        function eraseMagnifyingGlass() { // Called when the mouse moves
+            if (imageData != null) {
+                context.putImageData(imageData,
+                    magnifyRectangle.x,
+                    magnifyRectangle.y);
+            }
+        }
+
+        // 绘制放大镜图标
+        function drawGlassIcon(context, radius) {
+            context.save();
+            context.clearRect(0,0,context.canvas.width, context.canvas.height);
+        
+            context.shadowColor = 'rgba(52, 72, 35, 0.5)';
+            context.shadowOffsetX = 1;
+            context.shadowOffsetY = 1;
+            context.shadowBlur = 2;
+        
+            context.beginPath();
+
+            context.translate(context.canvas.width/2,  context.canvas.height/2);
+        
+            context.beginPath();
+            context.lineWidth = 1.5;
+            context.arc(0, 0, radius+3, 0, Math.PI*2, false);
+            context.strokeStyle = 'rgb(52, 72, 35)';
+            context.stroke();
+
+            context.beginPath();
+            context.lineWidth = 0.5;
+            context.strokeStyle = 'rgba(255,255,255,0.6)';
+            context.arc(0, 0, radius+6, 0, Math.PI*2, false);
+            context.stroke();
+
+            context.restore();
+        };
+        /*
+        function drawGlassIcon(context, radius) {
+            context.save();
+            context.clearRect(0,0,context.canvas.width,
+                                    context.canvas.height);
+            context.shadowColor = 'rgba(100, 150, 255, 0.5)';
+            context.shadowOffsetX = -1;
+            context.shadowOffsetY = -1;
+            context.shadowBlur = 2;
+            context.beginPath();
+            context.translate(context.canvas.width/2, 
+                                    context.canvas.height/2);
+            
+            context.beginPath();
+            context.lineWidth = 2;
+            context.arc(0, 0, radius+4, 0, Math.PI*2, false);
+            context.strokeStyle = 'rgba(52, 72, 35, 0.6)';
+            context.stroke();
+            
+            context.beginPath();
+            context.lineWidth = 1;
+            context.strokeStyle = 'silver';
+            context.arc(0, 0, radius+6, 0, Math.PI*2, false);
+            context.stroke();
+            context.restore();
+        }
+        */
+        // 绘制放大文本
+        function drawMagnificationText(value, percent) { 
+            scaleOutput.innerHTML = value;
+            percent = percent < 0.35 ? 0.35 : percent;
+            scaleOutput.style.fontSize = percent*MAXIMUM_SCALE/2 + 'em';
+        }
+
+        // 更新放大镜位置
+        function updateMagnifyingGlass() {
+            eraseMagnifyingGlass();// 恢复放大镜位置处的图像
+            drawMagnifyingGlass({ x: magnifyingGlassX, y: magnifyingGlassY });// 绘制放大镜
+        }
+
+        function step(time, lastTime, mouse, speed) {
+            var elapsedTime = time - lastTime,
+                nextLeft = mouse.x - magnifyingGlassRadius + speed.vx*(elapsedTime/10), 
+                nextTop = mouse.y - magnifyingGlassRadius + speed.vy*(elapsedTime/10),
+                nextRight = nextLeft + magnifyingGlassRadius*2,
+                nextBottom = nextTop + magnifyingGlassRadius*2;
+                    
+            eraseMagnifyingGlass();// 恢复放大镜位置处的图像
+
+            if (nextLeft < 0) {
+                speed.vx = -speed.vx;
+                mouse.x = magnifyingGlassRadius;
+            }
+            else if (nextRight > canvas.width) {
+                speed.vx = -speed.vx;
+                mouse.x = canvas.width - magnifyingGlassRadius;
+            }
+
+            if (nextTop < 0) {
+                speed.vy = -speed.vy;
+                mouse.y = magnifyingGlassRadius;
+            }
+            else if (nextBottom > canvas.height) {
+                speed.vy = -speed.vy;
+                mouse.y = canvas.height - magnifyingGlassRadius;
+            }
+
+            mouse.x += speed.vx*(elapsedTime/10);
+            mouse.y += speed.vy*(elapsedTime/10);
+
+            drawMagnifyingGlass(mouse);// 绘制放大镜
+        }
+
+        // 动画
+        function animate(mouse, speed) {
+            var time, lastTime = 0, elapsedTime;
+            animating = true;
+
+            if (lastTime === 0) {
+                lastTime = +new Date;
+            }
+
+            animationLoop = setInterval(function() {
+                var time = + new Date;
+                step(time, lastTime, mouse, speed);
+                lastTime = time;
+            }, 1000/60);
+        }
+        // 计算鼠标点击时间
+        function didThrow() {
+            var elapsedTime = mouseup.time - mousedown.time;
+            var elapsedMotion = Math.abs(mouseup.x - mousedown.x) +
+                                Math.abs(mouseup.y - mousedown.y);
+            return false; //(elapsedMotion / elapsedTime * 10) > 3;
+        }
+
+        // Touch Event Handlers........................................
+
+        function isPinching (e) {
+            var changed = e.changedTouches.length, // 手指个数
+                touching = e.touches.length;
+
+            return changed === 1 || changed === 2 && touching === 2;
+        }
+
+        // 是否是单指拖动
+        function isDragging (e) {
+            var changed = e.changedTouches.length,
+                touching = e.touches.length;
+
+            return changed === 1 && touching === 1;
+        }
+
+        canvas.ontouchstart = function (e) { 
+            var changed = e.changedTouches.length,
+                touching = e.touches.length;
+
+            e.preventDefault(e);
+
+            if (isDragging(e)) {
+                mouseDownOrTouchStart(windowToCanvas(e.pageX, e.pageY)); // 存储初始坐标
+            }
+            else if (isPinching(e)) { // 判断是否是双指
+                var touch1 = e.touches.item(0),
+                    touch2 = e.touches.item(1),
+                    point1 = windowToCanvas(touch1.pageX, touch1.pageY),
+                    point2 = windowToCanvas(touch2.pageX, touch2.pageY);
+
+                distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.x - point1.x, 2));
+                pinchRatio = magnificationScale / distance; // 放大比率
+            }
+        };
+
+        canvas.ontouchmove = function (e) { 
+            var changed = e.changedTouches.length,
+                touching = e.touches.length,
+                distance, touch1, touch2;
+
+            e.preventDefault(e);
+
+            if (isDragging(e)) { // 是否是单指拖动
+                mouseMoveOrTouchMove(windowToCanvas(e.pageX, e.pageY)); // 实时擦除、绘制放大镜
+            }
+            else if (isPinching(e)) {
+                var touch1 = e.touches.item(0),
+                    touch2 = e.touches.item(1),
+                    point1 = windowToCanvas(touch1.pageX, touch1.pageY),
+                    point2 = windowToCanvas(touch2.pageX, touch2.pageY),
+                    scale;
+
+                distance = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.x - point1.x, 2));
+                scale = pinchRatio * distance;
+
+                if (scale > 1 && scale < 3) {
+                    magnificationScale = parseFloat(pinchRatio * distance).toFixed(2);
+                    draw();
+                }
+            }
+        };
+
+        canvas.ontouchend = function (e) { 
+            e.preventDefault(e);
+            mouseUpOrTouchEnd(windowToCanvas(e.pageX, e.pageY));
+        };
+
+        // Mouse Event Handlers........................................
+
+        canvas.onmousedown = function (e) { 
+            e.preventDefault(e);
+            mouseDownOrTouchStart(windowToCanvas(e.clientX, e.clientY)); // 存储初始坐标
+        };
+
+        canvas.onmousemove = function (e) { 
+            e.preventDefault(e);
+            mouseMoveOrTouchMove(windowToCanvas(e.clientX, e.clientY)); // 实时擦除、绘制放大镜
+        };
+
+        canvas.onmouseup = function (e) { 
+            e.preventDefault(e);
+            mouseUpOrTouchEnd(windowToCanvas(e.clientX, e.clientY)); // 鼠标弹起
+        };
+
+        // 存储初始坐标
+        function mouseDownOrTouchStart(mouse) {
+            mousedown = { x: mouse.x, y: mouse.y, time: (new Date).getTime() }; 
+
+            if (animating) {
+                animating = false;
+                clearInterval(animationLoop);
+                eraseMagnifyingGlass();
+            }
+            else {
+                dragging = true;
+                context.save();
+            }
+        };
+        // 实时擦除、绘制放大镜
+        function mouseMoveOrTouchMove(mouse) {
+            if (dragging) {
+                eraseMagnifyingGlass();
+                drawMagnifyingGlass(mouse);
+            }
+        };
+        // 鼠标弹起
+        function mouseUpOrTouchEnd(mouse) {
+            mouseup = { x: mouse.x, y: mouse.y, time: (new Date).getTime() }; 
+
+            if (dragging) {
+                if (didThrow()) {
+                    velocityX = (mouseup.x-mousedown.x)/100;
+                    velocityY = (mouseup.y-mousedown.y)/100;
+                    animate(mouse, { vx: velocityX, vy: velocityY });
+                }
+                else {
+                    //eraseMagnifyingGlass();
+                }
+            }
+            dragging = false;
+        };
+
+        // Slider Event Handlers.......................................
+        // 放大倍数事件
+        magnifyZoomSlider.addChangeListener( function(e) {
+            var maxRadius = (glassSizeCanvas.width/2-7);
+                percent = magnifyZoomSlider.knobPercent,
+                value = parseFloat(1 + percent * 2).toFixed(2);
+
+            drawMagnificationText(value, percent);
+            magnificationScale = value;
+            updateMagnifyingGlass();
+        });
+
+        // 放大镜大小事件
+        glassSlider.addChangeListener( function(e) {
+            var maxRadius = glassSizeCanvas.width/2-5,
+                percent = parseFloat(glassSlider.knobPercent),
+                value = 25 + new Number((percent * 175).toFixed(0));
+
+            magnifyingGlassRadius = value
+            drawGlassIcon(glassSizeContext, maxRadius * percent);
+            updateMagnifyingGlass();
+        });
+
+        // Initialization..............................................
+
+        context.fillStyle     = 'cornflowerblue';
+        context.strokeStyle   = 'rgba(250, 250, 0, 0.5)';
+        context.shadowColor   = 'rgba(0, 0, 0, 0.5)';
+        context.shadowOffsetX = 10;
+        context.shadowOffsetY = 10;
+        context.shadowBlur    = 20;
+
+        // 初始绘制
+        function draw() {
+            var maxRadius = (glassSizeCanvas.width/2-7),
+                percent = parseFloat(glassSlider.knobPercent);
+
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                drawGlassIcon(glassSizeContext, maxRadius * 0.5); // 绘制放大镜图标
+                drawMagnificationText(magnificationScale, percent); // 绘制放大放大倍数
+                drawMagnifyingGlass({ x: magnifyingGlassX, y: magnifyingGlassY }); // 绘制放大镜
+        }
+
+        image.src = 'imgs/camp.png';
+        image.onload = function(e) {
+            draw(); // 初始绘制
+        };
+
+        drawGlassIcon(glassSizeContext, (glassSizeCanvas.width/2-7)/2 ); // 绘制放大镜图标
+
+        canvas.addEventListener('dragenter', function (e) {
+            e.preventDefault();
+            e.dataTransfer.effectAllowed = 'copy';
+        }, false);
+
+        canvas.addEventListener('dragover', function (e) {
+            e.preventDefault();
+        }, false);
+
+        window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+
+        canvas.addEventListener('drop', function (e) {
+            console.log('drop.....');
+            var file = e.dataTransfer.files[0];
+
+            window.requestFileSystem(window.TEMPORARY, 5*1024*1024, function (fs) {
+                fs.root.getFile(file.name, {create: true}, function (fileEntry) {
+                    fileEntry.createWriter( function (writer) {
+                        writer.write(file);
+                    });
+                    image.src = fileEntry.toURL();
+                }, function (e) {
+                    alert(e.code);
+                });
+
+            },function (e) {
+                alert(e.code);
+            });
+        }, false);
+
+        magnifyZoomSlider.appendTo('magnificationSliderDiv');
+        glassSlider.appendTo('glassSizeSliderDiv');
+
+        magnifyZoomSlider.draw();
+        glassSlider.draw();
+      </script>
+   </body>
+</html>

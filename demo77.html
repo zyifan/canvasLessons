@@ -1,0 +1,124 @@
+<head>
+  <title>移动的云</title>
+
+  <style>
+    body {
+      background: #dddddd;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      background: #ffffff;
+      cursor: crosshair;
+      margin-left: 10px;
+      margin-top: 10px;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    input {
+      margin-left: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='1024' height='512'>
+    Canvas not supported
+  </canvas>
+
+  <input id='animateButton' type='button' value='Animate' />
+
+  <script src='requestNextAnimationFrame.js'></script>
+
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+
+      animateButton = document.getElementById('animateButton'),//播放按钮
+      sky = new Image(),
+
+      paused = true,
+      lastTime = 0,
+      fps = 0,
+
+      skyOffset = 0,
+      SKY_VELOCITY = 30; // 30 pixels/second  30像素/1s
+
+    // Functions.....................................................
+
+    // 擦除canvas
+    function erase() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // 绘制
+    function draw() {
+      context.save();
+
+      // SKY_VELOCITY / fps：一帧多少像素
+      skyOffset = skyOffset < canvas.width ? skyOffset + SKY_VELOCITY / fps : 0; // offset移动一帧的像素位置
+
+      context.save();
+      context.translate(-skyOffset, 0); // 将中心点x坐标向左移动 skyoffset 个像素
+
+      // 绘制两幅图像
+      context.drawImage(sky, 0, 0);
+      context.drawImage(sky, sky.width - 2, 0);
+
+      context.restore();
+    }
+
+    // 计算概率
+    function calculateFps(now) {
+      var fps = 1000 / (now - lastTime);//1s绘制多少帧
+      lastTime = now;
+      return fps;
+    }
+
+    // 动画函数
+    function animate(now) {
+      if (now === undefined) {
+        now = +new Date;
+      }
+
+      fps = calculateFps(now);// 计算概率
+
+      if (!paused) {
+        erase();
+        draw();
+      }
+
+      requestNextAnimationFrame(animate);
+    }
+
+    // Event handlers................................................
+
+    animateButton.onclick = function (e) {
+      paused = paused ? false : true;
+      if (paused) {
+        animateButton.value = 'Animate';
+      }
+      else {
+        animateButton.value = 'Pause';
+      }
+    };
+
+    // Initialization................................................
+
+    canvas.width = canvas.width;
+    canvas.height = canvas.height;
+
+    sky.src = 'imgs/sky.png';
+    sky.onload = function (e) {
+      draw();
+    };
+
+    requestNextAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

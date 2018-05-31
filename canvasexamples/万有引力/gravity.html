@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>gravity</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="500" height="500" style="background:#000;"></canvas>
+    <script src="../js/utils.js"></script>
+    <script src="../js/ball.js"></script>
+    <script>
+        window.onload = function () {
+            var canvas = document.getElementById('canvas'),
+                context = canvas.getContext('2d'),
+                particles = [],
+                numParticles = 50;
+
+            //创建粒子
+            for (var particle, i = 0; i < numParticles; i++) {
+                particle = new Ball(5, "orange");
+                particle.x = Math.random() * canvas.width;
+                particle.y = Math.random() * canvas.height;
+                particle.mass = 1;
+                particles.push(particle);
+            }
+
+            //绘制粒子
+            function draw(particle) {
+                particle.draw(context);
+            }
+
+            //引力函数
+            function gravitate(partA, partB) {
+                var dx = partB.x - partA.x;
+                var dy = partB.y - partA.y;
+                // 计算物体建的距离的平方
+                var distQ = dx * dx + dy * dy;
+                //距离的平方根
+                var dist = Math.sqrt(distQ);
+
+                //  万有引力公式（两个物体，他们之间存在一种引力）
+                // force = G * m1 * m2 / distance^2 
+                // m1 和m2是物体的质量，distance是物体间的距离，G是引力常数，是个非常小的值6.674*10^-11。在动画中可以忽略这个值。最后，表达式就变为
+                // force = m1 * m2 / distance^2
+                var F = (partA.mass * partB.mass) / distQ;
+
+                // 作用力作用于加速度
+                // 物体间的引力分解到水平和竖直两个方向，作用于物体的加速度，注意这里的分解方式比较隐晦，用的是dx/dist，相当于cos值。最后，将物体的加速度作用于速度
+                var ax = F * dx / dist;
+                var ay = F * dy / dist;
+
+                //加速度作用于速度
+                partA.vx += ax / partA.mass;
+                partA.vy += ay / partA.mass;
+                partB.vx -= ax / partB.mass;
+                partB.vy -= ay / partB.mass;
+
+                /*
+                    打开源代码试试改变地球的速度,你会发现当把地球的速度改小的时候，地球会被太阳吸到自己的身上，和地球上的飞机由于速度限制无法逃离地球一个道理。
+                    当你加大地球的速度，你就会发现太阳的引力不足以把地球拉向自身，就会发生地球逃逸的想象。
+
+                    太阳没动呢？在我们的代码中，你应该会注意到在将加速度作用于物体的速度上时，我们并不是直接让速度值与加速度相加，而是：
+
+                    partA.vx += ax/partA.mass;	//加速度作用于速度
+                    partA.vy += ay/partA.mass;
+                    partB.vx -= ax/partB.mass;
+                    partB.vy -= ay/partB.mass;             
+
+                    让加速度的大小除以物体的质量。所以你会发现，太阳纹丝不动，那是因为它的质量太大，其他星球对它的影响微乎其微，这是不是十分的合乎情理呢？你可以试着让地球的质量也很大，那么你就会发现，太阳也移动了！
+                */
+            }
+
+            //引力
+            function move(partA, i) {
+                partA.x += partA.vx;
+                partA.y += partA.vy;
+
+                for (var partB, j = i + 1; j < numParticles; j++) {
+                    partB = particles[j];
+                    //引力
+                    gravitate(partA, partB);
+                }
+            }
+
+
+
+
+            (function drawFrme() {
+                window.requestAnimationFrame(drawFrme, canvas);
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach(move);
+                particles.forEach(draw);
+
+            }())
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,49 @@
+<html>
+   <head>
+     <title>canvas绘制音频</title>
+      <style> 
+        body {
+            background: #dddddd;
+         }
+         #canvas {
+            background: #ffffff;
+            border: thin solid darkgray;
+         }
+         #video {
+            display: none;
+         }
+      </style>
+   </head>
+
+   <body id='body'>
+    <video id='video' poster>
+        <source src='video/mov.mp4'/>
+        <!--<source src='video/tibetScenery.mp4'/>-->
+        <!--<source src='video/movie.ogg'/>-->
+    </video>
+
+    <canvas id='canvas' width='720' height='405'>
+      Canvas not supported
+    </canvas>
+
+    <script src='requestNextAnimationFrame.js'></script>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            video = document.getElementById('video');
+
+        function animate() {
+            if (!video.ended) {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                window.requestNextAnimationFrame(animate);
+            }
+        }
+
+        video.oncanplaythrough = function (e) {
+            video.play();
+            window.requestNextAnimationFrame(animate);
+        };
+
+      </script>
+   </body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>mouse follow 鼠标跟随运动</title>
+</head>
+<body>
+   <canvas id="canvas" style="background:#000;" width="500" height="500">
+       you browser not support canvas
+   </canvas>
+   
+   <script src="../js/arrow.js"></script>
+   <script src="../js/utils.js"></script>
+   <script>
+       window.onload = function(){
+           var canvas = document.getElementById("canvas");
+           var context = canvas.getContext("2d");
+           var mouse = utils.captureMouse(canvas);
+           
+           var arrow = new Arrow();
+           arrow.x = canvas.width/2;
+           arrow.y = canvas.height/2;
+           
+           var angle = 0, speed = 2;
+           
+           
+           //角度
+           function lerpAngle(beta, angle, ratio) {
+	         var delta = angle - beta;
+	         if (delta > Math.PI) delta = delta - 2 * Math.PI;   //delta - 360
+	         if (delta < -Math.PI) delta = delta + 2 * Math.PI;  //delta + 360
+	         return beta + delta * ratio; // 角度 + 角度差值 * 0.1
+          }
+
+           // 距离计算
+            function lerpDistance(arrow, mouse, ratio) {
+	         var delta = mouse - arrow;
+	         return arrow + delta * ratio; // arrow 每次前进 间距的ratio倍
+          }
+
+           
+           (function drawFrame(){
+               window.requestAnimationFrame(drawFrame, canvas);
+               context.clearRect(0,0,canvas.width,canvas.height);
+               
+               // arrow每次前进间距的0.05倍
+               arrow.x = lerpDistance(mouse.x, arrow.x, 0.95);
+               arrow.y = lerpDistance(mouse.y, arrow.y, 0.95);
+               
+               // 移动间距
+               var dy = mouse.y - arrow.y;
+               var dx = mouse.x - arrow.x;
+               
+               // 鼠标距离箭头的角度值   
+               var beta = Math.atan2(dy,dx) + Math.PI;
+               
+               // 获取角度
+               angle = lerpAngle(beta,angle,0.1); // beta + (beta - angle)*0.1
+               
+               // 设置箭头旋转角度    
+               arrow.rotation = angle + Math.PI;  //angle默认为弧度 Math.atan2(dy,dx) + 2 * Math.PI + (Math.atan2(dy,dx) + Math.PI - angle)*0.1
+               
+               // 根据角度计算x、y轴的速度分量
+               var vx = Math.cos(angle)*speed;
+               var vy = Math.sin(angle)*speed;
+               
+               // 位置增加 vx、vy    
+               arrow.x += vx;
+               arrow.y += vy;
+               
+               arrow.draw(context);
+           }());
+           
+       }
+    
+    </script>
+    
+</body>
+</html>

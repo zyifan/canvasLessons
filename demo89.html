@@ -1,0 +1,397 @@
+<html>
+
+<head>
+  <title>Bucket投球游戏</title>
+
+  <style>
+    output {
+      color: blue;
+    }
+
+    .floatingControls {
+      background: rgba(0, 0, 0, 0.1);
+      border: thin solid skyblue;
+      -webkit-box-shadow: rgba(0, 0, 0, 0.3) 2px 2px 4px;
+      -moz-box-shadow: rgba(100, 140, 230, 0.5) 2px 2px 6px;
+      box-shadow: rgba(100, 140, 230, 0.5) 2px 2px 6px;
+      padding: 15px;
+      font: 12px Arial;
+    }
+
+    #canvas {
+      background: skyblue;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
+    #scoreboard {
+      background: rgba(255, 255, 255, 0.5);
+      position: absolute;
+      left: 755px;
+      top: 20px;
+      color: blue;
+      font-size: 18px;
+      padding: 5px;
+    }
+
+    #controls {
+      position: absolute;
+      left: 285px;
+      top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='800' height='450'>
+    Canvas not supported
+  </canvas>
+
+  <!-- 分数 -->
+  <div id='scoreboard' class='floatingControls'>0</div>
+
+  <!-- 数据说明 -->
+  <div id='controls' class='floatingControls'>
+    Launch velocity (m/s):
+    <output id='launchVelocityOutput'></output> m/s
+    <br/> Launch angle (degrees):
+    <output id='launchAngleOutput'></output> degrees
+    <br/>
+  </div>
+
+  <script src='requestNextAnimationFrame.js'></script>
+  <script src='sprites.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      scoreboard = document.getElementById('scoreboard'), //得分
+      launchVelocityOutput = document.getElementById('launchVelocityOutput'), //发射速度
+      launchAngleOutput = document.getElementById('launchAngleOutput'), //发射角度
+
+      launchTime = undefined, //发射时间
+
+      score = 0, //得分
+      lastScore = 0, //最近一次得分
+      lastMouse = { left: 0, top: 0 },
+
+      threePointer = false,//是否是3分球
+      needInstructions = true,//是否需要说明
+
+      //发射台参数
+      LAUNCHPAD_X = 50, 
+      LAUNCHPAD_Y = context.canvas.height - 50,
+      LAUNCHPAD_WIDTH = 50,
+      LAUNCHPAD_HEIGHT = 12,
+
+      BALL_RADIUS = 8, //小球半径
+      ARENA_LENGTH_IN_METERS = 10, //游戏场地在现实中对应的距离为10米
+      INITIAL_LAUNCH_ANGLE = Math.PI / 4, // 初始发射角度为45°角
+
+      launchAngle = INITIAL_LAUNCH_ANGLE,//发射角度
+      pixelsPerMeter = canvas.width / ARENA_LENGTH_IN_METERS, //将现实的距离转换为像素距离 px/m
+
+      // LaunchPad.................................................
+      // 发射台
+      launchPadPainter = {
+        LAUNCHPAD_FILL_STYLE: 'rgb(100,140,230)',
+
+        paint: function (ledge, context) {
+          context.save();
+          context.fillStyle = this.LAUNCHPAD_FILL_STYLE;
+          context.fillRect(LAUNCHPAD_X, LAUNCHPAD_Y, LAUNCHPAD_WIDTH, LAUNCHPAD_HEIGHT);
+          context.restore();
+        }
+      },
+
+      launchPad = new Sprite('launchPad', launchPadPainter),
+
+      // Ball......................................................
+      // 小球绘制
+      ballPainter = {
+        BALL_FILL_STYLE: 'rgb(255,255,0)',
+        BALL_STROKE_STYLE: 'rgb(0,0,0,0.4)',
+
+        paint: function (ball, context) {
+          context.save();
+          context.shadowColor = undefined;
+          context.lineWidth = 2;
+          context.fillStyle = this.BALL_FILL_STYLE;
+          context.strokeStyle = this.BALL_STROKE_STYLE;
+
+          context.beginPath();
+          context.arc(ball.left, ball.top, ball.radius, 0, Math.PI * 2, false);
+
+          context.clip();
+          context.fill();
+          context.stroke();
+          context.restore();
+        }
+      },
+
+      // Lob behavior..............................................
+      // 小球行为
+      lob = {
+        lastTime: 0,
+        GRAVITY_FORCE: 9.81, // m/s/s 重力加速度
+
+        // 计算小球y轴速度
+        applyGravity: function (elapsedFlightTime) {
+          ball.velocityY = (this.GRAVITY_FORCE * elapsedFlightTime) - (launchVelocity * Math.sin(launchAngle));// gt - vy 速度先为负值，先减小后增大
+        },
+        
+        // 更新小球位置
+        updateBallPosition: function (elapsedFrameTime) {
+          ball.left += ball.velocityX * (elapsedFrameTime) * pixelsPerMeter;
+          ball.top += ball.velocityY * (elapsedFrameTime) * pixelsPerMeter;
+        },
+        
+        // 如果小球在运动过程中超出上边界，则会获取三分
+        checkForThreePointer: function () {
+          if (ball.top < 0) {
+            threePointer = true;
+          }
+        },
+        
+        // 检查是否超出右边界和下边界，超出的话则重置小球位置
+        checkBallBounds: function () {
+          if (ball.top > canvas.height || ball.left > canvas.width) {
+            reset();// 重置小球位置及状态信息
+          }
+        },
+
+        execute: function (ball, context, time) {
+          var updateDelta,
+            elapsedFlightTime;
+
+          if (ballInFlight) {//球是否在运动中
+            if (launchTime === undefined) launchTime = time;
+            elapsedFrameTime = (time - this.lastTime) / 1000,
+              elapsedFlightTime = (time - launchTime) / 1000;
+
+            this.applyGravity(elapsedFlightTime);//更新小球y轴速度
+            this.updateBallPosition(elapsedFrameTime);// 更新小球位置
+            this.checkForThreePointer();//检查是否是三分球
+            this.checkBallBounds();//检查是否超出边界，超出的话，重置小球位置
+          }
+          this.lastTime = time;
+        }
+      },      
+      // 小球
+      ball = new Sprite('ball', ballPainter, [lob]),
+
+      ballInFlight = false, //球是否在运动中
+
+      // Bucket....................................................
+      // 水桶
+      catchBall = {
+        // 判断小球是否在桶中
+        ballInBucket: function () {
+          return ball.left > bucket.left + bucket.width / 2 &&
+            ball.left < bucket.left + bucket.width &&
+            ball.top > bucket.top && ball.top < bucket.top + bucket.height / 3;
+        },
+        
+        // 更新得分
+        adjustScore: function () {
+          if (threePointer) lastScore = 3;
+          else lastScore = 2;
+
+          score += lastScore;
+          scoreboard.innerHTML = score;
+        },
+
+        execute: function (bucket, context, time) {
+          //小球在飞行中且小球在桶中
+          if (ballInFlight && this.ballInBucket()) { 
+            reset();
+            this.adjustScore();
+          }
+        }
+      },
+      
+      // 水桶参数
+      BUCKET_X = 668,
+      BUCKET_Y = canvas.height - 100,
+      bucketImage = new Image(),
+
+      // 水桶精灵
+      bucket = new Sprite('bucket',
+        {
+          paint: function (sprite, context) {
+            context.drawImage(bucketImage, BUCKET_X, BUCKET_Y);
+          }
+        },
+
+        [catchBall]
+      );
+
+    // Functions.....................................................
+
+    function windowToCanvas(x, y) {
+      var bbox = canvas.getBoundingClientRect();
+
+      return {
+        x: x - bbox.left * (canvas.width / bbox.width),
+        y: y - bbox.top * (canvas.height / bbox.height)
+      };
+    }
+    
+    // 重置小球位置及状态信息
+    function reset() {
+      ball.left = LAUNCHPAD_X + LAUNCHPAD_WIDTH / 2; //发射台中间
+      ball.top = LAUNCHPAD_Y - ball.height / 2;
+      ball.velocityX = 0;
+      ball.velocityY = 0;
+      ballInFlight = false;//没有位于飞行状态
+      needInstructions = false;
+      lastScore = 0;
+    }
+
+    // 显示提示文本
+    function showText(text) {
+      var metrics;
+
+      context.font = '42px Helvetica';
+      metrics = context.measureText(text);
+
+      context.save();
+      context.shadowColor = undefined;
+      context.strokeStyle = 'rgb(80,120,210)';
+      context.fillStyle = 'rgba(100,140,230,0.5)';
+
+      context.fillText(text,
+        canvas.width / 2 - metrics.width / 2,
+        canvas.height / 2);
+
+      context.strokeText(text,
+        canvas.width / 2 - metrics.width / 2,
+        canvas.height / 2);
+      context.restore();
+    }
+    
+    // 绘制导线
+    function drawGuidewire() {
+      context.moveTo(ball.left, ball.top);
+      context.lineTo(lastMouse.left, lastMouse.top);
+      context.stroke();
+    };
+    
+    // 更新说明文本
+    function updateBackgroundText() {
+      if (lastScore == 3) showText('Three pointer!');
+      else if (lastScore == 2) showText('Nice shot!');
+      else if (needInstructions) showText('Click to launch ball');
+    };
+    
+    // 1s后将分数重置为0
+    function resetScoreLater() {
+      setTimeout(function () {
+        lastScore = 0;
+      }, 1000);
+    };
+    
+    // 更新精灵
+    function updateSprites(time) {
+      bucket.update(context, time); //更新水桶位置
+      launchPad.update(context, time);//更新发射台位置
+      ball.update(context, time);//更新小球位置
+    }
+
+    // 绘制精灵
+    function paintSprites() {
+      launchPad.paint(context);//绘制发射台
+      bucket.paint(context);//绘制水桶
+      ball.paint(context);//绘制小球
+    }
+
+    // Event handlers................................................
+    // 鼠标点击事件
+    canvas.onmousedown = function (e) {
+      var rect;
+
+      e.preventDefault();
+
+      if (!ballInFlight) {
+        ball.velocityX = launchVelocity * Math.cos(launchAngle);
+        ball.velocityY = launchVelocity * Math.sin(launchAngle);
+        ballInFlight = true;
+        threePointer = false;
+        launchTime = undefined;
+      }
+    };
+    
+    // 鼠标移动事件，更新鼠标位置及角度
+    canvas.onmousemove = function (e) {
+      var rect;
+
+      e.preventDefault();
+
+      if (!ballInFlight) {
+        loc = windowToCanvas(e.clientX, e.clientY);
+
+        // 记录鼠标最新的位置
+        lastMouse.left = loc.x;
+        lastMouse.top = loc.y;
+
+        deltaX = Math.abs(lastMouse.left - ball.left);
+        deltaY = Math.abs(lastMouse.top - ball.top);
+
+        launchAngle = Math.atan(parseFloat(deltaY) / parseFloat(deltaX)); //获取线条与小球的角度
+        launchVelocity = 4 * deltaY / Math.sin(launchAngle) / pixelsPerMeter;//获取线条米数的4倍值
+
+        launchVelocityOutput.innerHTML = launchVelocity.toFixed(2);
+        launchAngleOutput.innerHTML = (launchAngle * 180 / Math.PI).toFixed(2);
+      }
+    };
+
+    // Animation Loop................................................
+    // 实时更新线条、文本
+    function animate(time) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!ballInFlight) {
+        drawGuidewire();// 绘制导线
+        updateBackgroundText();// 更新说明文本
+
+        if (lastScore !== 0) { // just scored
+          resetScoreLater(); // 1s后将分数重置为0
+        }
+      }
+
+      updateSprites(time); //更新
+      paintSprites();
+
+      window.requestNextAnimationFrame(animate);
+    }
+
+    // Initialization................................................
+
+    ball.width = BALL_RADIUS * 2;
+    ball.height = ball.width;
+    ball.left = LAUNCHPAD_X + LAUNCHPAD_WIDTH / 2;
+    ball.top = LAUNCHPAD_Y - ball.height / 2;
+    ball.radius = BALL_RADIUS;
+
+    context.lineWidth = 0.5;
+    context.strokeStyle = 'rgba(0,0,0,0.5)';
+    context.shadowColor = 'rgba(0,0,0,0.5)';
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.shadowBlur = 4;
+    context.stroke();
+
+    bucketImage.src = 'imgs/bucket.png';
+    bucketImage.onload = function (e) {
+      bucket.left = BUCKET_X;
+      bucket.top = BUCKET_Y;
+      bucket.width = bucketImage.width;
+      bucket.height = bucketImage.height;
+    };
+
+    window.requestNextAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>弹簧</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="500" height="500" style="background-color: #000;">
+        your browser not support canvas!
+    </canvas>
+
+    <script type="text/javascript" src="../js/utils.js"></script>
+    <script type="text/javascript" src="../js/ball.js"></script>
+    <script>
+        window.onload = function () {
+            var canvas = document.getElementById('canvas'),
+                context = canvas.getContext('2d'),
+
+                // 小球
+                ball = new Ball(),
+
+                // 弾动系数
+                spring = 0.03,
+
+                // 目标位置
+                targetX = canvas.width / 2,
+
+                // x轴速度
+                vx = 0;
+
+            ball.y = canvas.height / 2;
+
+            (function drawFrame() {
+                window.requestAnimationFrame(drawFrame, canvas);
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                // ball.x不断增大，加速度ax不断增加
+                var dx = targetX - ball.x,
+                    ax = dx * spring;
+
+                // ball 速度增加
+                vx += ax;
+
+                // ball位置变动
+                ball.x += vx;
+
+                // 绘制ball
+                ball.draw(context);
+            }());
+        };
+    </script>
+
+</body>
+
+</html>

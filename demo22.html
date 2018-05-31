@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>绘制坐标轴</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            /* border:thin solid #aaa; */
+        }     
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="600">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            
+            <li><span>moveTo(x,y)，当向前路径中增加一条子路径，该子路径只包含一个点，就是由参数传入的那个点。该方法并不会从当前路径中清除任何子路径</span></li>
+            <li><span>lineTo(x,y)，如果当前路径中没有了子路径，那么这个方法行为与moveTo()方法一样：它会创建一条新的子路径，其中包含了经由参数所传入的那个点。如果当前路径中存在子路径，那么该方法会将你所指定的那个点加入子路径中</span></li>           
+            <li>lineWidth 设置的是1 ，上边的线画出来确是 2px：如果在像素边界处绘制一条1像素框的垂直线段，那么canvas的绘图环境对象会试着将半个像素画在边界线右边，将另外半个像素画在边界中线的左边。然而，在一整个像素范围内绘制半个像素宽的线段是不可能的，所以左右两个方向上的半像素都被扩展为1个像素。</li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');       
+
+       var AXIS_MARGIN = 40,//坐标轴距离边框的外边距
+           AXIS_ORIGIN = {x:AXIS_MARGIN, y:canvas.height - AXIS_MARGIN},//坐标轴的中心点
+
+           AXIS_TOP = AXIS_MARGIN, //坐标轴距离顶部的距离
+           AXIS_RIGHT = canvas.width - AXIS_MARGIN, //坐标轴右边框到canvas左边框的距离
+
+           HORIZONTAL_TICK_SPACING = 10, //刻度水平间距
+           VERTICAL_TICK_SPACING = 10, //刻度垂直间距
+
+           AXIS_WIDTH = AXIS_RIGHT - AXIS_ORIGIN.x,//坐标轴宽度
+           AXIS_HEIGHT = AXIS_ORIGIN.y - AXIS_TOP,//坐标轴高度
+
+           NUM_VERTICAL_TICKS = AXIS_HEIGHT/VERTICAL_TICK_SPACING,//垂直轴线上刻度的个数
+           NUM_HORIZONTAL_TICKS = AXIS_WIDTH/HORIZONTAL_TICK_SPACING,//水平轴线上刻度的个数
+
+           TICK_WIDTH = 10,//刻度宽度
+           TICKS_LINEWIDTH = 0.5,//刻度的线宽度
+           TICKS_COLOR = 'navy',//刻度线的颜色
+
+           AXIS_LINEWIDTH = 1.0,//轴线的线宽度
+           AXIS_COLOR = 'blue';//轴线的颜色
+
+        //Functions.....
+        function drawGrid(){
+            //......
+        }
+
+        // 绘制坐标轴
+        function drawAxes(){
+            context.save();
+            context.strokeStyle = AXIS_COLOR;//设置坐标轴颜色
+            context.lineWidth = AXIS_LINEWIDTH;//设置轴线宽度
+            
+            drawHorizontalAxis();//绘制垂直轴线
+            drawVerticalAxis();//绘制水平轴线
+
+            context.lineWidth = 0.5;//重置刻度线的线宽
+            context.lineWidth = TICKS_LINEWIDTH;//重置刻度线的线宽
+            context.strokeStyle = TICKS_COLOR;//重置刻度线的颜色
+
+            drawVerticalAxisTicks();//绘制垂直刻度线
+            drawHorizontalAxisTicks();//绘制水平刻度线
+
+            context.restore();
+        }
+
+        //绘制水平轴线
+        function drawHorizontalAxis(){
+            context.beginPath();
+            context.moveTo(AXIS_ORIGIN.x, AXIS_ORIGIN.y);//从中心点开始绘制
+            context.lineTo(AXIS_RIGHT, AXIS_ORIGIN.y);//绘制到右下角
+            context.stroke();
+        }
+
+        //绘制垂直轴线
+        function drawVerticalAxis(){
+            context.beginPath();
+            context.moveTo(AXIS_ORIGIN.x, AXIS_ORIGIN.y);//从中心点开始绘制
+            context.lineTo(AXIS_ORIGIN.x, AXIS_TOP);//绘制到左上角
+            context.stroke();
+        }
+
+        // 绘制垂直刻度线
+        function drawVerticalAxisTicks(){
+            var deltaX;//线宽度
+
+            for(var i=1;i<NUM_VERTICAL_TICKS;++i){//绘制 ‘轴线高度/刻度间距’ 个线段
+                context.beginPath();
+                if(i%5 === 0){//如果是第5的倍数个线段，则绘制成长线段
+                    deltaX = TICK_WIDTH;
+                }else{
+                    deltaX = TICK_WIDTH/2;
+                }
+                //x轴位置固定，y轴每隔VERTICAL_TICK_SPACING距离绘制一个刻度
+                context.moveTo(AXIS_ORIGIN.x - deltaX, AXIS_ORIGIN.y - i*VERTICAL_TICK_SPACING);
+                context.lineTo(AXIS_ORIGIN.x + deltaX, AXIS_ORIGIN.y - i*VERTICAL_TICK_SPACING);
+                context.stroke();
+            }
+        }
+        // 绘制水平刻度线
+        function drawHorizontalAxisTicks(){
+            var deltaY;//线高度
+
+            for(var i=1;i<NUM_HORIZONTAL_TICKS;++i){//绘制 ‘轴线高度/刻度间距’ 个线段
+                context.beginPath();
+                if(i%5 === 0){//如果是第5的倍数个线段，则绘制成长线段
+                    deltaY = TICK_WIDTH;
+                }else{
+                    deltaY = TICK_WIDTH/2;
+                }
+                //y轴位置固定，x轴每隔VERTICAL_TICK_SPACING距离绘制一个刻度
+                context.moveTo(AXIS_ORIGIN.x + i*HORIZONTAL_TICK_SPACING, AXIS_ORIGIN.y - deltaY);
+                context.lineTo(AXIS_ORIGIN.x + i*HORIZONTAL_TICK_SPACING, AXIS_ORIGIN.y + deltaY)
+                context.stroke();
+            }
+        }
+
+        drawAxes();
+        
+    </script>
+</body>
+</html>

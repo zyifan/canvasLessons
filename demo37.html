@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>画图 — 可编辑贝塞尔曲线</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        .floatingControls{
+            position:absolute;
+            left:150px;
+            top:100px;
+            width:300px;
+            padding:20px;
+            border:thin solid rgba(0,0,0,0.3);
+            background:rgba(0,0,200,0.1);
+            color:blue;
+            font:14px Arial;
+            -webkit-box-shadow:rgba(0,0,0,0.2) 6px 6px 8px;            
+            -moz-box-shadow:rgba(0,0,0,0.2) 6px 6px 8px;
+            box-shadow:rgba(0,0,0,0.2) 6px 6px 8px;
+            display:none;
+        }
+        .floatingControls p{
+            margin-top:0px;
+            margin-bottom:20px;
+        }    
+        #controls{
+           position:absolute;
+           left:25px;
+           top:25px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        } 
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="1200" height="800">
+        canvas not support
+    </canvas>
+
+    <div id="controls">
+        Stroke color:
+        <select id='strokeStyleSheet'>
+            <option value="red">red</option>
+            <option value="green">green</option>
+            <option value="blue">blue</option>
+            <option value="orange">orange</option>
+            <option value="cornflowerblue">cornflowerblue</option>
+            <option value="goldenrod">goldenrod</option>
+            <option value="navy">navy</option>
+            <option value="purple">purple</option>
+        </select>
+        Fill color:
+        <select id='fillStyleSelect'>
+            <option value="red">red</option>
+            <option value="green">green</option>
+            <option value="blue">blue</option>
+            <option value="orange" selected>orange</option>
+            <option value="cornflowerblue">cornflowerblue</option>
+            <option value="goldenrod">goldenrod</option>
+            <option value="navy">navy</option>
+            <option value="purple">purple</option>
+        </select>
+        Guidwires:
+        <input id="guidewireCheckbox" type="checkbox" checked>
+        <input id="guidewireButton" type="button" value="Erase all">
+        Fill
+        <input id="fillCheckbox" type="checkbox">
+    </div>
+    <div id="instructions" class="floatingControls">
+        <p>Drag the curve end- and control points to change the shape of curve.</p>
+        <p>When you are done dragging end- and control points, click outside of the points to finalize the curve.</p>
+        <input type="button" id="instructionsOkayButton" value = 'Okay' autofocus>
+        <input type="button" id="instructionsNoMoreButton" value = 'Do not show these instructions again'>
+    </div>
+
+    <div class="info">
+        <ul>            
+            <li><span>isPointInPath() 如果指定的点位于当前路径中返回 true，否则返回 false</span></li>
+            <li><span>scrollPathIntoView() 主要用于在小屏幕的手机上进行应用程序开发，可让网页自行滚动，从而将屏幕外的某部分canvas内容显示到视窗之内</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+
+            eraseAllButton = document.getElementById('guidewireButton'),
+            strokeStyleSelect = document.getElementById('strokeStyleSheet'),
+            guidewireCheckbox = document.getElementById('guidewireCheckbox'),
+            fillCheckbox = document.getElementById('fillCheckbox'),
+            sidesSelect = document.getElementById('sidesSelect'),
+            startAngleSelect = document.getElementById('startAngleSelect'),
+            fillStyleSelect = document.getElementById('fillStyleSelect'),
+            instructions = document.getElementById('instructions'),
+            instructionsOkayButton = document.getElementById('instructionsOkayButton'),
+            instructionsNoMoreButton = document.getElementById('instructionsNoMoreButton'),             
+
+            isCheck = fillCheckbox.checked,
+
+            showInstructions = true,
+
+            GRID_STROKE_STYLE = 'lightblue',
+            GRID_SPACING = 10,
+
+            CONTROLS_POINT_RADIUS = 5,
+            CONTROLS_POINT_STROKE_STYLE = 'blue',
+            CONTROLS_POINT_FILL_STYLE = 'rgba(255,255,0,0.5)',
+
+            END_POINT_STROKE_STYLE = 'navy',
+            END_POINT_FILL_STYLE = 'rgba(0,255,0,0.5)',
+
+            GUIDEWIRE_STROKE_STYLE = 'rgba(0,0,230,0.4)',
+
+            drawingSurfaceImageData,
+            
+            mousedown = {},
+            rubberbandRect = {},
+
+            dragging = false,
+            draggingPoint = false,
+
+            endPoints = [{},{}],
+            controlPoints = [{},{}],
+            editing = false,
+
+            guidewires = guidewireCheckbox.checked;
+
+        //Functions.....
+        // 绘制网格
+        function drawGrid(color,stepx,stepy){
+            context.save();
+            context.strokeStyle = color;
+            context.lineWidth = 0.5;
+            for(var i = stepx + 0.5; i < context.canvas.width; i += stepx){
+                context.beginPath();
+                context.moveTo(i,0);
+                context.lineTo(i,context.canvas.height);
+                context.stroke();
+            }
+            for(var i = stepy + 0.5; i < context.canvas.height; i += stepy){
+                context.beginPath();
+                context.moveTo(0,i);
+                context.lineTo(context.canvas.width,i);
+                context.stroke();
+            }
+            context.restore();
+        }
+
+        // 将window坐标转换为canvas坐标
+        function windowToCanvas(x,y){
+            var bbox = canvas.getBoundingClientRect();
+            return {
+                x: x - bbox.left*(canvas.width/bbox.width),
+                y: y - bbox.top*(canvas.height/bbox.height)
+            }
+        }
+
+        //save and restore drawing surface......
+        // 保存canvas画面
+        function saveDrawingSurface(){
+            drawingSurfaceImageData = context.getImageData(0,0,canvas.width,canvas.height);
+        }
+        // 恢复canvas画面
+        function restoreDrawingSurface(){
+            context.putImageData(drawingSurfaceImageData,0,0);
+        }
+
+        //Rubber bands......
+        // 实时更新鼠标移动距离，和定位位置left、top
+        function updateRubberbandRectangle(loc){
+            rubberbandRect.width = Math.abs(loc.x - mousedown.x);
+            rubberbandRect.height = Math.abs(loc.y - mousedown.y);
+
+            if(loc.x > mousedown.x){
+                rubberbandRect.left = mousedown.x;
+            }else{
+                rubberbandRect.left = loc.x;
+            }
+
+            if(loc.y > mousedown.y){
+                rubberbandRect.top = mousedown.y;
+            }else{
+                rubberbandRect.top = loc.y;
+            }
+        }       
+        // 绘制三次贝塞尔曲线
+        function drawBezierCurve(){
+            context.beginPath();
+            context.moveTo(endPoints[0].x,endPoints[0].y);
+            context.bezierCurveTo(controlPoints[0].x, controlPoints[0].y, controlPoints[1].x, controlPoints[1].y, endPoints[1].x,endPoints[1].y);
+            context.stroke();
+        }
+        // 实时更新控制点的坐标
+        function updateEndAndControlPoints(){
+            // 左上角
+            endPoints[0].x = rubberbandRect.left;
+            endPoints[0].y = rubberbandRect.top;
+
+            // 右下角
+            endPoints[1].x = rubberbandRect.left + rubberbandRect.width;
+            endPoints[1].y = rubberbandRect.top + rubberbandRect.height;
+
+            // 左下角
+            controlPoints[0].x = rubberbandRect.left;
+            controlPoints[0].y = rubberbandRect.top + rubberbandRect.height;
+            
+            // 右上角
+            controlPoints[1].x = rubberbandRect.left + rubberbandRect.width;
+            controlPoints[1].y = rubberbandRect.top;
+        }
+        //绘制贝塞尔曲线
+        function drawRubberbandShape(loc){
+           updateEndAndControlPoints();//更新控制点坐标
+           drawBezierCurve();//绘制贝塞尔曲线
+        }
+        // 绘制贝塞尔曲线
+        function updateRubberband(loc){
+            updateRubberbandRectangle(loc);//实时更新鼠标移动位置信息
+            drawRubberbandShape(loc);//绘制贝塞尔曲线
+        }
+
+        //Guidewires...
+        // 绘制横向辅助线
+        function drawHorizontalLine(y){
+            context.beginPath();
+            // y坐标不变，x坐标从canvas左边框到右边框，（由于线宽是0.5，所有要从y+0.5处开始绘制线段，否则线段的宽度会变成2）
+            context.moveTo(0,y+0.5);
+            context.lineTo(context.canvas.width,y+0.5);
+            context.stroke();
+        }
+        // 绘制垂直辅助线
+        function drawVerticalLine(x){
+            context.beginPath();
+            // x坐标不变，y坐标从canvas上边框到下边框，（由于线宽是0.5，所有要从x+0.5处开始绘制线段，否则线段的宽度会变成2）
+            context.moveTo(x+0.5,0)
+            context.lineTo(x+0.5,context.canvas.height);
+            context.stroke();
+        }
+        // 绘制辅助线
+        function drawGuidewires(x,y){
+            context.save();
+            context.strokeStyle = GUIDEWIRE_STROKE_STYLE; //辅助线颜色
+            context.lineWidth = 0.5; //辅助线的线宽
+            drawVerticalLine(x); //绘制垂直辅助线
+            drawHorizontalLine(y); //绘制横向辅助线
+            context.restore(); //恢复canvas之前的颜色等配置
+        }
+
+        //Endpoints and control points...
+        function drawControlPoint(index){
+            context.beginPath();
+            context.arc(controlPoints[index].x,controlPoints[index].y,CONTROLS_POINT_RADIUS,0,Math.PI*2,false);
+            context.stroke();
+            context.fill();
+        }
+        function drawControlPoints(){
+            context.save();
+            context.strokeStyle = CONTROLS_POINT_STROKE_STYLE;
+            context.fillStyle = CONTROLS_POINT_FILL_STYLE;
+            drawControlPoint(0);
+            drawControlPoint(1);
+            context.stroke();
+            context.fill();
+            context.restore();
+        }
+        function drawEndPoint(index){
+            context.beginPath();
+            context.arc(endPoints[index].x, endPoints[index].y, CONTROLS_POINT_RADIUS, 0, Math.PI*2, false);
+            context.stroke();
+            context.fill();
+        }
+        function drawEndPoints(){
+            context.save();
+            context.strokeStyle = END_POINT_STROKE_STYLE;
+            context.fillStyle = END_POINT_FILL_STYLE;
+
+            drawEndPoint(0);
+            drawEndPoint(1);
+
+            context.stroke();
+            context.fill();
+            context.restore();
+        }
+
+        // 绘制控制点圆圈
+        function drawControlAndEndPoints(){
+            drawControlPoints();
+            drawEndPoints();
+        }
+
+        // 判断鼠标是否在终点圆圈内
+        function cursorInEndPoint(loc){
+            var pt;
+
+            endPoints.forEach(function(point){
+                context.beginPath();
+                context.arc(point.x,point.y,CONTROLS_POINT_RADIUS,0,Math.PI*2,false);
+                if(context.isPointInPath(loc.x,loc.y)){
+                    pt = point;
+                }
+            })
+
+            return pt;
+        }
+
+        // 判断鼠标是否在控制点圆圈内
+        function cursorInControlPoint(loc){
+            var pt;
+
+            controlPoints.forEach(function(point){
+                context.beginPath();
+                context.arc(point.x,point.y,CONTROLS_POINT_RADIUS,0,Math.PI*2,false);
+                if(context.isPointInPath(loc.x,loc.y)){
+                    pt = point;
+                }
+            })
+
+            return pt;
+        }
+
+        function updateDraggingPoint(loc){
+            draggingPoint.x = loc.x;
+            draggingPoint.y = loc.y;
+        }
+
+        // Canvas event handlers...
+        // 鼠标按下时存储画面数据，存储鼠标位置
+        canvas.onmousedown = function(e){
+            var loc = windowToCanvas(e.clientX,e.clientY);
+
+            e.preventDefault();//Prevent cursor change  
+
+            if(editing){
+                // 如果可编辑，获取鼠标点击的控制点圆圈对象draggingPoint
+               draggingPoint = cursorInControlPoint(loc);
+               if(!draggingPoint){
+                   draggingPoint = cursorInEndPoint(loc);
+               }
+            }else{
+                // 不可编辑时存储画面和初始坐标
+                saveDrawingSurface();
+                mousedown.x = loc.x;
+                mousedown.y = loc.y;
+                updateRubberbandRectangle(loc);
+                dragging = true;
+            }
+            
+        }
+
+        // 鼠标移动时，不断的恢复鼠标点下时的画面，然后根据鼠标当前位置重新绘制线段
+        canvas.onmousemove = function(e){
+            var loc = windowToCanvas(e.clientX,e.clientY);          
+
+            if(dragging || draggingPoint){
+                e.preventDefault();
+                restoreDrawingSurface();
+                if(guidewires){
+                    drawGuidewires(loc.x,loc.y);
+                }
+            }
+            
+            if(dragging){//画图
+                // 绘制曲线，绘制控制点圆圈
+                updateRubberband(loc);
+                drawControlAndEndPoints();
+            }else if(draggingPoint){ //编辑
+                // 更新控制点圆圈的中心点坐标
+                updateDraggingPoint(loc);
+                // 绘制控制点圆圈
+                drawControlAndEndPoints();
+                // 绘制贝塞尔曲线
+                drawBezierCurve();
+            }
+        }
+
+        // 鼠标起开时，恢复画面，绘制新图像
+        canvas.onmouseup = function(e){
+            var loc = windowToCanvas(e.clientX,e.clientY);
+
+            restoreDrawingSurface();
+
+             dragging = false;
+
+            if(editing){
+                if(draggingPoint){
+                    drawControlAndEndPoints();
+                }else{
+                    editing = false;
+                }
+
+                drawBezierCurve();
+                draggingPoint = undefined;
+            }else{
+                //绘制线段
+                updateRubberband(loc);
+                drawControlAndEndPoints();
+                dragging = false;
+                editing = true;
+                if(showInstructions){
+                    instructions.style.display = 'inline';
+                }
+            }          
+           
+        }
+
+        //Controls event handlers...
+        // 橡皮擦事件
+        eraseAllButton.onclick = function(e){
+            context.clearRect(0,0,canvas.width,canvas.height);//擦除canvas画面
+            drawGrid(GRID_STROKE_STYLE,GRID_SPACING,GRID_SPACING);//重新绘制网格
+            saveDrawingSurface();//保存初始画面
+
+            editing = false;
+            dragging = false;
+            draggingPoint = undefined;
+        }
+        // 选择线段颜色
+        strokeStyleSelect.onchange = function(e){
+            context.strokeStyle = strokeStyleSelect.value;
+        }
+        // 选择填充颜色
+        fillStyleSelect.onchange = function(e){ 
+            context.fillStyle = fillStyleSelect.value;
+        }
+        // 是否绘制辅助线控件
+        guidewireCheckbox.onchange = function(e){
+            guidewires = guidewireCheckbox.checked;
+        }
+
+        // 是否填充颜色
+        fillCheckbox.onchange = function(e){
+            isCheck = guidewireCheckbox.checked;
+        }
+
+        // Instructions event handlers...
+        instructionsOkayButton.onclick = function(e){
+            instructions.style.display = 'none';
+        }
+        instructionsNoMoreButton.onclick = function(e){
+            instructions.style.display = 'none';
+            showInstructions = false;
+        }
+
+        //Initialization......
+        context.strokeStyle = strokeStyleSelect.value; //初始化线段颜色
+        context.fillStyle = fillStyleSelect.value;//初始化填充颜色
+
+
+        drawGrid(GRID_STROKE_STYLE,GRID_SPACING,GRID_SPACING);//绘制网格
+
+        console.profileEnd();
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<html>
+
+<head>
+  <title>Polygon Collision Detection using SAT 超平面分离定理</title>
+
+  <style>
+    #canvas {
+      background: lightskyblue;
+      cursor: pointer;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .info {
+      margin-top: 50px;
+    }
+
+    .info li {
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='600' height='400'>
+    Canvas not supported
+  </canvas>
+
+  <ul class="info">
+    <li>任意多边形之间的碰撞判断</li>
+    <li>分离轴定理：简称SAT，又叫超平面分离定理,最小平移向量(MTV)</li>
+    <li> 使用分割轴定理的算法可以实现更为精确的碰撞检测，分割轴定理可以检测多边形之间的碰撞，不过也适用于圆形、图像及精灵；利用分割轴定理来计算处理碰撞时所用到的做小平移向量；</li>
+    <li>分离轴定理只适用于凸多边形，也就是所有内角均小于180度的多边形。凸多边形的各个顶点都是由多边形的中心向外延伸的，比如矩形、三角形、正方形等。而只要有一个角大于180°，那么这个多边形就有了凹陷（dent），也就是凹多边形。不能使用分离轴定理检测凹多边形之间的碰撞。</li>
+    <li>分离轴定理很好理解，可以用通俗的语言将其数学模型描述如下：把受测的两个多边形置于一堵墙前面，用光线照射它们，然后根据其阴影部分是否相交来判断二者有没有相撞。阴影在数学上叫‘投影’，而那堵墙叫做‘轴’，即受测多边形在x轴、y轴的投影，只要它们在任一轴上的投影不重叠，，那么就说明两者没有相碰；但仅仅在x、y轴这两个方向进行投影判断碰撞是不够的，必须全方位地对其进行投射才行，投影轴的数量等于多边形的边数的总和，如检测三角形和四边形碰撞，则总共有3+4=7个投影轴。</li>
+  </ul>
+
+  <script src='shapes.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      shapes = [],
+      polygonPoints = [
+        // The paths described by these point arrays
+        // are open. They are explicitly closed by
+        // Polygon.createPath() and Polygon.getAxes()
+
+        // 三角形
+        [new Point(250, 150), new Point(250, 250),
+        new Point(350, 250)],
+
+        // 正方形
+        [new Point(100, 100), new Point(100, 150),
+        new Point(150, 150), new Point(150, 100)],
+
+        // 平行四边形
+        [new Point(400, 100), new Point(380, 150),
+        new Point(500, 150), new Point(520, 100)]
+      ],
+
+      polygonStrokeStyles = ['blue', 'yellow', 'red'],
+      polygonFillStyles = ['rgba(255,255,0,0.7)', 'rgba(100,140,230,0.6)', 'rgba(255,255,255,0.8)'],
+
+      mousedown = { x: 0, y: 0 },
+      lastdrag = { x: 0, y: 0 },
+      shapeBeingDragged = undefined;
+
+    // Functions.....................................................
+
+    function windowToCanvas(e) {
+      var x = e.x || e.clientX,
+        y = e.y || e.clientY,
+        bbox = canvas.getBoundingClientRect();
+
+      return {
+        x: x - bbox.left * (canvas.width / bbox.width),
+        y: y - bbox.top * (canvas.height / bbox.height)
+      };
+    };
+
+    // 绘制多边形
+    function drawShapes() {
+      shapes.forEach(function (shape) {
+        shape.stroke(context);
+        shape.fill(context);
+      });
+    }
+    
+    // 检测碰撞
+    function detectCollisions() {
+      var textY = 30,
+        numShapes = shapes.length, //多边形数组的长度
+        shape,
+        i;
+      
+      // 如果存在正在拖拽的多边形
+      if (shapeBeingDragged) {
+        
+        // 遍历多边形数组
+        for (i = 0; i < numShapes; ++i) {
+          shape = shapes[i];
+          
+          // 处理非拖拽多边形
+          if (shape !== shapeBeingDragged) {
+            // collidesWith 如果碰撞则返回true
+            if (shapeBeingDragged.collidesWith(shape)) {
+              context.fillStyle = shape.fillStyle;
+              context.fillText('collision', 20, textY);
+              textY += 40;
+            }
+          }
+        }
+      }
+    }
+
+    // Event handlers................................................
+
+    canvas.onmousedown = function (e) {
+      var location = windowToCanvas(e);
+
+      shapes.forEach(function (shape) {
+        // 判断鼠标点是否在某一个多边形内
+        if (shape.isPointInPath(context, location.x, location.y)) {
+
+          // 将鼠标点击的多边形对象 shape 赋值给 shapeBeingDragged
+          shapeBeingDragged = shape;
+
+          // 存储初始鼠标坐标
+          mousedown.x = location.x;
+          mousedown.y = location.y;
+
+          // 存储拖拽坐标
+          lastdrag.x = location.x;
+          lastdrag.y = location.y;
+        }
+      });
+    }
+
+    canvas.onmousemove = function (e) {
+      var location,
+        dragVector;
+      
+      // 如果鼠标在多边形内拖拽
+      if (shapeBeingDragged !== undefined) {
+        location = windowToCanvas(e);
+        
+        // 获取鼠标移动距离
+        dragVector = {
+          x: location.x - lastdrag.x,
+          y: location.y - lastdrag.y
+        };
+        
+        // 移动多边形
+        shapeBeingDragged.move(dragVector.x, dragVector.y);
+
+        // 存储鼠标坐标
+        lastdrag.x = location.x;
+        lastdrag.y = location.y;
+        
+        // 清除canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        drawShapes(); // 绘制多边形
+        
+        // 检测碰撞
+        detectCollisions();
+      }
+    }
+
+    canvas.onmouseup = function (e) {
+      shapeBeingDragged = undefined;
+    }
+
+    // 获取多边形对象数组
+    for (var i = 0; i < polygonPoints.length; ++i) {
+      var polygon = new Polygon(), //创建多边形对象
+        points = polygonPoints[i]; // 多边形顶点坐标
+
+      polygon.strokeStyle = polygonStrokeStyles[i];//多边形边框颜色
+      polygon.fillStyle = polygonFillStyles[i];//多边形填充颜色
+
+      // 添加顶点坐标
+      points.forEach(function (point) {
+        polygon.addPoint(point.x, point.y);
+      });
+
+      shapes.push(polygon); //存储每一个多边形对象
+    }
+
+    // Initialization................................................
+
+    context.shadowColor = 'rgba(100,140,255,0.5)';
+    context.shadowBlur = 4;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.font = '38px Arial';
+
+    drawShapes();// 绘制多边形
+
+    context.save();
+    context.fillStyle = 'cornflowerblue';
+    context.font = '24px Arial';
+    context.fillText('Drag shapes over each other', 10, 25);
+    context.restore();
+  </script>
+</body>
+
+</html>

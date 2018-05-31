@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>多边形绘制代码</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+            /* width:600px;
+            height:300px; */
+        }     
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="600">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li><span>bezierCurveTo(cpx,cpy, cpx1,cpy1, x,y)创建一条三次贝塞尔曲线的路径。该方法需要传入三个点，前两个个是控制点，第三个是锚点</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        // 绘制16格表盘，每隔分8个刻度，一共2*8*8个小格
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        
+        // var sideSelect = document.getElementById('sideSelect'),
+            // startAngleSelect = document.getElementById('startAngleSelect'),
+            // fillCheckbox = document.getElementById('fillCheckbox'),
+
+        var mousedown = {},
+            rubberbandRect = {},
+            Point = function(x,y){
+                this.x = x;
+                this.y = y;
+            }
+        
+        //Function......
+        // 获取多边形顶点坐标集合
+        function getPolygonPoints(centerX,centerY,radius,sides,startAngle){
+            var points = [],
+                angle = startAngle || 0;
+
+            for(var i=0; i<sides; ++i){
+                // points.push(new Point(centerX + radius * Math.sin(angle), centerY - radius * Math.cos(angle)));
+                points.push(new Point(centerX + radius * Math.cos(angle), centerY + radius * Math.sin(angle)));
+                angle += 2*Math.PI/sides; //顶点与平衡线的夹角
+            }
+
+            return points;
+        }
+
+        // 绘制多边形
+        function createPolygonPath(centerX,centerY,radius,sides,startAngle){
+            var points = getPolygonPoints(centerX,centerY,radius,sides,startAngle);// 获取多边形顶点坐标集合
+
+            context.beginPath();
+            context.moveTo(points[0].x, points[0].y);
+
+            for(var i=1; i<sides; ++i){
+                context.lineTo(points[i].x, points[i].y);
+            }
+            context.closePath();
+        }
+        
+        // 实时绘制多边形
+        function drawRubberbandShape(loc,sides,startAngle){
+            // createPolygonPath(mousedown.x,mousedown.y,rubberbandRect.width,parseInt(sideSelect.value),(Math.PI/180)*parseInt(startAngleSelect.value));
+            createPolygonPath(300, 300, 200, 10, 0);//中心点300,300，半径200，边数8，起始角度0°
+            context.stroke();
+
+            // if(fillCheckbox.checked){
+                // context.fill();
+            // }
+        }
+
+        //辅助线： 绘制中心点和半径
+        function drawCenterCircle(){
+            context.save();
+            context.strokeStyle = 'coral';
+            context.beginPath();
+            context.arc(300,300,5,0,Math.PI*2,false);
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(300,300);
+            context.lineTo(500,300);
+            context.stroke();
+            context.restore();
+        }
+
+        drawCenterCircle();//辅助线： 绘制中心点和半径
+        drawRubberbandShape(); // 实时绘制多边形
+        
+        console.profileEnd();
+    
+    </script>
+</body>
+</html>

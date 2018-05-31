@@ -1,0 +1,288 @@
+<html>
+
+<head>
+  <title>Sticking using SAT and MTV 利用最小平移向量使两个物体粘在一起</title>
+
+  <style>
+    #canvas {
+      background: lightskyblue;
+      cursor: pointer;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .info {
+      position: absolute;
+      width: 100%;
+      top: 500px;
+    }
+
+    .info li {
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="600" height="400">
+    Canvas not supported
+  </canvas>
+
+  <ul class="info">
+    <li>最小平移向量：MTV（Minimum Translation Vector）</li>
+    <li>最小平移向量是指，如果要让某个物体不再与另外一个物体相撞，所需要移动的最小距离。 </li>
+    <li>最小平移向量基本用法就是将两个碰撞物体分开，除此之外，它还有另外两个用途，可以让两个物体粘连在一起，也可以让它们彼此分弹开。</li>
+  </ul>
+
+  <script src='shapesMTV.js'></script>
+  <script src='requestNextAnimationFrame.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      shapes = [],
+      polygonPoints = [
+        // 三角形
+        [new Point(250, 150), new Point(250, 200),
+          new Point(300, 200)
+        ],
+
+        // 正方形
+        [new Point(100, 100), new Point(100, 125),
+          new Point(125, 125), new Point(125, 100)
+        ],
+
+        // 平行四边形
+        [new Point(400, 100), new Point(380, 150),
+          new Point(500, 150), new Point(520, 100)
+        ],
+      ],
+
+      polygonStrokeStyles = ['blue', 'yellow', 'red'],
+      polygonFillStyles = ['rgba(255,255,0,0.7)',
+        'rgba(100,140,230,0.6)',
+        'rgba(255,255,255,0.8)'
+      ],
+      shapeMoving = undefined, //当前被点击的图像
+      // 圆
+      c1 = new Circle(150, 275, 20),
+      c2 = new Circle(350, 350, 30),
+
+      lastTime = undefined,
+      // 速度
+      velocity = {
+        x: 350,
+        y: 190
+      },
+      lastVelocity = {
+        x: 350,
+        y: 190
+      },
+      STICK_DELAY = 500, //粘贴延时
+      stuck = false;
+    showInstructions = true;
+
+    // Functions.....................................................
+
+    function windowToCanvas(e) {
+      var x = e.x || e.clientX,
+        y = e.y || e.clientY,
+        bbox = canvas.getBoundingClientRect();
+
+      return {
+        x: x - bbox.left * (canvas.width / bbox.width),
+        y: y - bbox.top * (canvas.height / bbox.height)
+      };
+    };
+
+    // 绘制多边形
+    function drawShapes() {
+      shapes.forEach(function (shape) {
+        shape.stroke(context);
+        shape.fill(context);
+      });
+    }
+
+    // 粘贴
+    function stick(mtv) {
+      var dx,
+        dy,
+        velocityMagnitude,
+        point;
+
+      // 如果运动图形是圆
+      if (mtv.axis === undefined) { // The object that's moving is a circle. 
+        point = new Point();
+        velocityMagnitude = Math.sqrt(Math.pow(velocity.x, 2) + Math.pow(velocity.y, 2));
+
+        // Point the mtv axis in the direction of the circle's velocity.
+        // 获取圆移动方向的法向量
+        point.x = velocity.x / velocityMagnitude;
+        point.y = velocity.y / velocityMagnitude;
+
+        // 将移动方向的单位法向量作为mtv的axis
+        mtv.axis = new Vector(point);
+      }
+
+      // Calclulate delta X and delta Y. The mtv.axis is a unit vector
+      // indicating direction, and the overlap is the magnitude of
+      // the translation vector.
+
+      // mtv的axis是指示方向的单位向量
+      // overlap是向量的大小
+      // 获取距离
+      dx = mtv.axis.x * mtv.overlap;
+      dy = mtv.axis.y * mtv.overlap;
+
+      // If deltas and velocity are in the same direction,
+      // turn deltas around.
+      
+      // 如果移动距离和移动速度是一个方向的，取距离的反值
+      if ((dx < 0 && velocity.x < 0) || (dx > 0 && velocity.x > 0))
+        dx = -dx;
+
+      if ((dy < 0 && velocity.y < 0) || (dy > 0 && velocity.y > 0))
+        dy = -dy;
+
+      // In STICK_DELAY (500) ms, move the moving shape out of collision
+
+      setTimeout(function () {
+        shapeMoving.move(dx, dy);
+      }, STICK_DELAY);
+
+      // Reset pertinent variables
+
+      lastVelocity.x = velocity.x;
+      lastVelocity.y = velocity.y;
+      velocity.x = velocity.y = 0;
+
+      // Don't stick again before STICK_DELAY expires
+      stuck = true;
+    }
+
+    // 判断检测结果，如果碰撞则返回true
+    function collisionDetected(mtv) {
+      return mtv.axis != undefined || mtv.overlap !== 0;
+    }
+
+    // 检测碰撞
+    function detectCollisions() {
+      var textY = 30,
+        bbox, mtv;
+
+      if (shapeMoving) {
+        shapes.forEach(function (shape) {
+          if (shape !== shapeMoving) {
+            // 检测碰撞结果
+            mtv = shapeMoving.collidesWith(shape);
+            // 检测碰撞结果
+            if (collisionDetected(mtv)) {
+              // 碰撞
+              if (!stuck) //执行粘贴代码
+                stick(mtv);
+            }
+          }
+        });
+
+        // 如果运动到边界，则弹回
+        bbox = shapeMoving.boundingBox();
+        if (bbox.left + bbox.width > canvas.width || bbox.left < 0) {
+          velocity.x = -velocity.x;
+        }
+        if (bbox.top + bbox.height > canvas.height || bbox.top < 0) {
+          velocity.y = -velocity.y;
+        }
+      }
+    };
+
+    // Event Handlers................................................
+
+    canvas.onmousedown = function (e) {
+      var location = windowToCanvas(e);
+
+      if (showInstructions)
+        showInstructions = false;
+
+      velocity.x = lastVelocity.x;
+      velocity.y = lastVelocity.y;
+
+      shapeMoving = undefined;
+      stuck = false;
+
+      // 判断鼠标是否在图形内
+      shapes.forEach(function (shape) {
+        if (shape.isPointInPath(context, location.x, location.y)) {
+          // 存储当前被点击的图形
+          shapeMoving = shape;
+        }
+      });
+    };
+
+    // Animation.....................................................
+
+    function animate(time) {
+      var elapsedTime, deltaX;
+
+      if (lastTime === 0) {
+        if (time !== undefined)
+          lastTime = time;
+
+        window.requestNextAnimationFrame(animate);
+        return;
+      }
+
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (shapeMoving !== undefined) {
+        elapsedTime = parseFloat(time - lastTime) / 1000; //获取当前帧耗时
+        // 根据耗时和速度计算图形移动距离，并移动图形
+        shapeMoving.move(velocity.x * elapsedTime, velocity.y * elapsedTime);
+      }
+
+      // 检测碰撞
+      detectCollisions();
+      drawShapes();
+      lastTime = time; //存储上一帧耗时
+
+      if (showInstructions) {
+        context.fillStyle = 'cornflowerblue';
+        context.font = '24px Arial';
+        context.fillText('Click on a shape to animate it', 20, 40);
+      }
+      window.requestNextAnimationFrame(animate);
+    };
+
+    // Initialization................................................
+    // shapes start......
+    for (var i = 0; i < polygonPoints.length; ++i) {
+      var polygon = new Polygon(),
+        points = polygonPoints[i];
+
+      polygon.strokeStyle = polygonStrokeStyles[i];
+      polygon.fillStyle = polygonFillStyles[i];
+
+      points.forEach(function (point) {
+        polygon.addPoint(point.x, point.y);
+      });
+
+      shapes.push(polygon);
+    }
+
+    c1.fillStyle = 'rgba(200, 50, 50, 0.5)';
+
+    shapes.push(c1);
+    shapes.push(c2);
+    // shapes end.....
+
+    context.shadowColor = 'rgba(100,140,255,0.5)';
+    context.shadowBlur = 4;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.font = '38px Arial';
+
+    window.requestNextAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

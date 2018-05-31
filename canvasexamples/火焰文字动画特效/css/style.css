@@ -1,0 +1,16 @@
+html, body {
+  margin:0px;
+  padding:0px;
+  background-color:#000000;
+}
+
+#logo { 
+	position: absolute;
+  right:0px;
+  bottom:0px;
+}
+
+canvas {
+  background-color:#000000;
+  left: 0;
+}

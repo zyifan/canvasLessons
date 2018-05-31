@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas 保存和恢复绘图表面</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            margin:20px;            
+            background:#fff;
+            border:thin inset rgba(100,150,230,0.5);
+            cursor:pointer;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+    <div id="readout"></div>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="500" height="250">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>此demo仅为代码演示，无法实际运行</span></li>
+        </ul>
+    </div>
+    <script>
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        // 将window坐标转换为canvas坐标，并禁用视图自动缩放功能
+        function windowToCanvas(canvas,x,y){
+           var bbox = canvas.getBoundingClientRect();
+           return {
+               x: x - bbox.left * (canvas.width /bbox.width), //将x坐标，根据 (canvas视图宽度/canvas实际宽度) 比例进行缩放
+               y: y - bbox.top * (canvas.height /bbox.height) //将y坐标，根据 (canvas视图高度/canvas实际高度) 比例进行缩放
+           }
+        }
+
+        // save and restore drawing surface..............
+
+       function saveDrawingSurface(){
+           drawingSurfaceImageData = context.getImageData(0,0,canvas.width,canvas.height);
+       }
+
+       function restoreDrawingSurface(){
+           context.putImageData(drawingSurfaceImageData);
+       }
+
+       //Event handlers..............
+       canvas.onmousedown = function(e){
+           //保存
+           saveDrawingSurface();
+       }
+
+       canvas.onmousemove = function(e){
+           var loc = windowToCanvas(canvas,e.clientX,e.clientY);
+
+           if(dragging){
+               restoreDrawingSurface();
+
+               if(guidewires){
+                   drawGuidewires(mousedown.x,mousedown.y);
+               }
+           }
+       }
+
+       canvas.onmouseup = function(e){
+           //恢复
+           restoreDrawingSurface();
+       }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>多行输入文本</title>
+    <style>
+        body {
+            background: #eeeeee;
+        }
+        #canvas {
+            background: #ffffff;
+            cursor: pointer;
+            margin-left: 10px;
+            margin-top: 10px;
+            -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        }
+        #fontSelectDiv {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+     <canvas id='canvas' width='850' height='500'>
+         Canvas not supported
+      </canvas>
+
+      <div id='fontSelectDiv'>
+         Font: <select id='fontSelect'>
+                  <option value='Arial'>Arial</option>
+                  <option value='Comic Sans' selected>Comic Sans</option>
+                  <option value='Lucida Sans'>Lucida Sans</option>
+                  <option value='Helvetica'>Helvetica</option>
+                  <option value='Palatino'>Palatino</option>
+               </select>
+
+         Size: <select id='sizeSelect'>
+                  <option value='32'>32 px</option>
+                  <option value='48' selected>48 px</option>
+                  <option value='64'>64 px</option>
+                  <option value='128'>128 px</option>
+               </select>
+
+          Text stroke color: <select id='strokeStyleSelect'>
+                  <option value='red'>red</option>
+                  <option value='green'>green</option>
+                  <option value='blue'>blue</option>
+                  <option value='orange'>orange</option>
+                  <option value='cornflowerblue'>cornflowerblue</option>
+                  <option value='goldenrod'>goldenrod</option>
+                  <option value='navy' selected>navy</option>
+                  <option value='purple'>purple</option>
+               </select>
+
+       Text fill color: <select id='fillStyleSelect'>
+                  <option value='rgba(255,0,0,0.5)'>semi-transparent red</option>
+                  <option value='green'>green</option>
+                  <option value='rgba(0,0,255,0.5)'>semi-transparent blue</option>
+                  <option value='orange'>orange</option>
+                  <option value='rgba(100,140,230,0.5)'>semi-transparent cornflowerblue</option>
+                  <option value='rgba(218,165,32,0.5)' selected>semi-transparent goldenrod</option>
+                  <option value='navy'>navy</option>
+                  <option value='purple'>purple</option>
+               </select>
+
+         Fill: <input id='fillCheckbox' type='checkbox' checked/>
+      </div>
+
+    <div class="info">
+        <ul>          
+            <li>
+                context.putImageData(imgData,x,y,dirtyX,dirtyY,dirtyWidth,dirtyHeight):
+                <ul>
+                    <li>imgData: 规定要放回画布的 ImageData 对象</li>
+                    <li>x, y: 在画布上开始绘制的起始位置，左上角的 x ，y坐标，以像素计</li>
+                    <li>dirtyX, dirtyY: 可选。水平值（x,y），以像素计，在画布上放置图像的位置</li>
+                    <li>dirtyWidth, dirtyHeight: 可选。在画布上绘制图像所使用的宽度/高度</li>
+                </ul>
+            </li>
+            <li>textBaseline 该属性决定了文本在垂直方向上的对齐方式。有效取值是：top、bottom、middle、alphabetic、ideographic 及 hanging。默认值是alphabetic，该值用于绘制由基于拉丁字母的语言所组成的字符串。ideographic值则用于绘制日文或中文字符串，hanging值用于绘制各种印度语字符串。top、bottom、middle这三个值与特定的语言不相关，它们代表文本周围的边界框之内的某个位置，这个边界框也叫做“字符方框”</li>
+            <li>measureText(txt) 返回一个TextMetrics对象，该对象包含width属性代表传入文本的像素宽度。该宽度是基于当前的字型而计算出来的，measureText返回的文本宽度并不精确</li>
+        </ul>
+    </div>
+    <script src="./cursorAndParagraph.js"></script>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+
+            fontSelect = document.getElementById('fontSelect'),
+            sizeSelect = document.getElementById('sizeSelect'),
+            strokeStyleSelect = document.getElementById('strokeStyleSelect'),
+            fillStyleSelect = document.getElementById('fillStyleSelect'),
+
+            GRID_STROKE_STYLE = 'lightgray',
+            GRID_HORIZONTAL_SPACING = 10,
+            GRID_VERTICAL_SPACING = 10,
+
+            drawingSurfaceImageData,
+        
+            cursor = new TextCursor(),
+            paragraph;
+
+        // General-purpose functions.....................................
+        //绘制网格
+        function drawBackground() {
+            var STEP_Y = 12,
+                i = context.canvas.height;
+            
+            context.strokeStyle = 'rgba(0,0,200,0.225)';
+            context.lineWidth = 0.5;
+
+            context.save();
+            context.restore();
+
+            while(i > STEP_Y*4) {
+                context.beginPath();
+                context.moveTo(0, i);
+                context.lineTo(context.canvas.width, i);
+                context.stroke();
+                i -= STEP_Y;
+            }
+
+            context.save();
+
+            context.strokeStyle = 'rgba(100,0,0,0.3)';
+            context.lineWidth = 1;
+
+            context.beginPath();
+
+            context.moveTo(35,0);
+            context.lineTo(35,context.canvas.height);
+            context.stroke();
+
+            context.restore();
+        }
+        //转换坐标
+        function windowToCanvas(canvas, x, y) {
+            var bbox = canvas.getBoundingClientRect();
+
+            return { 
+                x: x - bbox.left * (canvas.width  / bbox.width),
+                y: y - bbox.top  * (canvas.height / bbox.height)
+            };
+        }
+
+        // Drawing surface...............................................
+        //报错数据
+        function saveDrawingSurface() {
+            drawingSurfaceImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        }
+
+        // Text..........................................................
+        //设置字体样式
+        function setFont() {
+            context.font = sizeSelect.value + 'px ' + fontSelect.value;
+        }
+
+        // Event handlers................................................
+
+        canvas.onmousedown = function (e) {
+            var loc = windowToCanvas(canvas, e.clientX, e.clientY),
+                fontHeight,
+                line;
+
+            cursor.erase(context, drawingSurfaceImageData);
+            saveDrawingSurface();
+
+            if (paragraph && paragraph.isPointInside(loc)) {// paragraph存在，且坐标在段落范围内
+                paragraph.moveCursorCloseTo(loc.x, loc.y);// 将光标移动到鼠标点击位置的字符处
+            } else {
+                fontHeight = context.measureText('W').width,
+                fontHeight += fontHeight/6;
+
+                paragraph = new Paragraph(context, loc.x, loc.y - fontHeight,
+                                        drawingSurfaceImageData,
+                                        cursor);//创建段落对象
+
+                paragraph.addLine(new TextLine(loc.x, loc.y));//添加行数据
+            }
+        };
+        
+        fillStyleSelect.onchange = function (e) {
+            cursor.fillStyle = fillStyleSelect.value;
+        }
+
+        strokeStyleSelect.onchange = function (e) {
+            cursor.strokeStyle = strokeStyleSelect.value;
+        }
+
+        // Key event handlers............................................
+
+        document.onkeydown = function (e) {
+            if (e.keyCode === 8 || e.keyCode === 13) {
+                // The call to e.preventDefault() suppresses
+                // the browser's subsequent call to document.onkeypress(),
+                // so only suppress that call for backspace and enter.
+                e.preventDefault();
+            }
+            
+            if (e.keyCode === 8) {  // backspace
+                paragraph.backspace();//删除字符
+            }
+            else if (e.keyCode === 13) { // enter
+                paragraph.newline();//换行
+            }
+        }
+        
+        document.onkeypress = function (e) {
+            var key = String.fromCharCode(e.which);
+
+            // Only process if user is editing text
+            // and they aren't holding down the CTRL
+            // or META keys.
+
+            if (e.keyCode !== 8 && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault(); // no further browser processing
+
+                context.fillStyle = fillStyleSelect.value;
+                context.strokeStyle = strokeStyleSelect.value;
+
+                paragraph.insert(key);//插入字符
+            }
+        }
+
+        // Initialization................................................
+
+        fontSelect.onchange = setFont;
+        sizeSelect.onchange = setFont;
+
+        cursor.fillStyle = fillStyleSelect.value;
+        cursor.strokeStyle = strokeStyleSelect.value;
+
+        context.lineWidth = 2.0;
+        setFont();//设置字体
+
+        drawBackground();//绘制网格
+        saveDrawingSurface();//保存canvas图像
+            
+    </script>
+</body>
+</html>

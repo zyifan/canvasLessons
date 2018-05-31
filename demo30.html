@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>仪表盘绘制</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+            /* width:600px;
+            height:300px; */
+        }     
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="600">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>canvas坐标,x轴向右为正, y轴向下为正, 弧度顺时针走</span></li>
+            <li><span>顺时针走位正角度，逆时针旋转位负角度</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        // 绘制16格表盘，每隔分8个刻度，一共2*8*8个小格
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        
+        var CENTROID_RADIUS = 10, //中心小圆半径
+            CENTROID_STROKE_STYLE = 'rgba(0,0,0,0.5)',//中心小圆线条颜色
+            CENTROID_FILL_STYLE = 'rgba(80,190,240,0.6)',//中心小圆填充颜色
+
+            RING_INNER_RADIUS = 35, //圆环内半径
+            RING_OUTER_RADIUS = 55, //圆环外半径
+
+            ANNOTATIONS_FILL_STYLE = 'rgba(0,0,230,0.9)', //数字颜色
+            ANNOTATIONS_TEXT_SIZE = 12, //数字字体大小
+
+            TICK_WIDTH = 10, //刻度线宽
+            TICK_LONG_STROKE_STYLE = 'rgba(100,140,230,0.9)', //长刻度线颜色
+            TICK_SHORT_STROKE_STYLE = 'rgba(100,140,230,0.7)', //短刻度线颜色
+
+            TRACKING_DIAL_STROKING_STYLE = 'rgba(100,140,230,0.5)', //圆环边框颜色
+
+            GUIDEWIRE_STROKE_STYLE = 'goldenrod', //指针线段颜色
+            GUIDEWIRE_FILL_STYLE = 'rgba(250,250,0,0.6)', //指针填充颜色
+
+            // 表盘中心坐标和半径
+            circle = {
+                x: canvas.width/2,
+                y: canvas.height/2,
+                radius: 150
+            }
+
+        //Functions......
+        // 绘制网格
+        function drawGrid(color,stepx,stepy){
+            context.save();
+            context.shadowColor = undefined;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+            context.strokeStyle = color;
+            context.fillStyle = '#ffffff';
+            context.lineWidth = 0.5;
+            context.fillRect(0,0,context.canvas.width,context.canvas.height);
+
+            for(var i = stepx + 0.5; i<context.canvas.width; i += stepx){
+                context.beginPath();
+                context.moveTo(i,0);
+                context.lineTo(i,context.canvas.height);
+                context.stroke();
+            }
+
+            for(var i = stepy + 0.5; i<context.canvas.height; i += stepy){
+                context.beginPath();
+                context.moveTo(0,i);
+                context.lineTo(context.canvas.width,i);
+                context.stroke();
+            }
+            context.restore();
+        }
+
+        // 绘制表盘
+        function drawDial(){
+            var loc = {x:circle.x, y:circle.y};//中心点坐标
+
+            drawCentroid();//绘制中心圆
+            drawCentroidGuidewire(loc);//绘制指针
+            drawRing();//绘制圆环
+            drawTickInnerCircle();//绘制刻度内环
+            drawTicks();//绘制刻度线
+            drawAnnotations();//绘制数字
+        }
+
+        // 绘制中心圆
+        function drawCentroid(){
+            context.beginPath();
+            context.save();
+            context.strokeStyle = CENTROID_STROKE_STYLE;//中心圆边框颜色
+            context.fillStyle = CENTROID_FILL_STYLE;//中心圆填充颜色
+            context.arc(circle.x, circle.y, CENTROID_RADIUS, 0, Math.PI*2, false);//顺时针绘制中心圆
+            context.stroke();
+            context.fill();
+            context.restore();
+        }
+
+        // 绘制指针
+        function drawCentroidGuidewire(loc){
+            // loc中心点坐标
+            var angle = -Math.PI/4, //45度
+                radius, //半径
+                endpt; //指针终点坐标
+
+            radius = circle.radius + RING_OUTER_RADIUS; //圆环外半径
+
+            // 获取指针终点坐标
+            if(loc.x >= circle.x){ //坐标点在中心点右侧
+                endpt = {
+                    x: circle.x + radius*Math.cos(angle),
+                    y: circle.y + radius*Math.sin(angle)
+                }
+            }else{
+                endpt = {
+                    x: circle.x - radius*Math.cos(angle),
+                    y: circle.y - radius*Math.sin(angle)
+                }
+            }
+
+            context.save();
+
+            context.strokeStyle = GUIDEWIRE_STROKE_STYLE;//指针线段颜色
+            context.fillStyle = GUIDEWIRE_FILL_STYLE;//填充颜色
+
+            // 绘制指针
+            context.beginPath();
+            context.moveTo(circle.x, circle.y);
+            context.lineTo(endpt.x, endpt.y);
+            context.stroke();
+
+            // 绘制指针终点圆圈
+            context.beginPath();
+            context.strokeStyle = TICK_LONG_STROKE_STYLE; 
+            context.arc(endpt.x,endpt.y,5,0,Math.PI*2,false);//顺时针绘制终点圆圈
+            context.fill();
+            context.stroke();
+
+            context.restore();
+        }
+
+        // 绘制圆环
+        function drawRing(){
+            drawRingOuterCircle();//绘制外环
+
+            context.strokeStyle = 'rgba(0,0,0,0.1)';//内环边框颜色
+            context.arc(circle.x, circle.y, circle.radius + RING_INNER_RADIUS, 0, Math.PI*2, false);//顺时针绘制内环
+            context.fillStyle = 'rgba(100,140,230,0.1)';//非零环绕填充圆环
+            context.fill();
+            context.stroke();
+        }
+
+        //绘制外环边框
+        function drawRingOuterCircle(){
+            // 外环阴影
+            context.shadowColor = 'rgba(0,0,0,0.7)';
+            context.shadowOffsetX = 3,
+            context.shadowOffsetY = 3,
+            context.shadowBlur = 6,
+            context.strokeStyle = TRACKING_DIAL_STROKING_STYLE; //外环边框颜色
+            context.beginPath();
+            context.arc(circle.x, circle.y, circle.radius + RING_OUTER_RADIUS, 0, Math.PI*2, true);//逆时针画外环
+            context.stroke();
+        }
+
+        // 绘制刻度内环，在内环之内
+        function drawTickInnerCircle(){
+            context.save();
+            context.beginPath();
+            context.strokeStyle = 'rgba(0,0,0,0.1)';//刻度环边框颜色和内环边框颜色一样
+            context.arc(circle.x, circle.y, circle.radius + RING_INNER_RADIUS - TICK_WIDTH, 0, Math.PI*2, false);
+            context.stroke();
+            context.restore();
+        }
+
+        // 绘制刻度
+        function drawTick(angle, radius, cnt){
+            var tickWidth = cnt % 4 === 0 ? TICK_WIDTH : TICK_WIDTH/2;//偶数为长线段，奇数为短线段
+
+            context.beginPath();
+            context.moveTo(circle.x + Math.cos(angle) * (radius - tickWidth), circle.y + Math.sin(angle) * (radius - tickWidth));//位于刻度线上的点
+            context.lineTo(circle.x + Math.cos(angle) * radius, circle.y + Math.sin(angle) * radius);//位于内环上的点
+            context.strokeStyle = TICK_SHORT_STROKE_STYLE;//刻度线颜色
+            context.stroke();
+        }
+        function drawTicks(){
+            var radius = circle.radius + RING_INNER_RADIUS,//内环半径
+                ANGLE_MAX = 2 * Math.PI,//最大角度360
+                ANGLE_DELTA = Math.PI/64,//角度间隔
+                tickWidth;//刻度线宽度
+            
+            context.save();
+            
+            for(var angle = 0, cnt = 0; angle < ANGLE_MAX; angle += ANGLE_DELTA, cnt++){
+                // angle角度，radius内环半径，cnt一共有多少个刻度
+                drawTick(angle, radius, cnt++);
+            }
+
+            context.restore();
+            
+        }
+
+        //绘制表盘数字
+        function drawAnnotations(){
+            var radius = circle.radius + RING_INNER_RADIUS;//内环半径
+
+            context.save();
+            context.fillStyle = ANNOTATIONS_FILL_STYLE;//字体颜色
+            context.font = ANNOTATIONS_TEXT_SIZE + 'px Helvetica';//字体大小
+
+            // 绘制数字
+            for(var angle = 0; angle < 2*Math.PI; angle += Math.PI/8){
+                context.beginPath();
+                // (angle*180/Math.PI).toFixed(0) 根据弧度值求得角度值
+                context.fillText((angle*180/Math.PI).toFixed(0), circle.x + Math.cos(angle) * (radius - TICK_WIDTH*2), circle.y - Math.sin(angle)*(radius - TICK_WIDTH*2));
+            }
+
+            context.restore();
+        }
+
+        //Initialization......
+        context.shadowColor = 'rgba(0,0,0,0.4)';
+        context.shadowOffsetX = 2;
+        context.shadowOffsetY = 2;
+        context.shadowBlur = 4;
+
+        // 设置字体对齐位置
+        context.textAlign = 'center';
+        context.textBaseLine = 'middle';
+
+        drawGrid('lightgray',10,10);//绘制网格
+        drawDial();//绘制表盘
+       
+    </script>
+</body>
+</html>

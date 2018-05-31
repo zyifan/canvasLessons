@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>图像水印（普通绘制）</title>
+    <style>
+            body {
+            background: rgba(100, 145, 250, 0.3);
+         }
+         #scaleSlider {
+            vertical-align: 10px;
+            width: 100px;
+            margin-left: 90px;
+         }
+         #canvas {
+            margin: 10px 20px 0px 20px;
+            border: thin solid #aaaaaa;
+            cursor: crosshair;
+            padding: 0;
+         }
+         #controls {
+            margin-left: 15px;
+            padding: 0;
+         }
+         #scaleOutput {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            margin-left: 10px;
+            vertical-align: center;
+            text-align: center;
+            color: blue;
+            font: 18px Arial;
+            text-shadow: 2px 2px 4px rgba(100, 140, 250, 0.8);
+         }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+    <div id='controls'>
+        <output id='scaleOutput'>1.0</output>
+        <input id='scaleSlider' type='range'
+               min='1' max='3.0' step='0.01' value='1.0'/> 
+     </div>
+
+     <canvas id='canvas' width='800' height='520'>
+        Canvas not supported
+     </canvas>
+    <div class="info">
+        <ul>          
+            <li>
+               <ul>
+                    <li>drawImage(imageEl, dx, dy);</li>     
+                    <li>drawImage(imageEl, dx, dy, dw, dh);</li>
+                    <li>drawImage(imageEl, sx, sy, sw, sh, dx, dy, dw, dh);</li>     
+               </ul>
+            </li>
+            <li>
+                将图像绘制到canvas之中。如果该图像参数是一个 HTMLVideoElement 类型的视频对象，那么drawImage()方法就会将视频的当前帧绘制出来。这个图像参数也可以是另外一个HTMLCanvasElement的canvas对象。向canvas之中绘制的图像可以是一整幅，也可以是它的一部分，并且在绘制时有可能要对图像进行缩放。源图像中需要被绘制的区域通过sx、sy、sw与sh参数来确定的，浏览器会根据dw与dh参数对所绘内容进行缩放。在该方法的各种用法中，只有前三个参数是必须的。
+            </li>
+            <li>
+                drawImage()方法的使用很灵活：可以将一幅图像、一个canvas对象或一个视频帧的整体或某个部分绘制到canvas中。在绘制这些图像、canvas对象或视频帧的时候，可以任意指定其绘制位置及缩放比例。
+            </li>
+        </ul>
+    </div>
+    <script>
+    var canvas = document.getElementById('canvas'),
+        context = canvas.getContext('2d'),
+        image = new Image(),
+
+        scaleOutput = document.getElementById('scaleOutput');
+        scaleSlider = document.getElementById('scaleSlider'),
+        scale = scaleSlider.value,
+        scale = 1.0,
+        MINIMUM_SCALE = 1.0,
+        MAXIMUM_SCALE = 3.0;
+
+    // Functions.....................................................
+    //放大时实时绘制图像
+    function drawScaled() {
+        var w = canvas.width,
+            h = canvas.height,
+            sw = w * scale,
+            sh = h * scale;
+
+        // Clear the canvas, and draw the image scaled to canvas size
+        
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        // Draw the watermark on top of the image
+        
+        drawWatermark();
+
+        // Finally, draw the canvas scaled according to the current
+        // scale, back into itself. Note that the source and
+        // destination canvases are the same canvas.
+        
+        //重复绘制canvas（包含图像和水印）,将canvas自身绘制到canvas之中
+        context.drawImage(canvas, 0, 0, canvas.width, canvas.height, -sw/2 + w/2, -sh/2 + h/2, sw, sh);
+    }
+
+    //绘制放大倍数文本，实时缩放字体大小
+    function drawScaleText(value) { 
+        var text = parseFloat(value).toFixed(2);
+        var percent = parseFloat(value - MINIMUM_SCALE) / parseFloat(MAXIMUM_SCALE - MINIMUM_SCALE);
+
+        scaleOutput.innerText = text;
+        percent = percent < 0.35 ? 0.35 : percent;
+        scaleOutput.style.fontSize = percent*MAXIMUM_SCALE/1.5 + 'em';
+    }
+
+    //绘制文本，水印
+    function drawWatermark() {
+        var lineOne = 'Copyright',
+            lineTwo = 'Acme Inc.',
+            textMetrics = null,
+            FONT_HEIGHT = 128;
+
+        context.save();
+        context.font = FONT_HEIGHT + 'px Arial';
+
+        textMetrics = context.measureText(lineOne);
+
+        context.globalAlpha = 0.6;
+        context.translate(canvas.width/2, canvas.height/2-FONT_HEIGHT/2);
+
+        context.fillText(lineOne, -textMetrics.width/2, 0);
+        context.strokeText(lineOne, -textMetrics.width/2, 0);
+
+        textMetrics = context.measureText(lineTwo);
+        context.fillText(lineTwo, -textMetrics.width/2, FONT_HEIGHT);
+        context.strokeText(lineTwo, -textMetrics.width/2, FONT_HEIGHT);
+
+        context.restore();
+    }
+
+    // Event Handlers................................................
+
+    scaleSlider.onchange = function(e) {
+        scale = e.target.value;
+
+        if (scale < MINIMUM_SCALE) scale = MINIMUM_SCALE;
+        else if (scale > MAXIMUM_SCALE) scale = MAXIMUM_SCALE;
+
+        drawScaled(); //实时绘制放大的图像
+        drawScaleText(scale); //绘制放大倍数文本
+    }
+
+    // Initialization................................................
+
+    context.fillStyle     = 'cornflowerblue';
+    context.strokeStyle   = 'yellow';
+    context.shadowColor   = 'rgba(50, 50, 50, 1.0)';
+    context.shadowOffsetX = 5;
+    context.shadowOffsetY = 5;
+    context.shadowBlur    = 10;
+
+    var glassSize = 150;
+    var scale = 1.0;
+
+    image.src = './imgs/countrypath.jpg';
+    image.onload = function(e) {
+        var maxRadius = 200;
+        var percent = 20;
+        context.drawImage(image, 0, 0, canvas.width, canvas.height); //绘制图像
+        drawWatermark(); //绘制水印
+        drawScaleText(scaleSlider.value); //绘制放大倍数文本
+    };
+    </script>
+</body>
+</html>

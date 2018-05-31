@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>路径、描边与填充，正方形路径绘制</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            /* border:thin solid #aaa; */
+        }     
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="1920" height="650">
+        canvas not support
+    </canvas>   
+
+    <div class="info">
+        <ul>
+            <li><span>arc()：在当前路径中增加一段表示圆弧或圆形的子路径。与rect()方法不同，可以通过一个boolean参数来控制该段子路径的方向。如果此参数是true，那么arc()所创建的子路径就是逆时针的，否则就是顺时针的。如果在调用该方法时，已经有其它子路径存在，那么arc()方法则会用一条线段把已有路径的终点和这段圆弧路径的起点连接起来</span></li>
+            <li><span>beginPath()，将当前路径之中的所有子路径都清除掉，以此来重置当前路径。在需要开始一段新的路径时，应该调用此方法</span></li>
+            <li><span>closePath()，显式地封闭某段开放路径。该方法用于封闭圆弧路径以及曲线或线段所创建的开放路径</span></li>
+            <li><span>fill()，使用fillStyle对当前路径的内部进行填充</span></li>
+            <li><span>rect(x,y,width,height)，在坐标(x,y)处建立一个宽为width，高度为height的矩形子路径。该子路径一定是封闭的，而且总是按逆时针方向来创建</span></li>
+            <li><span>stroke()，使用strokeStyle来描绘当前路径的轮廓线</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+
+        //Functions......
+
+        function drawGrid(context,color,stepx,stepy){
+           //Listing omitted for brevity.
+        }
+
+        //Initialization............
+        drawGrid(context,'lightgray',10,10);
+
+        //drawing attributes......
+        context.font = '48pt Helvetica';
+        context.strokeStyle = 'blue';
+        context.fillStyle = 'red';
+        context.lineWidth = '2';
+
+        //Text..................
+        context.strokeText('Stroke',60,110);
+        context.fillText('Fill',440,110);
+        context.strokeText('Stroke & Fill',650,110)
+        context.fillText('Stroke & Fill',650,110)
+
+        //Rectangles...
+        context.lineWidth = '5';
+        context.beginPath();
+        context.rect(80,150,150,100);
+        context.stroke();
+
+        context.beginPath();
+        context.rect(400,150,150,100);
+        context.fill();
+
+        context.beginPath();
+        context.rect(750,150,150,100);
+        context.stroke();
+        context.fill();
+
+        //open arcs...
+        context.beginPath();
+        context.arc(150,370,60,0,Math.PI*3/2);
+        context.stroke();
+
+        context.beginPath();
+        context.arc(475,370,60,0,Math.PI*3/2);
+        context.fill();
+
+        context.beginPath();
+        context.arc(820,370,60,0,Math.PI*3/2);
+        context.stroke();
+        context.fill();
+
+        //Closed arcs...
+        context.beginPath();
+        context.arc(150,550,60,0,Math.PI*3/2);
+        context.closePath();
+        context.stroke();
+
+        context.beginPath();
+        context.arc(475,550,60,0,Math.PI*3/2);
+        context.closePath();
+        context.fill();
+
+        context.beginPath();
+        context.arc(820,550,60,0,Math.PI*3/2);
+        context.closePath();
+        context.stroke();
+        context.fill();
+       
+    </script>
+</body>
+</html>

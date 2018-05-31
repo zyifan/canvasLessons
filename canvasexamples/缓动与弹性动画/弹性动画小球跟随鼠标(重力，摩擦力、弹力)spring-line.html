@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="500" height="500" style="background-color: #000;">
+        your browser not support canvas!
+    </canvas>
+
+    <script type="text/javascript" src="../js/utils.js"></script>
+    <script type="text/javascript" src="../js/ball.js"></script>
+    <script>
+        window.onload = function () {
+            var canvas = document.getElementById('canvas'),
+                context = canvas.getContext('2d'),
+
+                ball = new Ball(),
+
+                mouse = utils.captureMouse(canvas),
+
+                spring = 0.03,
+                f = 0.95,
+                gravity = 2,
+                vx = 0,
+                vy = 0;
+
+            // 绘制从鼠标到小球的线段
+            function drawLine() {
+                context.strokeStyle = "#fff";
+                context.beginPath();
+                context.moveTo(mouse.x, mouse.y);
+                context.lineTo(ball.x, ball.y);
+                context.closePath();
+                context.stroke();
+            }
+
+            (function drawFrame() {
+                window.requestAnimationFrame(drawFrame, canvas);
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 鼠标到小球的距离，dx，dy一直减小
+                var dx = mouse.x - ball.x;
+                var dy = mouse.y - ball.y;
+
+                // 加速度 = 距离*0.03，加速度一直在减小
+                var ax = dx * spring;
+                var ay = dy * spring;
+
+                // 速度加上加速度、重力加速度
+                // vx、vy 是从初始位置到鼠标位置的间距（关键代码）
+                vx += ax;
+                vy += ay;
+
+                vy += gravity;//
+
+                // 距离减去摩擦力，距离的5%
+                vx *= f;
+                vy *= f;
+
+                // 更新位置，每次更新的都是从初始位置开始的间距
+                ball.x += vx;
+                ball.y += vy;
+
+                // 绘制线段
+                drawLine();
+
+                // 绘制小球
+                ball.draw(context);
+
+            }());
+
+        }
+    </script>
+
+</body>
+
+</html>

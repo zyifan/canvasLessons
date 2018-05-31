@@ -1,0 +1,178 @@
+<html>
+
+<head>
+  <title>多边形和圆形SAT碰撞检测 Polygon and Circle Collision Detection using SAT</title>
+
+  <style>
+    #canvas {
+      background: lightskyblue;
+      cursor: pointer;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='600' height='400'>
+    Canvas not supported
+  </canvas>
+
+  <script src='shapes1.js'></script>
+  <script src='requestNextAnimationFrame.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      shapes = [],
+      polygonPoints = [
+        // 三角形
+        [new Point(250, 150), new Point(250, 250),
+        new Point(350, 250)],
+
+        // 正方形
+        [new Point(100, 100), new Point(100, 150),
+        new Point(150, 150), new Point(150, 100)],
+
+        // 平行四边形
+        [new Point(400, 100), new Point(380, 150),
+        new Point(500, 150), new Point(520, 100)]
+      ],
+
+      polygonStrokeStyles = ['blue', 'yellow', 'red'],
+      polygonFillStyles = ['rgba(255,255,0,0.7)',
+        'rgba(100,140,230,0.6)',
+        'rgba(255,255,255,0.8)'],
+
+      mousedown = { x: 0, y: 0 },
+      lastdrag = { x: 0, y: 0 },
+      shapeBeingDragged = undefined,
+      // 圆
+      c1 = new Circle(150, 75, 20),
+      c2 = new Circle(350, 25, 30);
+
+    function windowToCanvas(e) {
+      var x = e.x || e.clientX,
+        y = e.y || e.clientY,
+        bbox = canvas.getBoundingClientRect();
+
+      return {
+        x: x - bbox.left * (canvas.width / bbox.width),
+        y: y - bbox.top * (canvas.height / bbox.height)
+      };
+    };
+
+    // 绘制多边形
+    function drawShapes() {
+      shapes.forEach(function (shape) {
+        shape.stroke(context);
+        shape.fill(context);
+      });
+    }
+
+    canvas.onmousedown = function (e) {
+      var location = windowToCanvas(e);
+
+      shapes.forEach(function (shape) {
+        if (shape.isPointInPath(context, location.x, location.y)) {
+          shapeBeingDragged = shape;
+          mousedown.x = location.x;
+          mousedown.y = location.y;
+          lastdrag.x = location.x;
+          lastdrag.y = location.y;
+        }
+      });
+    }
+
+    // 检测碰撞
+    function detectCollisions() {
+      var textY = 30;
+
+      // 如果存在正在拖拽的多边形
+      if (shapeBeingDragged) {
+
+        // 遍历多边形数组
+        shapes.forEach(function (shape) {
+          // 处理非拖拽多边形
+          if (shape !== shapeBeingDragged) {
+            // collidesWith 如果碰撞则返回true
+            if (shapeBeingDragged.collidesWith(shape)) {
+              context.fillStyle = shape.fillStyle;
+              context.fillText('collision', 20, textY);
+              textY += 40;
+            }
+          }
+        });
+      }
+    };
+
+    canvas.onmousemove = function (e) {
+      var location,
+        dragVector;
+
+      // 如果鼠标在多边形内拖拽
+      if (shapeBeingDragged !== undefined) {
+        location = windowToCanvas(e);
+
+        // 获取鼠标移动距离
+        dragVector = {
+          x: location.x - lastdrag.x,
+          y: location.y - lastdrag.y
+        };
+        
+        // 移动多边形
+        shapeBeingDragged.move(dragVector.x, dragVector.y);
+        
+        // 存储鼠标坐标
+        lastdrag.x = location.x;
+        lastdrag.y = location.y;
+        
+        // 清除canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        drawShapes();// 绘制多边形
+
+        // 检测碰撞
+        detectCollisions();
+      }
+    }
+
+    canvas.onmouseup = function (e) {
+      shapeBeingDragged = undefined;
+    }
+
+    // shapes start......
+    for (var i = 0; i < polygonPoints.length; ++i) {
+      var polygon = new Polygon(),
+        points = polygonPoints[i];
+
+      polygon.strokeStyle = polygonStrokeStyles[i];
+      polygon.fillStyle = polygonFillStyles[i];
+
+      points.forEach(function (point) {
+        polygon.addPoint(point.x, point.y);
+      });
+
+      shapes.push(polygon);
+    }
+
+    shapes.push(c1);
+    shapes.push(c2);
+    // shapes end.....
+
+    context.shadowColor = 'rgba(100,140,255,0.5)';
+    context.shadowBlur = 4;
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.font = '38px Arial';
+
+    drawShapes();
+
+    context.save();
+    context.fillStyle = 'cornflowerblue';
+    context.font = '24px Arial';
+    context.fillText('Drag shapes over each other', 10, 25);
+    context.restore();
+  </script>
+</body>
+
+</html>

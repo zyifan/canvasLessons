@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>小球超出边界则移除</title>
+    <style>
+        p {
+            position: absolute;
+            top: 0;
+            left: 420px;
+            padding: 5px;
+            width: 100px;
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="400" height="400" style="background:#000;">
+        your browser not support canvas
+    </canvas>
+    <p id="log"></p>
+    <script src="../js/utils.js"></script>
+    <script src="../js/ball.js"></script>
+    <script>
+        window.onload = function () {
+            var canvas = document.getElementById("canvas");
+            var context = canvas.getContext("2d");
+            var log = document.getElementById("log");
+
+            var balls = [];
+            var numBall = 10;
+            var canWid = canvas.width;
+            var canHei = canvas.height;
+
+            // 循环10次
+            for (var i = 0; i < numBall; i++) {
+                var size = Math.random() * 20 + 5; //[5,25)
+                var color = Math.random() * (0xffffff); //[0,0xffffff)
+                var ball = new Ball(size, color);
+
+                ball.id = "ball_" + i;
+                ball.radius = Math.random() * 30 + 10; //[10,30)
+                ball.x = Math.random() * canWid; //[0,canWid)
+                ball.y = Math.random() * canHei; //[0,canHei)
+                ball.vx = Math.random() * 2 - 1; //[-1,1)
+                ball.vy = Math.random() * 2 - 1; //[-1,1)
+
+                balls.push(ball);
+            }
+
+            function draw(ball, pos) {
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+
+                // 如果小球超出边界，则移除小球
+                if (ball.x - ball.radius > canvas.width || ball.radius + ball.x < 0 ||
+                    ball.y - ball.radius > canvas.height || ball.y + ball.radius < 0) {
+                    balls.splice(pos, 1); //
+                    if (balls.length > 0) {
+                        log.innerHTML += "移除" + ball.id + "<br/>";
+                    } else {
+                        log.innerHTML = "全部移除";
+                    }
+                }
+                ball.draw(context);
+
+            }
+
+            (function drawFrame() {
+                window.requestAnimationFrame(drawFrame, canvas);
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 每一帧都将所有小球绘制一遍
+                var i = balls.length;
+                while (i--) {
+                    draw(balls[i], i);
+                }
+            }());
+
+        }
+    </script>
+</body>
+
+</html>

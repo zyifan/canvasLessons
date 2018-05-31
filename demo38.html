@@ -1,0 +1,638 @@
+
+<html>
+    <head>
+      <title>旋转多边形</title>
+  
+      <style>
+        body {
+           background: #eeeeee;
+        }
+        #dragDiv {
+           position: absolute;
+           left: 25px;
+           top: 50px;
+        }
+        
+        #controls {
+           position: absolute;
+           left: 25px;
+           top: 25px;
+        }
+        
+        #canvas {
+           background: #ffffff;
+           cursor: crosshair;
+           margin-left: 10px;
+           margin-top: 10px;
+           -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+           -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+           box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        } 
+      </style>
+    </head>
+  
+     <body>
+        <canvas id='canvas' width='1200' height='600'>
+           Canvas not supported
+        </canvas>
+  
+       <div id='controls'>
+        Stroke color: 
+        <select id='strokeStyleSelect'>
+            <option value='red'>red</option>
+            <option value='green'>green</option>
+            <option value='blue'>blue</option>
+            <option value='orange'>orange</option>
+            <option value='cornflowerblue'>cornflowerblue</option>
+            <option value='goldenrod'>goldenrod</option>
+            <option value='navy' selected>navy</option>
+            <option value='purple'>purple</option>
+        </select>
+  
+        Fill color: 
+        <select id='fillStyleSelect'>
+            <option value='rgba(255,0,0,0.5)'>semi-transparent red</option>
+            <option value='green'>green</option>
+            <option value='rgba(0,0,255,0.5)'>semi-transparent blue</option>
+            <option value='orange'>orange</option>
+            <option value='rgba(100,140,230,0.5)' selected>semi-transparent cornflowerblue</option>
+            <option value='rgba(218,165,32,0.5)'>semi-transparent goldenrod</option>
+            <option value='navy'>navy</option>
+            <option value='purple'>purple</option>
+        </select>
+  
+        Sides: 
+        <select id='sidesSelect'>
+            <option value=4>4</option>
+            <option value=5 selected>5</option>
+            <option value=6>6</option>
+            <option value=7>7</option>
+            <option value=8>8</option>
+            <option value=9>9</option>
+            <option value=10>10</option>
+            <option value=12>12</option>
+            <option value=20>20</option>
+        </select>  
+         
+        Start angle: 
+        <select id='startAngleSelect'>
+            <option value=0 select>0</option>
+            <option value=22.5>22.5</option>
+            <option value=45>45</option>
+            <option value=67.5>67.5</option>
+            <option value=90>90</option>
+        </select>
+  
+         Fill <input id='fillCheckbox' type='checkbox' checked/>
+         <input id='eraseAllButton' type='button' value='Erase all'/>
+      </div>
+  
+      <div id='dragDiv'>
+        Edit: <input type='checkbox' id='editCheckbox'/>
+      </div>
+
+        <div class="info">
+            <ul>            
+                <li><span>rotate(angle) 按照给定的角度来旋转坐标系（π = 180°）</span></li>
+                <li><span>scale(x,y) 在X与Y方向上分别按照给定的数值来缩放坐标系；可以使用scale(-1,1)绘制水平镜像，使用scale(1,-1)来绘制垂直镜像</span></li>
+                <li><span>translate(x,y) 将坐标系平移到给定的X、Y坐标处</span></li>
+            </ul>
+        </div>
+      
+      <script src = './polygon.js'></script>
+      <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            eraseAllButton = document.getElementById('eraseAllButton'),
+            strokeStyleSelect = document.getElementById('strokeStyleSelect'),
+            startAngleSelect = document.getElementById('startAngleSelect'),
+
+            fillStyleSelect = document.getElementById('fillStyleSelect'),
+            fillCheckbox = document.getElementById('fillCheckbox'),
+            editCheckbox = document.getElementById('editCheckbox'),
+
+            sidesSelect = document.getElementById('sidesSelect'),
+
+            CENTROID_RADIUS = 10,
+            CENTROID_STROKE_STYLE = 'rgba(0, 0, 0, 0.8)',
+            CENTROID_FILL_STYLE ='rgba(255, 255, 255, 0.2)',
+            CENTROID_SHADOW_COLOR = 'rgba(255, 255, 255, 0.4)',
+
+            DEGREE_RING_MARGIN = 35,
+            TRACKING_RING_MARGIN = 55,
+            DEGREE_ANNOTATIONS_FILL_STYLE = 'rgba(0, 0, 230, 0.8)',
+            DEGREE_ANNOTATIONS_TEXT_SIZE = 11,
+            DEGREE_OUTER_RING_MARGIN = DEGREE_RING_MARGIN,
+            TICK_WIDTH = 10,
+            TICK_LONG_STROKE_STYLE = 'rgba(100, 140, 230, 0.9)',
+            TICK_SHORT_STROKE_STYLE = 'rgba(100, 140, 230, 0.7)',
+
+            TRACKING_RING_STROKING_STYLE = 'rgba(100, 140, 230, 0.3)',
+            drawingSurfaceImageData,
+        
+            mousedown = {},
+            rubberbandRect = {},
+
+            dragging = false,
+            draggingOffsetX,
+            draggingOffsetY,
+
+            sides = 8,
+            startAngle = 0,
+
+            guidewires = true,
+
+            editing = false,
+            rotatingLockEngaged = false,
+            rotatingLockAngle,
+            polygonRotating,
+
+            polygons = [];
+
+        // Functions.....................................................
+        // 绘制网格
+        function drawGrid(color, stepx, stepy) {
+            context.save()
+
+            context.shadowColor = undefined;
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+            
+            context.strokeStyle = color;
+            context.fillStyle = '#ffffff';
+            context.lineWidth = 0.5;
+            context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+
+            for (var i = stepx + 0.5; i < context.canvas.width; i += stepx) {
+                context.beginPath();
+                context.moveTo(i, 0);
+                context.lineTo(i, context.canvas.height);
+                context.stroke();
+            }
+
+            for (var i = stepy + 0.5; i < context.canvas.height; i += stepy) {
+                context.beginPath();
+                context.moveTo(0, i);
+                context.lineTo(context.canvas.width, i);
+                context.stroke();
+            }
+
+            context.restore();
+        }
+        // 转换坐标
+        function windowToCanvas(e) {
+            var x = e.x || e.clientX,
+                y = e.y || e.clientY,
+                bbox = canvas.getBoundingClientRect();
+
+            return { 
+                x: x - bbox.left * (canvas.width  / bbox.width),
+                y: y - bbox.top  * (canvas.height / bbox.height)
+            };
+        }
+
+        // Save and restore drawing surface..............................
+        // 保存图像
+        function saveDrawingSurface() {
+            drawingSurfaceImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        }
+        // 恢复图像
+        function restoreDrawingSurface() {
+            context.putImageData(drawingSurfaceImageData, 0, 0);
+        }
+
+
+        // Rubberbands...................................................
+        // 实时更新鼠标移动的位移信息
+        function updateRubberbandRectangle(loc) {
+            rubberbandRect.width = Math.abs(loc.x - mousedown.x);
+            rubberbandRect.height = Math.abs(loc.y - mousedown.y);
+
+            if (loc.x > mousedown.x) {
+                rubberbandRect.left = mousedown.x;
+            }else{
+                rubberbandRect.left = loc.x;
+            }
+
+            if (loc.y > mousedown.y) {
+                rubberbandRect.top = mousedown.y;
+            }else{
+                rubberbandRect.top = loc.y;
+            }
+        }
+        // 绘制多边形
+        function drawRubberbandShape(loc, sides, startAngle) {
+            var polygon = new Polygon(mousedown.x, mousedown.y,
+                                rubberbandRect.width, 
+                                parseInt(sidesSelect.value),
+                                (Math.PI / 180) * parseInt(startAngleSelect.value),
+                                context.strokeStyle,
+                                context.fillStyle,
+                                fillCheckbox.checked);
+            drawPolygon(polygon);
+            
+            if (!dragging) {
+                polygons.push(polygon);
+            }
+        }
+        // 实时更新坐标、绘制图像
+        function updateRubberband(loc, sides, startAngle) {
+            updateRubberbandRectangle(loc);//实时更新鼠标移动的位移信息
+            drawRubberbandShape(loc, sides, startAngle);//绘制多边形
+        }
+
+        // Guidewires....................................................
+        // 绘制辅助线
+        function drawHorizontalLine (y) {
+            context.beginPath();
+            context.moveTo(0,y+0.5);
+            context.lineTo(context.canvas.width,y+0.5);
+            context.stroke();
+        }
+
+        function drawVerticalLine (x) {
+            context.beginPath();
+            context.moveTo(x+0.5,0);
+            context.lineTo(x+0.5,context.canvas.height);
+            context.stroke();
+        }
+
+        function drawGuidewires(x, y) {
+            context.save();
+            context.strokeStyle = 'rgba(0,0,230,0.4)';
+            context.lineWidth = 0.5;
+            drawVerticalLine(x);
+            drawHorizontalLine(y);
+            context.restore();
+        }
+
+        // Drawing functions.............................................
+        // 根据多边形数组，绘制所有的多边形
+        function drawPolygons() {
+            polygons.forEach( function (polygon) {
+                polygon.stroke(context);
+                if (polygon.filled) {
+                    polygon.fill(context);
+                }
+            });
+        }
+        // 在多边形的中心点绘制表盘中心点圆圈
+        function drawCentroid(polygon) {
+            context.beginPath();
+            context.save();
+            context.strokeStyle = CENTROID_STROKE_STYLE;
+            context.fillStyle = CENTROID_FILL_STYLE;
+            context.shadowColor = CENTROID_SHADOW_COLOR;
+            context.arc(polygon.x, polygon.y, CENTROID_RADIUS, 0, Math.PI*2, false);
+            context.stroke();
+            context.fill();
+            context.restore();
+        }
+        // 绘制表盘辅助线
+        function drawCentroidGuidewire(loc, polygon) {
+            var angle = Math.atan( (loc.y - polygon.y) / (loc.x - polygon.x) ),//获取鼠标点下时的坐标和多边形中心点连线与x轴的夹角
+                radius, endpt;
+
+            radius = polygon.radius + TRACKING_RING_MARGIN;
+            angle = angle - rotatingLockAngle;
+
+            if (loc.x >= polygon.x) {
+                endpt = { 
+                    x: polygon.x + radius * Math.cos(angle),
+                    y: polygon.y + radius * Math.sin(angle)
+                };
+            }
+            else {
+                endpt = { 
+                    x: polygon.x - radius * Math.cos(angle),
+                    y: polygon.y - radius * Math.sin(angle)
+                };
+            }
+        
+            context.save();
+            context.beginPath();
+            context.moveTo(polygon.x, polygon.y);
+            context.lineTo(endpt.x, endpt.y);
+            context.stroke();
+
+            context.beginPath();
+            context.arc(endpt.x, endpt.y, 5, 0, Math.PI*2, false);
+            context.stroke();
+            context.fill();
+
+            context.restore();
+        }
+        
+        // 绘制表盘圆环外环
+        function drawDegreeOuterDial(polygon) {
+            context.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            context.arc(polygon.x, polygon.y, polygon.radius + DEGREE_OUTER_RING_MARGIN, 0, Math.PI*2, true);
+        }
+
+        //绘制刻度数字
+        function drawDegreeAnnotations(polygon) {
+            var radius = polygon.radius + DEGREE_RING_MARGIN;
+
+            context.save();
+            context.fillStyle = DEGREE_ANNOTATIONS_FILL_STYLE;
+            context.font = DEGREE_ANNOTATIONS_TEXT_SIZE + 'px Helvetica'; 
+            
+            for (var angle=0; angle < 2*Math.PI; angle += Math.PI/8) {
+                context.beginPath();
+                context.fillText((angle * 180 / Math.PI).toFixed(0),
+                    polygon.x + Math.cos(angle) * (radius - TICK_WIDTH*2),
+                    polygon.y + Math.sin(angle) * (radius - TICK_WIDTH*2));
+            }
+            context.restore();
+        }
+        
+        function drawDegreeDialTicks(polygon) {
+            var radius = polygon.radius + DEGREE_RING_MARGIN,
+                ANGLE_MAX = 2*Math.PI,
+                ANGLE_DELTA = Math.PI/64;
+
+            context.save();
+            
+            for (var angle = 0, cnt = 0; angle < ANGLE_MAX; angle += ANGLE_DELTA, ++cnt) {
+                context.beginPath();
+
+                if (cnt % 4 === 0) {
+                    // 长刻度
+                    context.moveTo(polygon.x + Math.cos(angle) * (radius - TICK_WIDTH), polygon.y + Math.sin(angle) * (radius - TICK_WIDTH));
+                    context.lineTo(polygon.x + Math.cos(angle) * (radius), polygon.y + Math.sin(angle) * (radius));
+                    context.strokeStyle = TICK_LONG_STROKE_STYLE;
+                    context.stroke();
+                } else {
+                    // 短刻度
+                    context.moveTo(polygon.x + Math.cos(angle) * (radius - TICK_WIDTH/2), polygon.y + Math.sin(angle) * (radius - TICK_WIDTH/2));
+                    context.lineTo(polygon.x + Math.cos(angle) * (radius), polygon.y + Math.sin(angle) * (radius));
+                    context.strokeStyle = TICK_SHORT_STROKE_STYLE;
+                    context.stroke();
+                }
+
+                context.restore();
+            }
+        }
+        
+        //绘制刻度内环
+        function drawDegreeTickDial(polygon) {
+            context.save();
+            context.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            context.beginPath();
+            context.arc(polygon.x, polygon.y, polygon.radius + DEGREE_RING_MARGIN - TICK_WIDTH, 0, Math.PI*2, false);
+            context.stroke();
+            context.restore();
+        }
+        
+        // 绘制表盘圆环
+        function drawTrackingDial(polygon) {
+            context.save();
+            context.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            context.shadowOffsetX = 3,
+            context.shadowOffsetY = 3,
+            context.shadowBlur = 6,
+            context.strokeStyle = TRACKING_RING_STROKING_STYLE;
+            context.beginPath();
+            context.arc(polygon.x, polygon.y, polygon.radius + TRACKING_RING_MARGIN, 0, Math.PI*2, false);
+            context.stroke();
+            context.restore();
+        }
+        
+        // 绘制表盘
+        function drawRotationAnnotations(loc) {
+            drawCentroid(polygonRotating);//绘制表盘中心点圆圈
+            drawCentroidGuidewire(loc, polygonRotating);// 绘制表盘辅助线
+
+            drawTrackingDial(polygonRotating);// 绘制表盘圆环
+            drawDegreeOuterDial(polygonRotating);// 绘制表盘圆环外环
+            context.fillStyle = 'rgba(100, 140, 230, 0.1)';
+            context.fill();
+
+            context.beginPath();
+            drawDegreeOuterDial(polygonRotating);// 绘制表盘圆环外环
+            context.stroke();
+
+            drawDegreeDialTicks(polygonRotating);//绘制刻度线
+            drawDegreeTickDial(polygonRotating);//绘制刻度内环
+            drawDegreeAnnotations(polygonRotating);//绘制表盘数字
+        }
+
+        function redraw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid('lightgray', 10, 10);
+            drawPolygons();
+        }
+
+        // Polygons......................................................
+        // 绘制一个多边形
+        function drawPolygon(polygon, angle) {
+            var tx = polygon.x,
+                ty = polygon.y;
+
+            context.save();
+
+            context.translate(tx, ty);//将坐标中心点移动到多边形的中心点
+
+            if (angle) {
+                context.rotate(angle);//rotate旋转画布的坐标系统
+            }
+
+            polygon.x = 0;
+            polygon.y = 0;
+            
+            polygon.createPath(context);
+            context.stroke();
+
+            if (fillCheckbox.checked) {
+                context.fill();
+            }
+
+            context.restore();
+
+            polygon.x = tx;
+            polygon.y = ty;
+        }
+        // 获取鼠标点击的多边形对象
+        function getSelectedPolygon(loc) {
+            for (var i=0; i < polygons.length; ++i) {
+                var polygon = polygons[i];
+
+                polygon.createPath(context); //绘制当前多边形路径，作为旋转多边形使用
+
+                if (context.isPointInPath(loc.x, loc.y)) {
+                    startDragging(loc);//保存图像，存储鼠标初始坐标
+                    draggingOffsetX = loc.x - polygon.x;
+                    draggingOffsetY = loc.y - polygon.y;
+                    return polygon;
+                }
+            }
+            return undefined;
+        }
+        // 停止选择多边形
+        function stopRotatingPolygon(loc) {
+            // 获取旋转角度
+            angle = Math.atan((loc.y - polygonRotating.y) / (loc.x - polygonRotating.x)) - rotatingLockAngle;
+
+            polygonRotating.startAngle += angle;
+            
+            // 重置当前多边形对象、是否可旋转标志、鼠标初始角度值
+            polygonRotating = undefined;
+            rotatingLockEngaged = false;
+            rotatingLockAngle = 0;
+        }
+        // 开始绘制，保存图像，保存初始坐标
+        function startDragging(loc) {
+            saveDrawingSurface();
+            mousedown.x = loc.x;
+            mousedown.y = loc.y;
+        }
+
+        // Event handlers................................................
+
+        canvas.onmousedown = function (e) {
+            var loc = windowToCanvas(e),
+                angle,
+                radius,
+                trackingRadius;
+
+            e.preventDefault(); // prevent cursor change
+
+            if (editing) {
+                // 编辑模式
+                if (polygonRotating) {
+                    // 获取旋转角度，并将旋转角度存储到多边形对象上
+                    stopRotatingPolygon(loc);
+                    // 重新绘制多有多边形
+                    redraw();
+                }
+
+                polygonRotating = getSelectedPolygon(loc);//获取鼠标单击的多边形对象...
+
+                if (polygonRotating) {
+                    // 绘制表盘
+                    drawRotationAnnotations(loc);
+                    
+                    if (!rotatingLockEngaged) {
+                        rotatingLockEngaged = true;
+                        // 获取鼠标点下时的角度值
+                        rotatingLockAngle = Math.atan((loc.y - polygonRotating.y) / (loc.x - polygonRotating.x));
+                    }
+                }
+            } else {
+                // 开始绘制图像
+                startDragging(loc);
+                dragging = true;
+            }
+        };
+
+        canvas.onmousemove = function (e) {
+            var loc = windowToCanvas(e),
+                radius = Math.sqrt(Math.pow(loc.x - dragging.x, 2) + Math.pow(loc.y - dragging.y, 2)),
+                angle;
+
+
+            e.preventDefault(); // prevent selections
+            
+            // 如果是编辑模块，多边形可旋转
+            if (rotatingLockEngaged) {
+                // 旋转角度为：鼠标当前坐标对应的角度值减去鼠标初始坐标对应的角度值
+                angle = Math.atan((loc.y - polygonRotating.y) / (loc.x - polygonRotating.x)) - rotatingLockAngle;
+
+                redraw();//重新绘制canvas中所有多边形图像
+
+                drawPolygon(polygonRotating, angle);//绘制当前多边形副本，并旋转一定的角度
+                drawRotationAnnotations(loc);//绘制表盘
+
+            } else if (dragging) {
+                // 绘制图像
+                restoreDrawingSurface();//恢复初始图像
+                updateRubberband(loc, sides, startAngle);//绘制新图像
+
+                if (guidewires) {
+                    // 绘制辅助线
+                    drawGuidewires(mousedown.x, mousedown.y);
+                }
+            }
+        };
+
+        canvas.onmouseup = function (e) {
+            var loc = windowToCanvas(e);
+
+            dragging = false;
+
+            if (!editing) {
+                // 如果不是编辑模式，则恢复图像，并将新图像绘制上去
+                restoreDrawingSurface();
+                updateRubberband(loc);
+            }
+        };
+
+        eraseAllButton.onclick = function (e) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid('lightgray', 10, 10);
+            saveDrawingSurface(); 
+        };
+
+        strokeStyleSelect.onchange = function (e) {
+            context.strokeStyle = strokeStyleSelect.value;
+        };
+
+        fillStyleSelect.onchange = function (e) {
+            context.fillStyle = fillStyleSelect.value;
+        };
+        
+        // 开始编辑
+        function startEditing() {
+            canvas.style.cursor = 'pointer';
+            editing = true;
+        }
+        // 停止编辑
+        function stopEditing() {
+            canvas.style.cursor = 'crosshair';
+            editing = false;
+            polygonRotating = undefined;
+            rotatingLockEngaged = false;
+            rotatingLockAngle = 0;
+            context.clearRect(0, 0, canvas.width, canvas.height);//清空canvas画布
+            drawGrid('lightgray', 10, 10);//绘制网格
+            drawPolygons();//绘制多边形
+        }
+        
+        // 是否可编辑
+        editCheckbox.onchange = function (e) {
+            if (editCheckbox.checked) {
+                startEditing();
+            } else {
+                stopEditing();
+            }
+        };
+
+        // Initialization................................................
+
+        context.strokeStyle = strokeStyleSelect.value;
+        context.fillStyle = fillStyleSelect.value;
+
+        drawGrid('lightgray', 10, 10);
+
+        if (navigator.userAgent.indexOf('Opera') === -1)
+        context.shadowColor = 'rgba(0, 0, 0, 0.4)';
+
+        context.shadowOffsetX = 2;
+        context.shadowOffsetY = 2;
+        context.shadowBlur = 4;
+
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+      </script>
+    </body>
+  </html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>墨镜滤镜，Web Worker</title>
+    <style>
+        body {
+            background: rgba(100, 145, 250, 0.3);
+        }
+        #canvas {
+            margin-left: 20px;
+            margin-right: 0;
+            margin-bottom: 20px;
+            border: thin solid #aaaaaa;
+            cursor: crosshair;
+            padding: 0;
+        }
+        #controls {
+            margin: 20px 0px 20px 20px;
+        }
+        a {
+            font: 18px Times Roman;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }
+    </style>
+</head>
+<body>
+   <div id='controls'>
+        <input type='button' id='sunglassButton' value='Sunglasses 墨镜'/>
+    </div>
+      
+    <canvas id='canvas' width='800' height='520'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>          
+            <li>
+              计算滤镜效果时需要获取图像数据的宽度，如果滤镜需要根据一个简单的等式来计算某个像素值，而该等式要用到当前像素右方以及下一行对应的像素值，那么必须知道图像的宽度，才能计算出下一行的那个像素在数组中的位置。
+            </li>  
+            <li>
+                代码中使用‘边缘检测’的技术使得位于颜色边界处的像素灰度更浓。这里说的颜色边界是指像素颜色值发生突变的地方。实现边缘检测技术所用的算法需要计算当前像素值，以及其右方与下方像素的值。
+            </li>
+            <li>
+                用工作线程处理图像，将任务交由工作线程（Web Worker）来做
+            </li>
+        </ul>
+    </div>
+    <script>
+        var image = new Image(),
+            canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            sunglassButton = document.getElementById('sunglassButton'),
+            sunglassesOn = false,
+            sunglassFilter = new Worker('sunglassFilter.js');// Web Worker
+
+        // 墨镜算法
+        function putSunglassesOn() {
+            // 调用线程
+            sunglassFilter.postMessage(context.getImageData(0, 0, canvas.width, canvas.height));
+
+            // 接收线程发回来的消息
+            sunglassFilter.onmessage = function (event) {
+                context.putImageData(event.data, 0, 0);
+            };
+        }
+
+        // 绘制初始图像
+        function drawOriginalImage() {
+            context.drawImage(image, 0, 0,
+                image.width, image.height, 0, 0,
+                canvas.width, canvas.height);
+        }
+
+        // 按钮点击事件
+        sunglassButton.onclick = function() {
+            if (sunglassesOn) {
+                sunglassButton.value = 'Sunglasses 墨镜';
+                drawOriginalImage();
+                sunglassesOn = false;
+            } else {
+                sunglassButton.value = 'Original picture 原始';
+                putSunglassesOn();
+                sunglassesOn = true;
+            }
+        };
+
+        image.src = 'imgs/countrypath.jpg';
+        image.onload = function() {
+            drawOriginalImage();
+        };
+    </script>
+</body>
+</html>

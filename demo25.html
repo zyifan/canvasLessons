@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>扩张canvas的canvasRenderingContext2D对象实现虚线绘制</title>
+    <style>
+        body{
+            background:#eee;
+        }
+        #canvas{
+            background: #fff;
+            cursor:pointer;
+            margin-left:10px;
+            margin-top:10px;
+            box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -webkit-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow:4px 4px 8px rgba(0,0,0,0.5);
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="600" height="600">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li><span>该示例所用到的技术有很多叫法，例如“元编程”（metaprogramming）、“猴子补丁”（monkey patching）及“方法覆盖”等，意思是先获取一个指向某对象的方法的引用，然后重新定义那个方法，在定义新方法的时候有选择的调用原有方法</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            moveToFunction = CanvasRenderingContext2D.prototype.moveTo;
+        CanvasRenderingContext2D.prototype.lastMoveToLocation = {};
+
+        CanvasRenderingContext2D.prototype.moveTo = function(x,y){
+            moveToFunction.apply(context,[x,y]);
+            this.lastMoveToLocation.x = x;
+            this.lastMoveToLocation.y = y;
+        }
+
+        CanvasRenderingContext2D.prototype.dashedLineTo = function(x,y,dashLength){
+            // 虚线线段长度
+            dashLength = dashLength === undefined ? 5 : dashLength;
+
+            var startX = this.lastMoveToLocation.x;
+            var startY = this.lastMoveToLocation.y;
+
+            var deltaX = x- startX;
+            var deltaY = y- startY;
+
+            var numDashes = Math.floor(Math.sqrt(deltaX*deltaX + deltaY*deltaY)/dashLength);
+            for(var i=0; i< numDashes; ++i){
+                context[i%2 === 0 ? 'moveTo':'lineTo'](startX+(deltaX/numDashes)*i, startY+(deltaY/numDashes)*i);
+            }
+
+            this.moveTo(x,y);
+        }
+
+        context.lineWidth = 3;
+        context.strokeStyle = 'blue';
+        context.moveTo(20,20);
+        context.dashedLineTo(context.canvas.width-20,20); 
+        context.dashedLineTo(context.canvas.width-20,context.canvas.height-20);       
+        context.dashedLineTo(20,context.canvas.height-20);
+        context.dashedLineTo(20,20);
+        context.dashedLineTo(context.canvas.width-20,context.canvas.height-20);
+        context.stroke();
+        
+    </script>
+</body>
+</html>

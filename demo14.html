@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas图案填充</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            /* border:thin solid #aaa; */
+        }     
+        .info{
+            position:absolute;
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="450" height="275">
+        canvas not support
+    </canvas>   
+
+    <div id="radios">
+        <input type="radio" id="repeatRadio" name='patternRadio' checked>repeat
+        <input type="radio" id="repeatXRadio" name='patternRadio'>repeat-x
+        <input type="radio" id="repeatYRadio" name='patternRadio'>repeat-y
+        <input type="radio" id="noRepeatRadio" name='patternRadio'>no-repeat
+    </div>
+
+    <div class="info">
+        <ul>
+            <li><span>context.createPattern(HtmlImageElement|HtmlCanvasElement|HtmlVideoElement image, DOMString repetition)，创建一个可以用来在canvas之中对图形和文本进行描边与填充图案。</span></li>
+            <li><span>该方法的第一个参数指定了图案所用的图像，它可以是image元素，canvas元素或者video元素。第2个参数告诉浏览器，在对图形进行描边或填充时，应该如何重复该图案，这个参数的有效取值是repeat、repeat-x、repeat-y及no-repeat</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            repeatRadio = document.getElementById('repeatRadio'),
+            repeatXRadio = document.getElementById('repeatXRadio'),
+            repeatYRadio = document.getElementById('repeatYRadio'),
+            noRepeatRadio = document.getElementById('noRepeatRadio'),
+            image = new Image();
+
+        function fillCanvasWithPattern(repeatString){
+            var pattern = context.createPattern(image,repeatString);
+            context.clearRect(0,0,canvas.width,canvas.height);
+            context.fillStyle = pattern;
+            context.fillRect(0,0,canvas.width,canvas.height);
+            context.fill();
+        }
+
+        // Event handlers.....
+        repeatRadio.onclick = function(){
+            fillCanvasWithPattern('repeat');
+        }
+        repeatXRadio.onclick = function(){
+            fillCanvasWithPattern('repeat-x');
+        }
+        repeatYRadio.onclick = function(){
+            fillCanvasWithPattern('repeat-y');
+        }
+        noRepeatRadio.onclick = function(){
+            fillCanvasWithPattern('no-repeat');
+        }
+
+        // Initialization....
+        image.src = './imgs/tamkero.png';
+        image.onload = function(e){
+            fillCanvasWithPattern('repeat');
+        }
+       
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>cavas test</title>
+    <style>
+        @font-face {
+            font-family: fzltt;
+            src: url('fzltt.ttf');
+        }
+
+        .tools {
+            margin: 20px 0;
+            line-height: 40px;
+        }
+
+        #canvasContainer,
+        #imgContainer {
+            width: 413px;
+            height: 413px;
+            background-color: antiquewhite;
+            padding: 50px;
+            float: left;
+        }
+
+        #canvasContainer {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #imgContainer {
+            background-color: cadetblue;
+            margin-left: 20px;
+        }
+
+        #canvasContainer img {
+            background-color: none;
+            border: 1px solid red;
+        }
+
+        #canvas {
+            background-color: none;
+            border: 1px solid red;
+        }
+
+        #cTxt {
+            position: absolute;
+            border: 1px dashed deepskyblue;
+            cursor: pointer;
+            left: 50px;
+            top: 50px;
+            moz-user-select: -moz-none;
+            -moz-user-select: none;
+            -o-user-select: none;
+            -khtml-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 操作按钮 -->
+    <div class="tools">
+        图片文本：
+        <input id="txt" type="text" placeholder="如：白日依山尽" value="白日依山尽">
+        <br> 字体颜色：
+        <input id="txtColor" placeholder="如：#000、red" type="text" value="#000000" />
+        <br> 字体大小：
+        <input id="txtSize" placeholder="如：48px" type="text" value="48px" />
+        <br> 字体family：
+        <select id="txtFamily">
+            <option value="fzltt" selected>方正兰亭特黑简体</option>
+            <option value="SimSun">宋体</option>
+            <option value="SimHei">黑体</option>
+            <option value="Microsoft JhengHei">微软雅黑</option>
+            <option value="Microsoft JhengHei">微软正黑体</option>
+        </select>
+
+        <button id="getImgBtn">预览图片</button>
+        <br> 图片名称：
+        <input id="imgName" placeholder="如：图片" type="text" value="download" />
+        <button id="download">下载图片(png)</button>
+    </div>
+    <!-- 图片 -->
+    <div>
+        <div id="canvasContainer">
+            <img src="./bg.png" alt="img" width="413px">
+            <div id="cTxt"></div>
+        </div>
+        <div id="imgContainer">
+            <canvas id="canvas" width="413" height="413">
+                您的浏览器不支持canvas
+            </canvas>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <script>
+        let canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            canvasContainer = document.getElementById('canvasContainer'),
+            txt = document.getElementById('txt'),
+            cTxt = document.getElementById('cTxt'),
+            txtColor = document.getElementById('txtColor'),
+            txtSize = document.getElementById('txtSize'),
+            imgName = document.getElementById('imgName'),
+            txtFamily = document.getElementById('txtFamily'),
+            imgData = null;
+
+        let img = new Image();
+        img.src = './bg.png';
+        img.onload = function () {
+            context.drawImage(img, 0, 0)
+        };
+
+        function getBounding() {
+            let bound = {
+                minLeft: 50,
+                minTop: 50,
+                maxLeft: 50 + canvasContainer.offsetWidth - cTxt.offsetWidth - 100,
+                maxTop: 50 + canvasContainer.offsetHeight - cTxt.offsetHeight - 100
+            }
+            return bound;
+        }
+
+        // events....
+
+        // 监听文本输入
+        document.getElementById('txt').addEventListener('input', function () {
+            cTxt.innerText = document.getElementById('txt').value;
+        }, false)
+
+        // 文本颜色
+        txtColor.addEventListener('change', function () {
+            cTxt.style.color = txtColor.value;
+        }, false)
+
+        //字体大小
+        txtSize.addEventListener('change', function () {
+            cTxt.style.fontSize = txtSize.value;
+        }, false)
+
+        //字体样式
+        txtFamily.addEventListener('change', function () {
+            cTxt.style.fontFamily = txtFamily.value;
+        }, false)
+
+        // 文本移动事件
+        let mousedown = {
+                x: 0,
+                y: 0
+            },
+            lastPos = {
+                left: 50,
+                top: 50
+            },
+            dragging = false;
+
+        let boxBound = null;
+        cTxt.onmousedown = function (e) {
+            mousedown.x = e.clientX;
+            mousedown.y = e.clientY;
+            lastPos.left = cTxt.offsetLeft;
+            lastPos.top = cTxt.offsetTop;
+            dragging = true;
+            boxBound = getBounding();
+        }
+        cTxt.onmousemove = function (e) {
+            let dx = e.clientX - mousedown.x,
+                dy = e.clientY - mousedown.y;
+
+            if (dragging) {
+                let endX = lastPos.left + dx,
+                    endY = lastPos.top + dy;
+
+                if (endX < boxBound.minLeft) {
+                    endX = 50;
+                }
+                if (endY < boxBound.minTop) {
+                    endY = 50;
+                }
+                if (endX > boxBound.maxLeft) {
+                    endX = boxBound.maxLeft;
+                }
+                if (endY > boxBound.maxTop) {
+                    endY = boxBound.maxTop;
+                }
+
+                cTxt.style.left = endX + 'px';
+                cTxt.style.top = endY + 'px';
+            }
+        }
+        cTxt.onmouseup = function (e) {
+            dragging = false;
+        }
+        canvasContainer.onmouseout = function (e) {
+            dragging = false;
+        }
+
+        // 预览图片
+        document.getElementById('getImgBtn').addEventListener('click', function () {
+            // 绘制
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height)
+            context.drawImage(img, 0, 0)
+            let size = txtSize.value || '48px';
+            let family = txtFamily.value || 'fzltt';
+            context.font = size + ' ' + family;
+            context.fillStyle = txtColor.value || '#000';
+            context.fillText(cTxt.innerText, cTxt.offsetLeft-50, cTxt.offsetTop);
+        }, false)
+
+        // 下载图片
+        document.getElementById('download').onclick = function () {
+            // 绘制
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height)
+            context.drawImage(img, 0, 0)
+            let size = txtSize.value || '48px';
+            let family = txtFamily.value || 'fzltt';
+            context.font = size + ' ' + family;
+            context.fillStyle = txtColor.value || '#000';
+            context.fillText(cTxt.innerText, cTxt.offsetLeft-50, cTxt.offsetTop);
+
+            imgData = canvas.toDataURL("image/png");
+            let a = document.createElement('a');
+            a.href = imgData;
+            a.download = imgName.value || 'download'
+            a.click();
+        }
+
+        // Initial....  
+        cTxt.style.fontSize = txtSize.value || '48px';
+        cTxt.style.color = txtColor.value || '#000';
+        cTxt.style.fontFamily = txtFamily.value || 'fzltt';
+        cTxt.innerText = txt.value;
+    </script>
+</body>
+
+</html>

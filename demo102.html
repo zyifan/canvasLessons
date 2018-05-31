@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<head>
+  <title>Rounded Rectangles</title>
+
+  <style>
+    body {
+      background: bisque;
+    }
+
+    #roundedRectangleDiv {
+      position: absolute;
+      left: 50px;
+      top: 70px;
+      width: 450px;
+      height: 80px;
+    }
+
+    .range {
+      vertical-align: -5px;
+    }
+
+    #controls {
+      color: blue;
+      margin-top: 20px;
+      margin-left: 65px;
+    }
+
+    #widthRangeDiv {
+      margin-right: 30px;
+      display: inline;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 宽、高调整控件 -->
+  <div id='controls'>
+    <div id='widthRangeDiv'>
+      Width:
+      <input id='widthRange' class='range' type='range' minimum='5' maximum='100' />
+    </div>
+
+    Height:
+    <input id='heightRange' class='range' type='range' minimum='5' maximum='100' />
+  </div>
+
+  <div id='roundedRectangleDiv'></div>
+
+  <script src='./roundedRectangle.js'></script>
+  <script>
+    var widthRange = document.getElementById('widthRange'),
+      heightRange = document.getElementById('heightRange'),
+
+      roundedRectangle = new COREHTML5.RoundedRectangle(
+        'rgba(0, 0, 0, 0.2)', 'darkgoldenrod',
+        widthRange.value, heightRange.value);
+
+    function resize() {
+      roundedRectangle.horizontalSizePercent = widthRange.value / 100;
+      roundedRectangle.verticalSizePercent = heightRange.value / 100;
+
+      roundedRectangle.resize(roundedRectangle.domElement.offsetWidth,
+        roundedRectangle.domElement.offsetHeight);
+
+      roundedRectangle.erase();
+      roundedRectangle.draw();
+    }
+
+    widthRange.onchange = resize;
+    heightRange.onchange = resize;
+
+    roundedRectangle.appendTo(document.getElementById('roundedRectangleDiv'));
+    roundedRectangle.draw();
+  </script>
+</body>
+
+</html>

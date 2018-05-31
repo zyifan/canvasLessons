@@ -1,0 +1,218 @@
+<html>
+
+<head>
+  <title>Pendulum 钟摆</title>
+
+  <style>
+    #canvas {
+      margin-left: 20px;
+      margin-top: 20px;
+      background: skyblue;
+      border: thin solid lightgray;
+      -webkit-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas' width='450' height='450'>
+    Canvas not supported
+  </canvas>
+
+  <script src='requestNextAnimationFrame.js'></script>
+  <script src='sprites.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+      startTime = undefined,
+
+      PIVOT_Y = 20, //枢轴y坐标
+      PIVOT_RADIUS = 7, //枢轴半径
+      WEIGHT_RADIUS = 25, //重球半径
+      INITIAL_ANGLE = Math.PI / 5, //初始角度35°
+      ROD_LENGTH_IN_PIXELS = 300, //杆长度
+
+      // Pendulum painter...........................................
+
+      pendulumPainter = {
+        PIVOT_FILL_STYLE: 'rgba(0,0,0,0.2)', //枢轴填充颜色
+        WEIGHT_SHADOW_COLOR: 'rgb(0,0,0)',//小球阴影颜色
+        PIVOT_SHADOW_COLOR: 'rgb(255,255,0)',//枢轴阴影颜色
+        STROKE_COLOR: 'rgb(100,100,195)',
+
+        paint: function (pendulum, context) {
+          this.drawPivot(pendulum); //绘制枢轴
+          this.drawRod(pendulum);//绘制拉杆
+          this.drawWeight(pendulum, context);//绘制小球
+        },
+
+        //绘制小球
+        drawWeight: function (pendulum, context) {
+          context.save();
+          context.beginPath();
+          context.arc(pendulum.weightX, pendulum.weightY, pendulum.weightRadius, 0, Math.PI * 2, false);
+          context.clip();
+
+          context.shadowColor = this.WEIGHT_SHADOW_COLOR;
+          context.shadowOffsetX = -4;
+          context.shadowOffsetY = -4;
+          context.shadowBlur = 8;
+
+          context.lineWidth = 2;
+          context.strokeStyle = this.STROKE_COLOR;
+          context.stroke();
+
+          context.beginPath();
+          context.arc(pendulum.weightX, pendulum.weightY, pendulum.weightRadius / 2, 0, Math.PI * 2, false);
+          context.clip();
+
+          context.shadowColor = this.PIVOT_SHADOW_COLOR;
+          context.shadowOffsetX = -4;
+          context.shadowOffsetY = -4;
+          context.shadowBlur = 8;
+          context.stroke();
+
+          context.restore();
+        },
+
+        //绘制枢轴
+        drawPivot: function (pendulum) {
+          context.save();
+          context.beginPath();
+          context.shadowColor = undefined;
+          context.shadowBlur = undefined;
+          context.shadowOffsetX = 0;
+          context.shadowOffsetY = 0;
+          context.fillStyle = 'white';
+          context.arc(pendulum.x + pendulum.pivotRadius, pendulum.y, pendulum.pivotRadius / 2, 0, Math.PI * 2, false);
+          context.fill();
+          context.stroke();
+
+          context.beginPath();
+          context.fillStyle = this.PIVOT_FILL_STYLE;
+          context.arc(pendulum.x + pendulum.pivotRadius, pendulum.y, pendulum.pivotRadius, 0, Math.PI * 2, false);
+          context.fill();
+          context.stroke();
+          context.restore();
+        },
+
+        //绘制拉杆
+        drawRod: function (pendulum) {
+          context.beginPath();
+
+          context.moveTo(
+            pendulum.x + pendulum.pivotRadius +
+            pendulum.pivotRadius * Math.sin(pendulum.angle),
+
+            pendulum.y + pendulum.pivotRadius * Math.cos(pendulum.angle));
+
+          context.lineTo(
+            pendulum.weightX - pendulum.weightRadius * Math.sin(pendulum.angle),
+            pendulum.weightY - pendulum.weightRadius * Math.cos(pendulum.angle));
+
+          context.stroke();
+        }
+      },
+
+      // Swing behavior.............................................
+
+      swing = {
+        GRAVITY_FORCE: 32, // 32 ft/s/s,
+        ROD_LENGTH: 0.8,   // 0.8 ft  拉杆长度
+
+        execute: function (pendulum, context, time) {
+          var elapsedTime = (time - startTime) / 1000;
+
+          // 获取摆钟角度
+          pendulum.angle = pendulum.initialAngle * Math.cos(
+            Math.sqrt(this.GRAVITY_FORCE / this.ROD_LENGTH) * elapsedTime);
+
+          // 获取小球
+          pendulum.weightX = pendulum.x +
+            Math.sin(pendulum.angle) * pendulum.rodLength;
+
+          pendulum.weightY = pendulum.y +
+            Math.cos(pendulum.angle) * pendulum.rodLength;
+        }
+      },
+
+      // Pendulum...................................................
+      // 摆钟精灵
+      pendulum = new Sprite('pendulum', pendulumPainter, [swing]);
+
+    // Animation Loop................................................
+
+    function animate(time) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      drawGrid('lightgray', 10, 10);
+      pendulum.update(context, time);
+      pendulum.paint(context);
+      window.requestNextAnimationFrame(animate);
+    }
+
+    function drawGrid(color, stepx, stepy) {
+      context.save()
+
+      context.shadowColor = undefined;
+      context.shadowBlur = 0;
+      context.shadowOffsetX = 0;
+      context.shadowOffsetY = 0;
+
+      context.strokeStyle = color;
+      context.fillStyle = '#ffffff';
+      context.shadowOffsetX = 0;
+      context.shadowOffsetY = 0;
+
+      context.strokeStyle = color;
+      context.fillStyle = '#ffffff';
+      context.lineWidth = 0.5;
+      context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+
+      for (var i = stepx + 0.5; i < context.canvas.width; i += stepx) {
+        context.beginPath();
+        context.moveTo(i, 0);
+        context.lineTo(i, context.canvas.height);
+        context.stroke();
+      }
+
+      for (var i = stepy + 0.5; i < context.canvas.height; i += stepy) {
+        context.beginPath();
+        context.moveTo(0, i);
+        context.lineTo(context.canvas.width, i);
+        context.stroke();
+      }
+
+      context.restore();
+    }
+
+    // Initialization................................................
+
+    pendulum.x = canvas.width / 2;
+    pendulum.y = PIVOT_Y;
+    pendulum.weightRadius = WEIGHT_RADIUS;
+    pendulum.pivotRadius = PIVOT_RADIUS;
+    pendulum.initialAngle = INITIAL_ANGLE;
+    pendulum.angle = INITIAL_ANGLE;
+    pendulum.rodLength = ROD_LENGTH_IN_PIXELS;
+
+    context.lineWidth = 0.5;
+    context.strokeStyle = 'rgba(0,0,0,0.5)';
+
+    if (navigator.userAgent.indexOf('Opera') === -1)
+      context.shadowColor = 'rgba(0,0,0,0.5)';
+
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.shadowBlur = 4;
+    context.stroke();
+
+    startTime = + new Date();
+    animate(startTime);
+
+    drawGrid('lightgray', 10, 10);
+  </script>
+</body>
+
+</html>

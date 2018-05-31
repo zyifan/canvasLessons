@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title> canvas 手写毛笔字效果 </title>
+    <style type="text/css">
+        #canvasId {
+            background-color: #FFFFcc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvasId" width="700" height="500"></canvas>
+    <br />
+    <!-- 擦除canvas面板 -->
+    <input type="button" value="clear" onclick="hw.clear();" />
+
+    <script type="text/javascript">
+        function Handwriting(id) {
+            this.canvas = document.getElementById(id);
+            this.ctx = this.canvas.getContext("2d");
+            this.ctx.fillStyle = "rgba(0,0,0,0.25)";
+            var _this = this;
+            this.canvas.onmousedown = function (e) {
+                _this.downEvent(e)
+            };
+            this.canvas.onmousemove = function (e) {
+                _this.moveEvent(e)
+            };
+            this.canvas.onmouseup = function (e) {
+                _this.upEvent(e)
+            };
+            this.canvas.onmouseout = function (e) {
+                _this.upEvent(e)
+            };
+            this.moveFlag = false;
+            this.upof = {}; //存储鼠标初始坐标
+            this.radius = 0; //半径
+            this.has = [];
+            this.lineMax = 30;//线最大宽度（半径的2倍）
+            this.lineMin = 3;//线最小宽度
+            this.linePressure = 1;//线倍数
+            this.smoothness = 80;//平滑度
+        }
+
+        // 清除canvas面板
+        Handwriting.prototype.clear = function () {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+        // 鼠标按下事件
+        Handwriting.prototype.downEvent = function (e) {
+            this.moveFlag = true;
+            this.has = [];
+            this.upof = this.getXY(e);
+        }
+        // 鼠标移动事件
+        Handwriting.prototype.moveEvent = function (e) {
+            if (!this.moveFlag)
+                return;
+            // 实时获取鼠标坐标
+            var of = this.getXY(e);
+            // 鼠标初始坐标
+            var up = this.upof;
+            // 存储初始半径
+            var ur = this.radius;
+
+            // 在移动的过程中，不断保存鼠标移动距离、当前时间
+            this.has.unshift({
+                time: new Date().getTime(),
+                dis: this.distance(up, of )
+            });
+
+            // 获取移动距离、移动时间总和
+            var dis = 0;
+            var time = 0;
+            for (var n = 0; n < this.has.length - 1; n++) {
+                dis += this.has[n].dis;
+                time += this.has[n].time - this.has[n + 1].time;
+                if (dis > this.smoothness)
+                    break;
+            }
+            
+            // 获取线宽度
+            var or = Math.min(time / dis * this.linePressure + this.lineMin, this.lineMax) / 2;
+            // 根据鼠标移动距离、时间获取半径
+            this.radius = or;
+
+            // 保存鼠标坐标
+            this.upof = of ;
+            
+            // 如果移动距离太短
+            if (this.has.length <= 4)
+                return;
+            
+            // 根据实时移动距离，获取一个随机长度
+            var len = Math.round(this.has[0].dis / 2) + 1;
+
+            for (var i = 0; i < len; i++) {
+                // 根据鼠标/半径的当前、初始值，获取x、y、r的大小
+                var x = up.x + ( of .x - up.x) / len * i;
+                var y = up.y + ( of .y - up.y) / len * i;
+                var r = ur + (or - ur) / len * i;
+
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, r, 0, 2 * Math.PI, true);
+                this.ctx.fill();
+            }
+        }
+        // 结束绘制
+        Handwriting.prototype.upEvent = function (e) {
+            this.moveFlag = false;
+        }
+
+        // 获取鼠标坐标
+        Handwriting.prototype.getXY = function (e) {
+            return {
+                x: e.clientX - this.canvas.offsetLeft + (document.body.scrollLeft || document.documentElement.scrollLeft),
+                y: e.clientY - this.canvas.offsetTop + (document.body.scrollTop || document.documentElement.scrollTop)
+            }
+        }
+        // 获取鼠标移动距离
+        Handwriting.prototype.distance = function (a, b) {
+            var x = b.x - a.x,
+                y = b.y - a.y;
+            return Math.sqrt(x * x + y * y);
+        }
+
+        var hw = new Handwriting("canvasId");
+
+        hw.lineMax = 40; //线最大宽度
+        hw.lineMin = 5; //线最小宽度
+        hw.linePressure = 2.5; //线倍数
+        hw.smoothness = 100; //平滑度
+    </script>
+</body>
+
+</html>

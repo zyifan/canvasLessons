@@ -1,0 +1,71 @@
+<head>
+     <title>基于时间的运动Time-based Motion（1s运行60帧）</title>
+
+      <style> 
+         body {
+            background: #dddddd;
+            width: 770px;
+         }
+         .canvas {
+            background: #ffffff;
+            -webkit-box-shadow: rgba(0,0,0,0.5) 5px 5px 20px;
+            -moz-box-shadow: rgba(0,0,0,0.5) 5px 5px 20px;
+            box-shadow: rgba(0,0,0,0.5) 5px 5px 20px;
+            margin-bottom: 10px;
+         }
+         
+         #canvas {
+            position: absolute;
+            left: 0px;
+            top: 20px;
+            margin: 20px;
+            border: thin inset rgba(100,150,230,0.5);
+         }
+         .floatingControls {
+            font-family: Droid Sans, Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: slateblue;
+            padding: 10px;
+            margin: 10px;
+            width: 20em;
+            background: rgba(255, 255, 255, 0.3);
+            border: thin solid rgba(0, 0, 0, 0.6);
+            -webkit-box-shadow: rgba(0,0,0,0.5) 5px 5px 20px;
+            -moz-box-shadow: rgba(0,0,0,0.5) 5px 5px 20px;
+            box-shadow: rgba(0,0,0,0.5) 5px 5px 20px;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+         }
+         
+         #controls {
+            margin-top: 10px;
+            margin-left: 15px;
+         }
+      </style>
+   </head>
+
+  <body>
+    <div id='controls'>
+      <div class='floatingControls' id='timeBasedMotionControls'>
+         <input type='checkbox' id='timeBasedMotionCheckbox'/>Time-based Motion&nbsp;基于时间的运动
+      </div>
+
+      <input type='button' id='topAnimateButton' value='Animate' style='font-size: 0.75em; position: absolute; left: 670px; top: 70px; z-index: 2;'/>
+            
+      <input type='button' id='bottomAnimateButton' value='Animate' style='font-size: 0.75em; position: absolute; left: 670px; top: 380px; z-index: 2;'/>
+
+    </div>
+
+    <canvas id='topCanvas' class='canvas' width='750' height='300'>
+      Canvas not supported
+    </canvas>
+
+    <canvas id='bottomCanvas' class='canvas' width='750' height='300'>
+      Canvas not supported
+    </canvas>
+
+    <script src='top.js'></script>
+    <script src='bottom.js'></script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>canvas元素状态保存和恢复(画网格线)</title>
+    <style>
+        body{
+            background:#ddd;
+        }
+        #canvas{
+            margin:20px;
+            padding:20px;
+            background:#fff;
+            border:thin inset #aaa;
+            width:600px;
+            height:300px;
+        }     
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+    </style>
+</head>
+<body>
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas">
+        canvas not support
+    </canvas>   
+
+    <!-- <div class="info">
+        <ul>
+            <li><span>通过canvas的属性width、height设置时，实际上是改变了该元素本身的大小和元素绘图表面的大小。</span></li>
+            <li><span>通过css设置canvas元素的大小，只会改变元素本身的大小，而不会影响绘图表面，这是，canvas和绘图表面默认都是300*150大小，使用css设置元素大小为600*300时，绘图表面的大小仍然是300*150像素，这时浏览器会对绘图表面进行缩放，使其符合元素的大小</span></li>
+        </ul>
+    </div> -->
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');
+        context.font = '38pt Arial';
+        context.fillStyle = 'cornflowerblue';
+        context.strokeStyle = 'blue';
+        context.fillText('Hello Canvas',canvas.width/2-150,canvas.height/2+15);
+        context.strokeText('Hello Canvas',canvas.width/2-150,canvas.height/2+15);
+
+        console.profileEnd();
+     
+
+        function drawGrid(context,strokeStyle,fillStyle){
+            context.save()//保存当前canvas状态
+            context.strokeStyle = strokeStyle;
+            context.fillStyle = fillStyle;
+
+            //绘制
+            context.restore();//重新恢复之前保存的canvas状态
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<head>
+  <title>Bounding Box Collision Detection 外接矩形碰撞检测</title>
+
+  <style>
+    body {
+      background: #eeeeee;
+    }
+
+    #thrustersCanvas {
+      background: rgba(255, 255, 255, 0.4);
+      position: absolute;
+      left: 135px;
+      top: 250px;
+      border: thin solid rbga(0, 0, 0, 1.0);
+      -webkit-box-shadow: rgba(100, 140, 230, 0.5) 4px 4px 6px;
+      -moz-box-shadow: rgba(100, 140, 230, 0.5) 4px 4px 6px;
+      box-shadow: rgba(100, 140, 230, 0.5) 4px 4px 6px;
+    }
+
+    #canvas {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      margin-top: 10px;
+      margin-left: 25px;
+      background: rgba(135, 206, 250, 1.0);
+      border: thin solid rbga(0, 0, 0, 1.0);
+      -webkit-box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+      -moz-box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+      box-shadow: rgba(0, 0, 0, 0.5) 4px 4px 6px;
+    }
+
+    input {
+      margin-left: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="350" height="500">
+    Canvas not supported
+  </canvas>
+
+  <div id='thrustersDiv'>
+    <canvas id='thrustersCanvas' width='110' height='50'>
+      canvas not supported
+    </canvas>
+  </div>
+
+  <script src='stopwatch.js'></script>
+  <script src='animationTimer.js'></script>
+  <script src='sprites.js'></script>
+  <script src='requestNextAnimationFrame.js'></script>
+  <script>
+    var canvas = document.getElementById('canvas'),
+      context = canvas.getContext('2d'),
+
+      GRAVITY_FORCE = 9.81,  // 9.81 m/s / s 中立加速度
+      CANVAS_HEIGHT_IN_METERS = 10, // 10 meters 实际长度与像素比例
+      pixelsPerMeter = canvas.height / CANVAS_HEIGHT_IN_METERS; // 一米多少像素
+
+    thrustersCanvas = document.getElementById('thrustersCanvas'),
+      thrustersContext = thrustersCanvas.getContext('2d'),
+
+      lastTime = 0,         // Time of last animation frame
+      fps = 60,             // Frames/second
+
+      // AnimationTimers....................................................
+
+      PUSH_ANIMATION_DURATION = 800, //动画最大耗时duration
+      pushAnimationTimer = new AnimationTimer(PUSH_ANIMATION_DURATION),
+      fallingAnimationTimer = new AnimationTimer(),
+
+      // Ledge information..............................................
+      // 拖杆位置信息
+      ledgeInfos = [
+        { left: 40, top: 75, width: 50, height: 12, color: 'rgb(255,255,0)' },
+        { left: 220, top: 455, width: 50, height: 12, color: 'rgb(100,80,205)' }
+      ],
+
+      ledges = [ledgeInfos.length],
+
+      // Ball behaviors................................................
+
+      LEFT = 1,
+      RIGHT = 2,
+      arrow = undefined,
+
+      BALL_RADIUS = 18,
+      // 小球初始坐标位置
+      BALL_INITIAL_LOCATION = {
+        top: ledgeInfos[0].top - BALL_RADIUS * 2, 
+        left: ledgeInfos[0].left + ledgeInfos[0].width / 2 - BALL_RADIUS
+      },
+
+      fallOnLedge = {
+        // 边界判断，判断小球是否在ledge上
+        ballWillHitLedge: function (ledge) {
+          var ballRight = ball.left + ball.width,
+            ledgeRight = ledge.left + ledge.width,
+            ballBottom = ball.top + ball.height,
+            nextBallBottomEstimate = ballBottom + ball.velocityY / fps;
+
+          return ballRight > ledge.left &&
+            ball.left < ledgeRight &&
+            ballBottom < ledge.top &&
+            nextBallBottomEstimate > ledge.top;
+        },
+
+        execute: function (sprite, context, time) {
+          if (isBallFalling()) {
+            ledges.forEach(function (ledge) {
+              // 边界判断，判断小球是否在ledge上，如果在的话则停止小球运动
+              if (fallOnLedge.ballWillHitLedge(ledge)) {  // this var. is DOMWindow
+                fallingAnimationTimer.stop();
+                pushAnimationTimer.stop();
+
+                sprite.top = ledge.top - sprite.height;
+                sprite.velocityY = 0;
+              }
+            });
+          }
+        }
+      },
+
+      moveBall = {
+        execute: function (sprite, context, time) {
+          if (pushAnimationTimer.isRunning()) {
+            if (arrow === LEFT) ball.left -= ball.velocityX / fps;
+            else ball.left += ball.velocityX / fps;
+            
+            // 获取紧挨小球下方的托杆对象
+            if (getLedgeUnderBall()) {
+              // 如果小球停在了杆上
+              if (pushAnimationTimer.getElapsedTime() > 800) {
+                pushAnimationTimer.stop();
+              }
+              if (pushAnimationTimer.getElapsedTime() > 200) {
+                pushAnimationTimer.stop();
+              }
+            } else if (!isBallFalling()) {
+              startFalling();//开始下降
+            }
+          }
+
+          if (isBallFalling()) {
+            ball.velocityY = GRAVITY_FORCE *
+              (fallingAnimationTimer.getElapsedTime() / 1000) * pixelsPerMeter;
+
+            ball.top += ball.velocityY / fps;
+
+            if (ball.top > canvas.height) {
+              stopFalling();
+            }
+          }
+        }
+      },
+
+      // Ball sprite...................................................
+
+      ball = new Sprite('ball',
+        {
+          paint: function (sprite, context) {
+            context.save();
+            context.beginPath();
+            context.arc(sprite.left + sprite.width / 2,
+              sprite.top + sprite.height / 2,
+              BALL_RADIUS, 0, Math.PI * 2, false);
+            context.clip();
+
+            context.shadowColor = 'rgba(0,0,255,0.7)';
+            context.shadowOffsetX = -4;
+            context.shadowOffsetY = -4;
+            context.shadowBlur = 8;
+
+            context.lineWidth = 2;
+            context.strokeStyle = 'rgba(100,100,195,0.8)';
+            context.stroke();
+
+            context.beginPath();
+            context.arc(sprite.left + sprite.width / 2,
+              sprite.top + sprite.height / 2,
+              BALL_RADIUS / 2, 0, Math.PI * 2, false);
+            context.clip();
+
+            context.shadowColor = 'rgba(255,255,0,1.0)';
+            context.shadowOffsetX = -4;
+            context.shadowOffsetY = -4;
+            context.shadowBlur = 8;
+            context.stroke();
+
+            context.restore();
+          }
+        },
+
+        [fallOnLedge, moveBall]
+      );
+
+    // Functions.....................................................
+
+    function paintBall(x, y, w, h, radius, context) {
+      context.save();
+      context.beginPath();
+      context.arc(x + w / 2, y + h / 2,
+        radius, 0, Math.PI * 2, false);
+      context.clip();
+
+      context.shadowColor = 'rgba(0,0,0,1.0)';
+      context.shadowOffsetX = -4;
+      context.shadowOffsetY = -4;
+      context.shadowBlur = 8;
+
+      context.lineWidth = 2;
+      context.strokeStyle = 'rgba(100,100,195,0.8)';
+      context.stroke();
+
+      context.beginPath();
+      context.arc(x + w / 2, y + h / 2,
+        radius / 2, 0, Math.PI * 2, false);
+      context.clip();
+
+      context.shadowColor = 'rgba(255,255,0,1.0)';
+      context.shadowOffsetX = -4;
+      context.shadowOffsetY = -4;
+      context.shadowBlur = 8;
+      context.stroke();
+
+      context.restore();
+    }
+    
+    // 绘制托杆
+    function paintLedge(sprite, context, color) {
+      context.save();
+      context.shadowColor = 'rgba(0,0,0,0.5)';
+      context.shadowBlur = 8;
+      context.shadowOffsetX = 2;
+      context.shadowOffsetY = 2;
+      context.fillStyle = color;
+
+      context.fillRect(sprite.left, sprite.top, sprite.width, sprite.height);
+      context.restore();
+    }
+
+    function pushBallLeft() {
+      if (pushAnimationTimer.isRunning()) {
+        pushAnimationTimer.stop();
+        ball.velocityX = ball.velocityX * 1.5;
+      }
+      arrow = LEFT;
+      pushAnimationTimer.start();
+    }
+
+    function pushBallRight() {
+      if (pushAnimationTimer.isRunning()) {
+        pushAnimationTimer.stop();
+        ball.velocityX = ball.velocityX * 1.5;
+      }
+      arrow = RIGHT;
+      pushAnimationTimer.start();
+    }
+
+    function startFalling() {
+      fallingAnimationTimer.start();
+      ball.velocityX = 110;
+      ball.velocityY = 200;
+    }
+
+    function stopFalling() {
+      reset();
+    }
+
+    function reset() {
+      fallingAnimationTimer.stop();
+      pushAnimationTimer.stop();
+
+      ball.left = BALL_INITIAL_LOCATION.left;
+      ball.top = BALL_INITIAL_LOCATION.top;
+      ball.velocityY = 0;
+    }
+
+    function isBallFalling() {
+      return fallingAnimationTimer.isRunning();
+    }
+    
+    // 获取小球所在的ledge元素
+    function getLedgeUnderBall() {
+      var ledge;
+
+      for (var i = 0; i < ledges.length; i++) {
+        ledge = ledges[i];
+        if (ball.left + 2 * BALL_RADIUS > ledge.left &&
+          ball.left < ledge.left + ledge.width &&
+          ball.top + ball.height === ledge.top) {
+          return ledge;
+        }
+      }
+      return undefined;
+    }
+
+    // Thrusters.....................................................
+    // 绘制三角推进器
+    function paintThrusters() {
+      thrustersContext.clearRect(0, 0, thrustersCanvas.width, thrustersCanvas.height);
+
+      if (pushAnimationTimer.isRunning())
+        thrustersContext.fillStyle = 'rgb(255,255,0)';
+      else
+        thrustersContext.fillStyle = 'rgba(100,140,230,0.3)';
+
+      if (arrow === LEFT) {
+        paintLeftArrow(thrustersContext);
+        thrustersContext.fillStyle = 'rgba(100,140,230,0.3)';
+        paintRightArrow(thrustersContext);
+      }
+      else {
+        paintRightArrow(thrustersContext);
+        thrustersContext.fillStyle = 'rgba(100,140,230,0.3)';
+        paintLeftArrow(thrustersContext);
+      }
+    }
+
+    function paintRightArrow(context) {
+      thrustersContext.save();
+      thrustersContext.translate(thrustersCanvas.width, 0);
+      thrustersContext.scale(-1, 1);
+      paintLeftArrow(context);
+      thrustersContext.restore();
+    }
+
+    function paintLeftArrow(context) {
+      var ARROW_MARGIN = 10;
+
+      context.beginPath();
+
+      context.moveTo(thrustersCanvas.width / 2 - ARROW_MARGIN / 2,
+        ARROW_MARGIN / 2);
+
+      context.lineTo(thrustersCanvas.width / 2 - ARROW_MARGIN / 2,
+        thrustersCanvas.height - ARROW_MARGIN);
+
+      context.quadraticCurveTo(
+        thrustersCanvas.width / 2 - ARROW_MARGIN / 2,
+        thrustersCanvas.height - ARROW_MARGIN / 2,
+        thrustersCanvas.width / 2 - ARROW_MARGIN,
+        thrustersCanvas.height - ARROW_MARGIN / 2);
+
+      context.lineTo(ARROW_MARGIN,
+        thrustersCanvas.height / 2 + ARROW_MARGIN / 2);
+
+      context.quadraticCurveTo(
+        ARROW_MARGIN - 3,
+        thrustersCanvas.height / 2,
+        ARROW_MARGIN,
+        thrustersCanvas.height / 2 - ARROW_MARGIN / 2);
+
+      context.lineTo(thrustersCanvas.width / 2 - ARROW_MARGIN,
+        ARROW_MARGIN / 2);
+
+      context.quadraticCurveTo(
+        thrustersCanvas.width / 2 - ARROW_MARGIN,
+        ARROW_MARGIN / 2,
+        thrustersCanvas.width / 2 - ARROW_MARGIN / 2,
+        ARROW_MARGIN / 2);
+
+      context.fill();
+      context.stroke();
+    }
+
+    // Animation functions...........................................
+
+    function calculateFps(time) {
+      var fps = 1000 / (time - lastTime);
+      lastTime = time;
+      return fps;
+    }
+
+    function updateSprites(time) {
+      ball.update(context, time);
+      ledges.forEach(function (ledge) {
+        ledge.update(context, time);
+      });
+    }
+
+    function paintSprites() {
+      ball.paint(context);
+      ledges.forEach(function (ledge) {
+        ledge.paint(context);
+      });
+    }
+
+    function animate(time) {
+      fps = calculateFps(time);
+
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      updateSprites(time);
+      paintSprites();
+      paintThrusters();
+
+      window.requestNextAnimationFrame(animate);
+    }
+
+    // Event handlers................................................
+
+    thrustersCanvas.onmousedown = function canvasMouseDown(e) {
+      var rect = thrustersCanvas.getBoundingClientRect(),
+        x = e.x || e.clientX,
+        y = e.y || e.clientY;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (x - rect.left > thrustersCanvas.width / 2) {
+        pushBallRight();
+      } else {
+        pushBallLeft();
+      }
+    };
+
+    // Initialization................................................
+
+    var BALL_SLOW_VELOCITY_X = 30,
+      BALL_SLOW_VELOCITY_Y = 7,
+      BALL_VELOCITY_X = 110,
+      BALL_VELOCITY_Y = 200,
+      index = 0;
+
+    thrustersContext.strokeStyle = 'rgba(100,140,230,0.6)';
+    thrustersContext.shadowColor = 'rgba(0,0,0,0.3)';
+    thrustersContext.shadowBlur = 6;
+    thrustersContext.shadowX = 4;
+    thrustersContext.shadowY = 4;
+
+    ball.left = BALL_INITIAL_LOCATION.left;
+    ball.top = BALL_INITIAL_LOCATION.top;
+    ball.width = BALL_RADIUS * 2;
+    ball.height = BALL_RADIUS * 2;
+    ball.velocityX = 110;
+    ball.velocityY = 0;
+
+    // 创建托杆精灵
+    ledges.forEach(function (ledge) {
+      index = 0;
+
+      ledgeInfos.forEach(function (ledgeInfo) {
+        ledge = new Sprite('ledge', {
+          paint: function (sprite, context) {
+            paintLedge(sprite, context, ledgeInfo.color);
+          }
+        });
+
+        ledge.left = ledgeInfo.left;
+        ledge.top = ledgeInfo.top;
+        ledge.width = ledgeInfo.width;
+        ledge.height = ledgeInfo.height;
+
+        ledges[index] = ledge;
+        ++index;
+      });
+    });
+
+    window.requestNextAnimationFrame(animate);
+  </script>
+</body>
+
+</html>

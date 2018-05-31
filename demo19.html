@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>路径、描边与填充,非零环绕填充原则，几何图形demo</title>
+    <style>
+        body{
+            /* background:#ddd; */
+        }
+        #canvas{
+            margin:20px;
+            /* border:thin solid #aaa; */
+        }     
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 使用css设置width、height -->
+    <canvas id="canvas" width="1920" height="650">
+        canvas not support
+    </canvas>
+
+    <div class="info">
+        <ul>
+            <li>填充路径时使用的是“非零环绕规则”：对于路径中任意给定区域，从该区域内部话一条足够长的线段，使此线段的终点完全落在路径范围之外。当这条线段跟路径上的直线或曲线相交时，如果是与路径的顺时针部分相交则加1，如果是与路径的逆时针部分相交，则减1，最后总数不是零的就可以在调用fill()犯法时进行填充</li>
+            <li><span>arc()：在当前路径中增加一段表示圆弧或圆形的子路径。与rect()方法不同，可以通过一个boolean参数来控制该段子路径的方向。如果此参数是true，那么arc()所创建的子路径就是逆时针的，否则就是顺时针的。如果在调用该方法时，已经有其它子路径存在，那么arc()方法则会用一条线段把已有路径的终点和这段圆弧路径的起点连接起来</span></li>
+            <li><span>beginPath()，将当前路径之中的所有子路径都清除掉，以此来重置当前路径。在需要开始一段新的路径时，应该调用此方法</span></li>
+            <li><span>closePath()，显式地封闭某段开放路径。该方法用于封闭圆弧路径以及曲线或线段所创建的开放路径</span></li>
+            <li><span>fill()，使用fillStyle对当前路径的内部进行填充</span></li>
+            <li><span>rect(x,y,width,height)，在坐标(x,y)处建立一个宽为width，高度为height的矩形子路径。该子路径一定是封闭的，而且总是按逆时针方向来创建</span></li>
+            <li><span>stroke()，使用strokeStyle来描绘当前路径的轮廓线</span></li>
+        </ul>
+    </div>
+    <script>
+        console.profile('canvas 性能分析...')
+
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d');       
+
+            // 填充形状
+            function drawCutouts(){
+                context.beginPath();
+                addOuterRectanglePath();//绘制矩形容器
+
+                addCirclePath();
+                addRectanglePath();
+                addTrianglePath();
+
+                context.fill();//填充颜色
+            }
+
+            // 绘制形状边框线
+            function strokeCutoutShapes(){
+                context.save();
+
+                context.strokeStyle = 'rgba(0,0,0,0.7)';
+                context.beginPath();
+
+                addOuterRectanglePath();
+                context.stroke();
+
+                context.beginPath();
+                addCirclePath();
+                addRectanglePath();
+                addTrianglePath();
+                context.stroke();
+
+                context.restore();
+            }
+            // 绘制矩形
+            function rect(x,y,w,h,direction){
+                if(direction){//逆时针绘制
+                    context.moveTo(x,y);
+                    context.lineTo(x,y+h);
+                    context.lineTo(x+w,y+h);
+                    context.lineTo(x+w,y);
+                    context.closePath();
+                }else{//顺时针绘制
+                    context.moveTo(x,y);
+                    context.lineTo(x+w,y);
+                    context.lineTo(x+w,y+h);
+                    context.lineTo(x,y+h);                   
+                    context.closePath();
+                }
+            }
+
+            //顺时针绘制矩形容器
+            function addOuterRectanglePath(){
+                context.rect(110,25,370,335);
+            }
+            // 逆时针绘制内部圆形
+            function addCirclePath(){
+                context.arc(300,300,40,0,Math.PI*2,true);
+            }
+            //逆时针绘制内部矩形
+            function addRectanglePath(){
+                rect(310,55,70,35,true)
+            }
+            // 逆时针绘制内部三角
+            function addTrianglePath(){
+                context.moveTo(400,200);
+                context.lineTo(250,115);
+                context.lineTo(200,200)
+                context.closePath();
+            }
+
+            function draw(){
+                context.clearRect(0,0,context.canvas.width,context.canvas.height);
+
+                context.save();
+                context.shadowColor = 'rgba(0,0,0,0.8)';
+                context.shadowOffsetX = 12;
+                context.shadowOffsetY = 12;
+                context.shadowBlur = 15;
+
+                drawCutouts();//填充
+                strokeCutoutShapes();//绘制边线
+                context.restore();
+            }
+
+        //Initialization...
+        context.fillStyle = 'goldenrod';
+        draw();
+           
+        
+    </script>
+</body>
+</html>

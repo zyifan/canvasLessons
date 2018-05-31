@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>环形文本</title>
+    <style>
+        body {
+            background: #eeeeee;
+        }
+        #canvas {
+            background: #ffffff;
+            cursor: pointer;
+            margin-left: 10px;
+            margin-top: 10px;
+            -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            -moz-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        }
+        .info{
+            width:100%;
+            top:500px;
+        }
+        .info li{
+            font-size:13px;
+            color:#888;
+        }  
+        #radios{
+            padding:10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id='canvas' width='950' height='600'>
+        Canvas not supported
+    </canvas>
+
+    <div class="info">
+        <ul>          
+            <li>textAlign 该属性决定了文本在水平方向的对齐方式。有效取值为 start、left、center、right、end。默认值是start。当canvas元素的 dir 属性是 ltr 时，也就是说浏览器是按照由左至右的方向来显示文本时，left的效果与start效果相同，而right的效果则与end相同。同理，如果dir属性的值是rtl，也就是说浏览器是从右至左来显示文本的，那么right的效果则与start一致，而left则与end一致。</li>
+            <li>textBaseline 该属性决定了文本在垂直方向上的对齐方式。有效取值是：top、bottom、middle、alphabetic、ideographic 及 hanging。默认值是alphabetic，该值用于绘制由基于拉丁字母的语言所组成的字符串。ideographic值则用于绘制日文或中文字符串，hanging值用于绘制各种印度语字符串。top、bottom、middle这三个值与特定的语言不相关，它们代表文本周围的边界框之内的某个位置，这个边界框也叫做“字符方框”</li>
+            <li>measureText(txt) 返回一个TextMetrics对象，该对象包含width属性代表传入文本的像素宽度。该宽度是基于当前的字型而计算出来的，measureText返回的文本宽度并不精确</li>
+        </ul>
+    </div>
+    <script>
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+
+            TEXT_FILL_STYLE = 'rgba(100,130,240,0.5)',
+            TEXT_STROKE_STYLE = 'rgba(200,0,0,0.7)',
+            TEXT_SIZE = 64,
+            circle = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: 200
+            };
+
+        // Functions..........................................................
+        function drawCircleText(string, startAngle, endAngle){
+            var radius = circle.radius,
+                angleDecrement = (startAngle - endAngle)/(string.length-1),//获取字符间的夹角                
+                angle = parseFloat(startAngle),
+                index = 0,
+                character;
+
+            context.save();
+
+            context.fillStyle = TEXT_FILL_STYLE;
+            context.strokeStyle = TEXT_STROKE_STYLE;
+            context.font = TEXT_SIZE + 'px Lucida Sans';
+
+            while( index < string.length){
+                character = string.charAt(index);//获取当前字符
+
+                context.save();
+                context.beginPath();
+
+                context.translate(circle.x + Math.cos(angle)*radius, circle.y - Math.sin(angle)*radius);//将canvas原点移动到绘制字符的坐标位置
+                context.rotate(Math.PI/2 - angle);//字体旋转角度，角度是正值则顺时针旋转，角度是负值则逆时针旋转
+
+                context.fillText(character, 0, 0);
+                context.strokeText(character, 0, 0);
+
+                angle -= angleDecrement;
+                index ++;
+
+                context.restore();
+            }
+
+            context.restore();
+        }
+
+        // Initialization.......
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+
+        drawCircleText('Clockwise around the circle', Math.PI*2, Math.PI/8);
+
+    </script>
+</body>
+</html>
