@@ -1,14 +1,20 @@
 function Ball3d(radius,color){
     if(radius === undefined) {radius = 40;}
     if(color === undefined){color = '#00ff00';}
+
     this.x = 0;
     this.y = 0;
+
+    // x、y、z轴坐标
     this.xpos = 0;
     this.ypos = 0;
     this.zpos = 0;
+
+    // x、y、z轴速度
     this.vz = 0;
     this.vx = 0;
     this.vy = 0;
+
     this.radius = radius;
     this.rotation = 0;
     this.mass = 1;

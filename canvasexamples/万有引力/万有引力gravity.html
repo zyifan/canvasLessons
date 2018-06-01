@@ -47,9 +47,10 @@
                 var F = (partA.mass * partB.mass) / distQ;
 
                 // 作用力作用于加速度
-                // 物体间的引力分解到水平和竖直两个方向，作用于物体的加速度，注意这里的分解方式比较隐晦，用的是dx/dist，相当于cos值。最后，将物体的加速度作用于速度
-                var ax = F * dx / dist;
-                var ay = F * dy / dist;
+                // 物体间的引力分解到水平和竖直两个方向，作用于物体的加速度，
+                // 注意这里的分解方式比较隐晦，用的是dx/dist，相当于cos值。最后，将物体的加速度作用于速度
+                var ax = F * dx / dist; //力作用在x轴的加速度
+                var ay = F * dy / dist; //力作用在y轴的加速度
 
                 //加速度作用于速度
                 partA.vx += ax / partA.mass;

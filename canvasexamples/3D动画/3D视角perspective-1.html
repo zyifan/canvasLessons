@@ -19,13 +19,14 @@
                ypos = 0,
                zpos = 0,
                fl = 250, //距离屏幕的距离
+               
                vpX = canvas.width/2,
                vpY = canvas.height/2;
            
            window.addEventListener('keydown', function(e){
                if(e.keyCode === 38){ //up
                    zpos += 5;
-               }else if(e.keyCode === 40){
+               }else if(e.keyCode === 40){//down
                    zpos -= 5;
                }
            }, false);
@@ -36,11 +37,15 @@
                
                if(zpos > -fl){
                     var scale = fl/(fl + zpos);
+
                    xpos = mouse.x - vpX;
                    ypos = mouse.y - vpY;
+
                    ball.scaleX = ball.scaleY = scale;
+
                    ball.x = vpX + xpos*scale;
                    ball.y = vpY + ypos*scale;
+
                    ball.visible = true;
                }else{
                    ball.visible = false

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>简单树</title>
+    <style>
+        canvas{
+            border:1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script src="../js/utils.js"></script>
+    <script src="../js/tree.js"></script>
+    <script>
+        let canvas = document.getElementById('canvas'),
+            ctx = canvas.getContext('2d');
+
+        let tree = new Tree('#000');
+
+        tree.x = 300;
+        tree.y = 600
+
+        tree.draw(ctx);
+        
+    </script>
+</body>
+
+</html>
