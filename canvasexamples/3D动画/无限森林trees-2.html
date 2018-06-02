@@ -21,18 +21,23 @@
     window.onload = function () {
       var canvas = document.getElementById('canvas'),
         context = canvas.getContext('2d'),
+
         trees = [],
         numTrees = 1000,
+
         fl = 250,
         vpX = canvas.width / 2,
         vpY = canvas.height / 2,
+
         floor = 50,
+
         ax = 0,
         ay = 0,
         az = 0,
         vx = 0,
         vy = 0,
         vz = 0,
+
         gravity = 0.3,
         friction = 0.98;
 
@@ -47,7 +52,7 @@
 
       window.addEventListener('keydown', function (event) {
         switch (event.keyCode) {
-          case 38: //up
+          case 38: //up 
             az = -1;
             break;
           case 40: //down
@@ -65,6 +70,7 @@
         }
       }, false);
 
+      // 重置
       window.addEventListener('keyup', function (event) {
         switch (event.keyCode) {
           case 38: //up
@@ -121,14 +127,20 @@
         window.requestAnimationFrame(drawFrame, canvas);
         context.clearRect(0, 0, canvas.width, canvas.height);
 
+        // 速度增加
         vx += ax;
         vy += ay;
         vz += az;
         vy -= gravity;
+
+        // 移动
         trees.forEach(move);
+
+        // 速度减小
         vx *= friction;
         vy *= friction;
         vz *= friction;
+
         trees.sort(zSort);
         trees.forEach(draw);
       }())

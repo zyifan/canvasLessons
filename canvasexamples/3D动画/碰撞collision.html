@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Document</title>
-</head>
-<body>
-    <canvas id="canvas" width="500" height="400" style="background:#000;"></canvas>
-    <script src="../js/utils.js"></script>
-    <script src="../js/ball3d.js"></script>
-    <script>
-       window.onload = function () {
-      var canvas = document.getElementById('canvas'),
-          context = canvas.getContext('2d'),
-          balls = [],
-          numBalls = 20,
-          fl = 250,
-          vpX = canvas.width / 2,
-          vpY = canvas.height / 2,
-          top = -200,
-          bottom = 200,
-          left = -200,
-          right = 200,
-          back = 200,
-          front = -200;
 
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+</head>
+
+<body>
+  <canvas id="canvas" width="500" height="400" style="background:#000;"></canvas>
+  <script src="../js/utils.js"></script>
+  <script src="../js/ball3d.js"></script>
+  <script>
+    window.onload = function () {
+      var canvas = document.getElementById('canvas'),
+        context = canvas.getContext('2d'),
+
+        balls = [],
+        numBalls = 20,
+
+        // 透视距离
+        fl = 250,
+        vpX = canvas.width / 2,
+        vpY = canvas.height / 2,
+
+        // 碰撞边界
+        top = -200,
+        bottom = 200,
+        left = -200,
+        right = 200,
+        back = 200,
+        front = -200;
+
+      // 随机生成20个小球
       for (var ball, i = 0; i < numBalls; i++) {
         ball = new Ball3d(15, "red");
         ball.xpos = Math.random() * 400 - 200;
@@ -35,11 +43,13 @@
         balls.push(ball);
       }
 
-      function move (ball) {
+      // 位置变动，边界检测
+      function move(ball) {
         ball.xpos += ball.vx;
         ball.ypos += ball.vy;
         ball.zpos += ball.vz;
-        
+
+        // 边界检测
         if (ball.xpos + ball.radius > right) {
           ball.xpos = right - ball.radius;
           ball.vx *= -1;
@@ -61,6 +71,8 @@
           ball.zpos = front + ball.radius;
           ball.vz *= -1;
         }
+
+        // 如果在透视距离内，3维设置
         if (ball.zpos > -fl) {
           var scale = fl / (fl + ball.zpos);
           ball.scaleX = ball.scaleY = scale;
@@ -72,13 +84,18 @@
         }
       }
 
-      function checkCollision (ballA, i) {
+      // 碰撞检测
+      function checkCollision(ballA, i) {
         for (var ballB, dx, dy, dz, dist, j = i + 1; j < numBalls; j++) {
           ballB = balls[j];
+
           dx = ballA.xpos - ballB.xpos;
           dy = ballA.ypos - ballB.ypos;
           dz = ballA.zpos - ballB.zpos;
+
           dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+          // 如果碰撞，变成蓝色球
           if (dist < ballA.radius + ballB.radius) {
             ballA.color = "#0000ff";
             ballB.color = "#0000ff";
@@ -86,26 +103,30 @@
         }
       }
 
-      function zSort (a, b) {
+      function zSort(a, b) {
         return (b.zpos - a.zpos);
       }
-      
-      function draw (ball) {
+
+      function draw(ball) {
         if (ball.visible) {
           ball.draw(context);
         }
       }
 
-      (function drawFrame () {
+      (function drawFrame() {
         window.requestAnimationFrame(drawFrame, canvas);
         context.clearRect(0, 0, canvas.width, canvas.height);
-        
+
+        // 移动
         balls.forEach(move);
+        // 检测碰撞
         balls.forEach(checkCollision);
+        // 排序，绘制
         balls.sort(zSort);
         balls.forEach(draw);
       }());
     };
-    </script>
+  </script>
 </body>
+
 </html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>rotate-3d</title>
+    <title>rotate-3d 绕y轴旋转</title>
 </head>
 <body>
    <canvas id="canvas" width="500" height="500" style="background:#000;"></canvas>
@@ -13,14 +13,18 @@
             var canvas = document.querySelector('#canvas'),
                 context = canvas.getContext('2d'),
                 mouse = utils.captureMouse(canvas),
+
                 balls = [],
                 numBalls = 50,
+
+                // 透视距离
                 fl = 250,
                 vpX = canvas.width/2,
                 vpY = canvas.height/2,
+
                 angleY; //绕Y轴旋转的角度
             
-            
+            // 随机生成50个小球
             for(var i=0; i<numBalls; i++){
                 var size = Math.random()*5+5,
                     color = Math.random()*(0xffffff),
@@ -34,15 +38,18 @@
                  
             }
             
+            // 绕着y轴移动，即y坐标不变
             function rotateY(ball, angle){
                 var cos = Math.cos(angle),
                     sin = Math.sin(angle),
+                    // 根据角度计算x、z轴旋转后的坐标
                     x1 = ball.xpos*cos - ball.zpos*sin,
                     z1 = ball.zpos*cos + ball.xpos*sin;
                 
                 ball.xpos = x1;
                 ball.zpos = z1;
                 
+                // 3维换算
                 if(ball.zpos > -fl){
                     var scale = fl/(fl + ball.zpos);
                     ball.scaleX = ball.scaleY = scale;
@@ -73,6 +80,7 @@
                 window.requestAnimationFrame(deawFrame, canvas);
                 context.clearRect(0, 0, canvas.width, canvas.height);
                
+                // 根据鼠标距离中心的间距获取角度值
                 angleY = (mouse.x - vpX)*0.001;
                 
                 balls.forEach(move);

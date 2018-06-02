@@ -1,74 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>spring</title>
 </head>
+
 <body>
-   <canvas id="canvas" width="500" height="500" style="background:#000;"></canvas>
-   <script src="../js/utils.js"></script>
-   <script src="../js/ball3d.js"></script>
-   <script>
-        window.onload = function(){
-             var canvas = document.querySelector("#canvas"),
+    <canvas id="canvas" width="500" height="500" style="background:#000;"></canvas>
+    <script src="../js/utils.js"></script>
+    <script src="../js/ball3d.js"></script>
+    <script>
+        window.onload = function () {
+            var canvas = document.querySelector("#canvas"),
                 context = canvas.getContext("2d"),
                 ball = new Ball3d(),
-                tx = Math.random()*500 - 250,
-                ty = Math.random()*500 - 250,
-                tz = Math.random()*500,
+
+                tx = Math.random() * 500 - 250,
+                ty = Math.random() * 500 - 250,
+                tz = Math.random() * 500,
+
+                // 弾动系数
                 spring = 0.1,
+
+                // 摩擦系数
                 friction = 0.94,
+
+                // 透视距离
                 fl = 250,
-                vpX = canvas.width/2,
-                vpY = canvas.height/2;
-            
-            window.addEventListener('mousedown', function(e){
-                 tx = Math.random()*500 - 250;
-                 ty = Math.random()*500 - 250;
-                 tz = Math.random()*500; 
-            },false);
-            
-            (function drawFrame(){
+                vpX = canvas.width / 2,
+                vpY = canvas.height / 2;
+
+            // 鼠标点击时重置定点坐标
+            window.addEventListener('mousedown', function (e) {
+                tx = Math.random() * 500 - 250;
+                ty = Math.random() * 500 - 250;
+                tz = Math.random() * 500;
+            }, false);
+
+            (function drawFrame() {
                 window.requestAnimationFrame(drawFrame, canvas);
-                context.clearRect(0,0,canvas.width,canvas.height);
-                
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 根据定点和小球位置之间的间距获取
                 var dx = tx - ball.xpos,
                     dy = ty - ball.ypos,
                     dz = tz - ball.zpos,
-                    dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-                
-                ball.vx += dx*spring;
-                ball.vy += dy*spring;
-                ball.vz += dz*spring;
-                
+                    dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                // 根据间距，增加速度
+                ball.vx += dx * spring;
+                ball.vy += dy * spring;
+                ball.vz += dz * spring;
+
+                // 阻力，速度减小
                 ball.vx *= friction;
                 ball.vy *= friction;
                 ball.vz *= friction;
-                
+
                 ball.xpos += ball.vx;
                 ball.ypos += ball.vy;
                 ball.zpos += ball.vz;
-                
-                if(ball.zpos > -fl){
-                    var scale = fl/(fl+ball.zpos);
+
+                // 3维环境
+                if (ball.zpos > -fl) {
+                    var scale = fl / (fl + ball.zpos);
                     ball.scaleX = ball.scaleY = scale;
-                    ball.x = vpX + ball.xpos*scale;
-                    ball.y = vpY + ball.ypos*scale;
+                    ball.x = vpX + ball.xpos * scale;
+                    ball.y = vpY + ball.ypos * scale;
                     ball.visible = true;
-                }else{
+                } else {
                     ball.visible = false;
                 }
-                
-                if(ball.visible){
+
+                if (ball.visible) {
                     ball.draw(context);
                 }
-                
-                
+
+
             }())
-            
-            
+
+
         }
-   </script>
-    
+    </script>
+
 </body>
+
 </html>

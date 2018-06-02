@@ -1,64 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>easing-3d</title>
 </head>
+
 <body>
-   <canvas id="canvas" width="500" height="500" style="background:#000;"></canvas>
-   <script src="../js/utils.js"></script>
-   <script src="../js/ball3d.js"></script>
-   <script>
+    <canvas id="canvas" width="500" height="500" style="background:#000;"></canvas>
+    <script src="../js/utils.js"></script>
+    <script src="../js/ball3d.js"></script>
+    <script>
         window.onload = function () {
             var canvas = document.querySelector("#canvas"),
                 context = canvas.getContext("2d"),
+
                 ball = new Ball3d(),
-                tx = Math.random()*500 - 250,
-                ty = Math.random()*500 - 250,
-                tz = Math.random()*500,
+
+                tx = Math.random() * 500 - 250,
+                ty = Math.random() * 500 - 250,
+                tz = Math.random() * 500,
+
+                // 缓动系数
                 easing = 0.1,
+
                 fl = 250,
-                vpX = canvas.width/2,
-                vpY = canvas.height/2;
-            
+                vpX = canvas.width / 2,
+                vpY = canvas.height / 2;
+
             context.fillStyle = "rgba(0,0,0,.05)";
-            (function drawFrame(){
+
+            (function drawFrame() {
                 window.requestAnimationFrame(drawFrame, canvas);
                 //context.clearRect(0, 0, canvas.width, canvas.height);
-                context.fillRect(0,0,canvas.width,canvas.height)
-                
+
+                // 没有清空画布，一层一层的绘制半透明遮罩，形成运动轨迹
+                context.fillRect(0, 0, canvas.width, canvas.height)
+
+                // 根据定点和小球位置之间的间距获取
                 var dx = tx - ball.xpos,
                     dy = ty - ball.ypos,
                     dz = tz - ball.zpos,
-                    dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-                
-                ball.xpos += dx*easing;
-                ball.ypos += dy*easing;
-                ball.zpos += dz*easing;
-                
-                if(dist<1){
-                    tx = Math.random()*500 - 250;
-                    ty = Math.random()*500 - 250;
-                    tz = Math.random()*500;
+                    dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                // 根据间距，获取速度
+                ball.vx = dx * easing;
+                ball.vy = dy * easing;
+                ball.vz = dz * easing;
+
+                // 位置移动，距离定点越近，运动的越慢
+                ball.xpos += ball.vx;
+                ball.ypos += ball.vy;
+                ball.zpos += ball.vz;
+
+                // 如果间距小于1，则重新设置定点
+                if (dist < 1) {
+                    tx = Math.random() * 500 - 250;
+                    ty = Math.random() * 500 - 250;
+                    tz = Math.random() * 500;
                 }
-                
-                if(ball.zpos > -fl){
-                    var scale = fl/(fl+ball.zpos);
+
+                // 3维环境
+                if (ball.zpos > -fl) {
+                    var scale = fl / (fl + ball.zpos);
                     ball.scaleX = ball.scaleY = scale;
-                    ball.x = vpX + ball.xpos*scale;
-                    ball.y = vpY + ball.ypos*scale;
+                    ball.x = vpX + ball.xpos * scale;
+                    ball.y = vpY + ball.ypos * scale;
                     ball.visible = true;
-                }else{
+                } else {
                     ball.visible = false;
                 }
-                    
-                if(ball.visible){
+
+                if (ball.visible) {
                     ball.draw(context);
                 }
             }())
-                
+
         }
-   </script>
-    
+    </script>
+
 </body>
+
 </html>
