@@ -104,7 +104,7 @@ NatureTree.prototype.branchAndLeaves = function (gen) {
 
         // 随机画左右侧树枝
         if ((Math.random() * 1) < this.spread) {
-            //画左侧树枝
+            //画左侧树枝，在上一次的基础上旋转、缩小
             this.ctx.rotate(-0.35);
             this.ctx.scale(0.7, 0.7);
             this.ctx.save();
@@ -112,7 +112,7 @@ NatureTree.prototype.branchAndLeaves = function (gen) {
             this.branchAndLeaves(gen + 1);
             this.ctx.restore();
 
-            //画右侧树枝
+            //画右侧树枝、在上一次的基础上旋转
             this.ctx.rotate(0.6);
             this.ctx.save();
             this.branchAndLeaves(gen + 1);
@@ -129,7 +129,7 @@ NatureTree.prototype.branchAndLeaves = function (gen) {
         // 当一条循环线完成之后，绘制一个rect
         //枝条画完画树叶
         if (this.drawLeaves) {
-            // 树叶高度
+            // 树叶高度 200 || 10
             var lengthFactor = 200;
             if (this.leaveType === this.thin_leaves) {
                 leaveFactor = 10;
