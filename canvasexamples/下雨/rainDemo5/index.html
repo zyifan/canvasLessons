@@ -1,0 +1,133 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>canvas雨滴</title>  
+    <style>  
+        body,html{margin:0px;height:100%;}  
+        ul,ol{margin:0;padding:0;list-style:none;}  
+        a{text-decoration:none;}  
+        img{border:none;}  
+        canvas{background:#000;display: block;}  
+    </style>  
+</head>  
+<body>  
+    <canvas id="canvas">您的浏览器不支持canvas标签，请更换浏览器！</canvas>  
+    <script>  
+        // window.requestAnimFram = (function(){  
+        //  // return   
+        // })();  
+        var can = document.getElementById('canvas');  
+        var cxt = can.getContext('2d');  
+        // 获取浏览器窗口宽高，并设置canvas全屏显示（必须给canvas设置宽高，否则会采用默认宽高，对后面绘图的坐标都难以控制（坐标和宽高都难以控制））  
+        var w = can.width = window.innerWidth;  
+        var h = can.height = window.innerHeight;  
+        // 宽高响应式设置  
+        window.onresize = function(){  
+            w = can.width = window.innerWidth;  
+            h = can.height = window.innerHeight;  
+            console.log(w+' -- '+w/50)  
+        }  
+        // cxt.fillStyle='#f00';  
+        // cxt.fillRect(100,100,50,50);//绘制矩形 前两个是坐标xy,后面两个是宽高  
+        // cxt.fill(); 填充方法（实心）  
+        // cxt.stroke();触笔方法（空心）  
+        // cxt.rect(x,y,w,h);规定矩形的路径  
+        // cxt.fill()和cxt.rect()可以用cxt.fillRect()代替  
+        // cxt.arc(x,y,r,0,Math.PI*2,false); xy圆心坐标 r半径 0和Math.PI*2弧度 false逆时针  
+        // cxt.arc(250,250,50,0,Math.PI*2,false);  
+        // cxt.fill();  
+  
+        // var x=100,y=0;  
+        /*setInterval(function(){  
+            y++;  
+            cxt.clearRect(0,0,w,h);  
+            cxt.fillRect(x,y,50,50)  
+        },1000/60);//1000/60兼容一般显卡*/  
+  
+        // move();//分号是语句结束的标记，js末尾建议带上分号，考虑性能问题。  
+        // function move(){  
+        //  y++;  
+        //  cxt.clearRect(0,0,w,h);  
+        //  cxt.fillRect(x,y,50,50);  
+        //  requestAnimationFrame(move);//原生js的经动画，需要考虑兼容  
+        // }  
+  
+        // 面相对像  
+        var drops = [];//雨滴数组  
+        // 创建雨滴对象  
+        function Drop(){};  
+        Drop.prototype = {  
+            init:function(){//初始化方法（设置每个雨滴的初始属性）  
+                this.x = random(0,w);  
+                this.y = 0;  
+                // y方向的速度值  
+                this.vy = random(4,5);  
+                // 雨滴下落的最大y值  
+                this.l=random(0.8*h,0.9*h);  
+                  
+                this.r=1;// 添加波纹初始半径  
+                this.vr=1;// 波纹半径增大的速度  
+                this.a = 1;// 判断雨滴消失的透明度  
+                this.va = 0.96;//透明度的变化系数  
+            },  
+            draw:function(){//绘制图形  
+                if(this.y > this.l){//雨滴已下落到指定位置,就绘制波纹  
+                    cxt.beginPath();//先开始路径，每次绘制前，先提笔  
+                    cxt.arc(this.x,this.y,this.r,0,Math.PI*2,false);  
+                    cxt.strokeStyle = 'rgb(0,255,255)';  
+                    cxt.stroke();  
+                }else{//绘制下落的雨滴  
+                    cxt.fillStyle = 'rgb(0,255,255)';  
+                    cxt.fillRect(this.x,this.y,2,10);  
+                }  
+                      
+                this.update();//每次绘制都更新；  
+            },  
+            update:function(){//更新坐标位置  
+                if(this.y<this.l){  
+                    this.y+=this.vy;  
+                }else{//雨滴下落到指定位置  
+                    if(this.a>0.01){  
+                        this.r += this.vr;    
+                        if(this.r > 30 ){//当半径大于50后，透明度会越来越大  
+                            this.a *= this.va;  
+                        }  
+                    }else{  
+                        this.init();//雨滴重新初始化  
+                    }  
+                }  
+            },  
+        }  
+  
+        // 生成随机数的方法  
+        function random(min,max){  
+            return Math.random()*(max-min)+min;//min-max之间的随机数  
+        }  
+  
+        // 实例化对象  
+        // var drop = new Drop();  
+        // drop.init();//初始化  
+        // drop.draw();//绘制  
+        for(var i=0;i<30;i++){  
+            setTimeout(function(){  
+                var drop = new Drop();  
+                drop.init();  
+                drops.push(drop);//添加到雨滴数组  
+            },i*300)  
+        }  
+        // console.log(drops)  
+        move();  
+        function move(){  
+            // cxt.clearRect();  
+            // 先绘制透明层，再绘制雨滴，雨滴就把先把先绘制的透明层覆盖，若干透明层叠加起来，就会越来也不透明  
+            cxt.fillStyle = 'rgba(0,0,0,0.1)';  
+            cxt.fillRect(0,0,w,h);  
+            for(var i=0;i<drops.length;i++){  
+                drops[i].draw();  
+            }  
+            requestAnimationFrame(move);  
+        }  
+    </script>  
+</body>  
+</html>
