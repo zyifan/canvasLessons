@@ -13,6 +13,7 @@ function Point3d(x, y ,z){
     this.cZ = 0; 
 }
 
+// 设置消失点
 Point3d.prototype.setVanishingPoint = function(vpX, vpY){
     this.vpX = vpX;
     this.vpY = vpY;
@@ -24,6 +25,7 @@ Point3d.prototype.setCenter = function(cX, cY, cZ){
     this.cZ = cZ;
 }
 
+// 绕x轴旋转坐标
 Point3d.prototype.rotateX = function(angleX){
     var cosX = Math.cos(angleX),
         sinX = Math.sin(angleX),
@@ -34,6 +36,7 @@ Point3d.prototype.rotateX = function(angleX){
       this.z = z1;
 }
 
+// 绕y轴旋转坐标
 Point3d.prototype.rotateY = function(angleY){
     var cosY = Math.cos(angleY),
         sinY = Math.sin(angleY),
@@ -44,6 +47,7 @@ Point3d.prototype.rotateY = function(angleY){
       this.z = z1;
 }
 
+// 绕z轴旋转坐标
 Point3d.prototype.rotateZ = function(angleZ){
     var cosZ = Math.cos(angleZ),
         sinZ = Math.sin(angleZ),
@@ -54,11 +58,13 @@ Point3d.prototype.rotateZ = function(angleZ){
       this.y = y1;
 }
 
+// 3维变换后的x坐标
 Point3d.prototype.getScreenX = function(){
     var scale = this.fl / (this.fl + this.cZ);
     return this.vpX + (this.cX + this.x) * scale;
 }
 
+// 3维变换后的y坐标
 Point3d.prototype.getScreenY = function(){
     var scale = this.fl / (this.fl + this.cZ);
     return this.vpY + (this.cY + this.y) * scale;
