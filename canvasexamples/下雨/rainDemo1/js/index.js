@@ -8,7 +8,7 @@
 // - all particles make use of object pooling to further boost performance
 
 // initialize
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 	demo.init();
 	window.addEventListener('resize', demo.resize);
 });
@@ -25,7 +25,7 @@ var demo = {
 		b: '255',
 		a: '0.5'
 	},
-	
+
 	// END CUSTOMIZATION
 	// whether demo is running
 	started: false,
@@ -55,7 +55,7 @@ var demo = {
 };
 
 // demo initialization (should only run once)
-demo.init = function() {
+demo.init = function () {
 	if (!demo.started) {
 		demo.started = true;
 		demo.canvas = document.getElementById('canvas');
@@ -65,16 +65,16 @@ demo.init = function() {
 		demo.rain_color_clear = 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',0)';
 		demo.resize();
 		Ticker.addListener(demo.step);
-		
+
 		// 
 		const gui = new dat.GUI();
 		gui.add(demo, 'speed', 0.2, 2);
-		
+
 		// fade out instructions after a few seconds
 		var instructions = document.getElementById('instructions');
-		setTimeout(function() {
+		setTimeout(function () {
 			instructions.style.opacity = 0;
-			setTimeout(function(){
+			setTimeout(function () {
 				instructions.parentNode.removeChild(instructions);
 			}, 2000);
 		}, 4000);
@@ -82,16 +82,16 @@ demo.init = function() {
 }
 
 // (re)size canvas (clears all particles)
-demo.resize = function() {
+demo.resize = function () {
 	// localize common references
 	var rain = demo.rain;
 	var drops = demo.drops;
 	// recycle particles
 	for (var i = rain.length - 1; i >= 0; i--) {
-			rain.pop().recycle();
+		rain.pop().recycle();
 	}
 	for (var i = drops.length - 1; i >= 0; i--) {
-			drops.pop().recycle();
+		drops.pop().recycle();
 	}
 	// resize
 	demo.width = window.innerWidth;
@@ -100,7 +100,7 @@ demo.resize = function() {
 	demo.canvas.height = demo.height * demo.dpr;
 }
 
-demo.step = function(time, lag) {
+demo.step = function (time, lag) {
 	// localize common references
 	var demo = window.demo;
 	var speed = demo.speed;
@@ -111,10 +111,10 @@ demo.step = function(time, lag) {
 	var rain_pool = demo.rain_pool;
 	var drops = demo.drops;
 	var drop_pool = demo.drop_pool;
-	
+
 	// multiplier for physics
 	var multiplier = speed * lag;
-	
+
 	// spawn drops
 	demo.drop_time += time * speed;
 	while (demo.drop_time > demo.drop_delay) {
@@ -127,7 +127,7 @@ demo.step = function(time, lag) {
 		new_rain.x = spawn_x;
 		rain.push(new_rain);
 	}
-	
+
 	// rain physics
 	for (var i = rain.length - 1; i >= 0; i--) {
 		var r = rain[i];
@@ -144,7 +144,7 @@ demo.step = function(time, lag) {
 			rain.splice(i, 1);
 		}
 	}
-	
+
 	// splash drop physics
 	var drop_max_speed = Drop.max_speed;
 	for (var i = drops.length - 1; i >= 0; i--) {
@@ -157,7 +157,7 @@ demo.step = function(time, lag) {
 		d.speed_x += wind / 25 * multiplier;
 		if (d.speed_x < -drop_max_speed) {
 			d.speed_x = -drop_max_speed;
-		}else if (d.speed_x > drop_max_speed) {
+		} else if (d.speed_x > drop_max_speed) {
 			d.speed_x = drop_max_speed;
 		}
 		// recycle
@@ -166,11 +166,11 @@ demo.step = function(time, lag) {
 			drops.splice(i, 1);
 		}
 	}
-	
+
 	demo.draw();
 }
 
-demo.draw = function() {
+demo.draw = function () {
 	// localize common references
 	var demo = window.demo;
 	var width = demo.width;
@@ -179,10 +179,10 @@ demo.draw = function() {
 	var rain = demo.rain;
 	var drops = demo.drops;
 	var ctx = demo.ctx;
-	
+
 	// start fresh
-	ctx.clearRect(0, 0, width*dpr, height*dpr);
-	
+	ctx.clearRect(0, 0, width * dpr, height * dpr);
+
 	// draw rain (trace all paths first, then stroke once)
 	ctx.beginPath();
 	var rain_height = Rain.height * dpr;
@@ -197,7 +197,7 @@ demo.draw = function() {
 	ctx.lineWidth = Rain.width * dpr;
 	ctx.strokeStyle = demo.rain_color;
 	ctx.stroke();
-	
+
 	// draw splash drops (just copy pre-rendered canvas)
 	for (var i = drops.length - 1; i >= 0; i--) {
 		var d = drops[i];
@@ -218,22 +218,22 @@ function Rain() {
 }
 Rain.width = 2;
 Rain.height = 40;
-Rain.prototype.init = function() {
+Rain.prototype.init = function () {
 	this.y = Math.random() * -100;
 	this.z = Math.random() * 0.5 + 0.5;
 	this.splashed = false;
 }
-Rain.prototype.recycle = function() {
+Rain.prototype.recycle = function () {
 	demo.rain_pool.push(this);
 }
 // recycle rain particle and create a burst of droplets
-Rain.prototype.splash = function() {
+Rain.prototype.splash = function () {
 	if (!this.splashed) {
 		this.splashed = true;
 		var drops = demo.drops;
 		var drop_pool = demo.drop_pool;
 
-		for (var i=0; i<16; i++) {
+		for (var i = 0; i < 16; i++) {
 			var drop = drop_pool.pop() || new Drop();
 			drops.push(drop);
 			drop.init(this.x);
@@ -251,13 +251,13 @@ function Drop() {
 	this.speed_y = 0;
 	this.canvas = document.createElement('canvas');
 	this.ctx = this.canvas.getContext('2d');
-	
+
 	// render once and cache
 	var diameter = this.radius * 2;
 	this.canvas.width = diameter;
 	this.canvas.height = diameter;
 
-	var grd = this.ctx.createRadialGradient(this.radius, this.radius , 1, this.radius, this.radius, this.radius);
+	var grd = this.ctx.createRadialGradient(this.radius, this.radius, 1, this.radius, this.radius, this.radius);
 	grd.addColorStop(0, demo.rain_color);
 	grd.addColorStop(1, demo.rain_color_clear);
 	this.ctx.fillStyle = grd;
@@ -266,7 +266,7 @@ function Drop() {
 
 Drop.max_speed = 5;
 
-Drop.prototype.init = function(x) {
+Drop.prototype.init = function (x) {
 	this.x = x;
 	this.y = demo.height;
 	var angle = Math.random() * Math.PI - (Math.PI * 0.5);
@@ -274,7 +274,7 @@ Drop.prototype.init = function(x) {
 	this.speed_x = Math.sin(angle) * speed;
 	this.speed_y = -Math.cos(angle) * speed;
 }
-Drop.prototype.recycle = function() {
+Drop.prototype.recycle = function () {
 	demo.drop_pool.push(this);
 }
 
@@ -282,20 +282,20 @@ Drop.prototype.recycle = function() {
 
 
 // handle interaction
-demo.mouseHandler = function(evt) {
+demo.mouseHandler = function (evt) {
 	demo.updateCursor(evt.clientX, evt.clientY);
 }
-demo.touchHandler = function(evt) {
+demo.touchHandler = function (evt) {
 	evt.preventDefault();
 	var touch = evt.touches[0];
 	demo.updateCursor(touch.clientX, touch.clientY);
 }
-demo.updateCursor = function(x, y) {
+demo.updateCursor = function (x, y) {
 	x /= demo.width;
 	y /= demo.height;
 	var y_inverse = (1 - y);
-	
-	demo.drop_delay = y_inverse*y_inverse*y_inverse * 100 + 2;
+
+	demo.drop_delay = y_inverse * y_inverse * y_inverse * 100 + 2;
 	demo.wind = (x - 0.5) * 50;
 }
 
@@ -306,13 +306,13 @@ document.addEventListener('touchmove', demo.touchHandler);
 
 
 // Frame ticker helper module
-var Ticker = (function(){
+var Ticker = (function () {
 	var PUBLIC_API = {};
 
 	// public
 	// will call function reference repeatedly once registered, passing elapsed time and a lag multiplier as parameters
 	PUBLIC_API.addListener = function addListener(fn) {
-		if (typeof fn !== 'function') throw('Ticker.addListener() requires a function reference passed in.');
+		if (typeof fn !== 'function') throw ('Ticker.addListener() requires a function reference passed in.');
 
 		listeners.push(fn);
 
@@ -335,6 +335,7 @@ var Ticker = (function(){
 			webkitRequestAnimationFrame(frameHandler);
 		}
 	}
+
 	function frameHandler(timestamp) {
 		var frame_time = timestamp - last_timestamp;
 		last_timestamp = timestamp;
@@ -351,7 +352,7 @@ var Ticker = (function(){
 		for (var i = 0, len = listeners.length; i < len; i++) {
 			listeners[i].call(window, frame_time, frame_time / 16.67);
 		}
-		
+
 		// always queue another frame
 		queueFrame();
 	}
