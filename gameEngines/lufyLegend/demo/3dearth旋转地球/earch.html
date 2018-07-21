@@ -5,73 +5,144 @@
     <meta charset="utf-8" />
     <title>beginBitmapFill</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <script type="text/javascript" src="../../js/lufylegend-1.10.1.min.js"></script> 
+    <script type="text/javascript" src="../../js/lufylegend-1.10.1.min.js"></script>
     </script>
     <script type="text/javascript">
         if (LGlobal.canTouch) {
+            /**
+                舞台的缩放模式LGlobal.stageScale
+                EXACT_FIT：指定整个应用程序在指定区域中可见，但不尝试保持原始高宽比
+                NO_BORDER：指定整个应用程序填满指定区域，不会发生扭曲，但有可能会进行一些裁切，同时保持应用程序的原始高宽比
+                NO_SCALE：指定应用程序的大小是固定的，因此，即使在更改播放器窗口大小时，它仍然保持不变
+                SHOW_ALL：指定整个应用程序在指定区域中可见，且不会发生扭曲，同时保持应用程序的原始高宽比
+            */
             LGlobal.stageScale = LStageScaleMode.EXACT_FIT;
+            // 全屏设置
             LSystem.screen(LStage.FULL_SCREEN);
         }
     </script>
 </head>
 
 <body>
-    <div id="legend">
-    </div>
+    <!-- 容器 -->
+    <div id="legend"></div>
+
     <script>
+        // 引擎初始化函数。等同于 init，
+        // LInit(speed, divid, width, height, callback) 速度、容器ID、宽、高、回调
         LInit(50, "legend", 600, 500, main);
+
+        // config
         var leftspeed = 0;
         var leftindex = 1;
+
         var upspeed = 10;
         var upindex = 1;
+
         var vertices;
         var indices;
         var uvtData;
         var backLayer;
+
         var bitmapData, earthBitmapData;
+
         var rows = 24,
             cols = 24;
+
         var mi = 0;
+
         var imgData = [{
             name: "earth",
             path: "earth.jpg"
         }];
+
         var imglist;
 
+        // 初始化回调
         function main() {
+            /** 
+                LLoadManage类是可以用来同时读取图片，文本以及js多种类型的文件。即用来加载静态资源
+                LLoadManage.load (list, onUpdate, onComplete)
+                list 指定的需要加载数据的数组
+                onUpdate 加载过程中调用的函数，一般用来显示游戏进度。
+                onComplete list中全部文件加载完成时调用此函数
+            */
             LLoadManage.load(imgData, null, gameInit);
         }
 
+        // 文件加载完成回调函数
         function gameInit(result) {
+            // result 加载完成之后的文件结果列表
             imglist = result;
+
+            /**
+                LBitmapData (image, x, y, width, height, dataType)  
+                创建一个具有指定的宽度和高度的 LBitmapData 对象
+                使用 LBitmapData 类，您可以处理 LBitmap 对象的数据（像素）。
+                可以使用 LBitmapData 类的方法创建任意大小的Image对象，并在运行时采用多种方式操作这些图像。
+                也可以访问使用 LLoader 类加载的Image对象。
+            */
             earthBitmapData = new LBitmapData(imglist["earth"]);
             //earthBitmapData = new LBitmapData("#ffffff", 0, 0, 500, 300);
 
+            // 获取24*24个点坐标
             var i, j;
             var r = 100;
             vertices = new Array();
+            // rows = cols = 24; 
+            // 24*24的循环
             for (i = 0; i <= cols; i++) {
                 for (j = 0; j <= rows; j++) {
+                    //  根据j获取角度值
+                    // 180 * j / rows => 180 * {0, 24}/24 => [0, 180];
+                    // 90 - 180 * j / rows => [90, -90]
                     var angle = (90 - 180 * j / rows) * Math.PI / 180;
+
+                    // 正弦函数计算
                     var a = Math.sin(angle);
+
+                    // 如果是90的倍数
                     if ((90 - 180 * j / rows) % 90 == 0 && (90 - 180 * j / rows) % 180 != 0)
                         a = (90 - 180 * j / rows) > 0 ? 1 : -1;
+
+                    // 如果是180的倍数
                     if ((90 - 180 * j / rows) % 180 == 0)
                         a = 0;
+
+                    // sy = 100 * sin(angle);
                     var sy = -r * a;
+
+                    // 余弦函数计算
                     var sa = Math.cos(angle);
+
+                    // 如果是180的倍数
                     if ((90 - 180 * j / rows) % 180 == 0) sa = 1;
+
+                    // sr = 100 * cos
                     var sr = Math.abs(r * sa);
+
+                    // 根据i获取角度值
+                    // 360 * {1,25} / 24 => [15,375]
                     var angle2 = 360 * (i + 1) / cols;
+
+                    // 获取cos值
                     var b = Math.cos(angle2 * Math.PI / 180);
+
+                    // 如果是360的倍数
                     if (angle2 % 360 == 0)
                         b = 1;
+                    // 如果是180的倍数
                     else if (angle2 % 180 == 0)
                         b = -1;
+
+                    // sx = 100 * cos(angle) * cos(angle2)
                     var sx = sr * b;
+
+                    // 存储sx，sy
                     vertices.push(sx, sy);
                 }
             }
+
             indices = new Array();
             for (i = 0; i < cols; i++) {
                 for (j = 0; j < rows; j++) {
@@ -79,19 +150,41 @@
                     indices.push((i + 1) * (rows + 1) + j, i * (rows + 1) + j + 1, (i + 1) * (rows + 1) + j + 1);
                 }
             }
+
             uvtData = new Array();
             for (i = 0; i <= cols; i++) {
                 for (j = 0; j <= rows; j++) {
                     uvtData.push(i / cols, j / rows);
                 }
             }
+            
+            //  LSprite 类是基本显示列表构造块：一个可显示图形并且也可包含子项的显示列表节点
             backLayer = new LSprite();
             backLayer.x = 200;
             backLayer.y = 200;
             addChild(backLayer);
+            
+            // graphics指定属于此 sprite 的 LGraphics 对象，在此 sprite 中可执行矢量绘图命令
+            // LGraphics 类包含一组可用来创建矢量形状的方法
             backLayer.graphics.clear();
-            backLayer.graphics.beginBitmapFill(earthBitmapData);
-            backLayer.graphics.drawTriangles(vertices, indices, uvtData);
+            backLayer.graphics.beginBitmapFill(earthBitmapData); //用位图图像填充绘图区
+            /**
+                drawTriangles() 方法使用一组 (u,v) 坐标将当前填充或位图填充映射到三角形面
+                drawTriangles (vertices, indices, uvtData, thickness, color) 
+                vertices 由数字构成的矢量，其中的每一对数字将被视为一个坐标位置（一个 x, y 对）。vertices 参数是必需的。
+                         可以指定6个（3对）Number类型，作为Triangle的三个顶点，或者指定6*N个number，来同时绘制出N个Triangles
+                indices 一个由整数或索引构成的矢量，其中每三个索引定义一个三角形。索引是指vertices的索引。
+                        当使用这个参数时，verticle的length就不需要为6*N了,函数会使用这个参数来确定Triangles的顶点的位置.
+                        如果 indexes 参数为 null，则每三个顶点（vertices 矢量中的 6 对 x,y）定义一个三角形。
+                        否则，每个索引将引用一个顶点，即 vertices 矢量中的一对数字。
+                        例如，indexes[1] 引用 (vertices[2], vertices[3])。
+                        indexes 参数是可选的，但 indexes 通常会减少提交的数据量和计算的数据量。
+                uvtData 该参数对填充图案进行切割。 由用于应用纹理映射的标准坐标构成的矢量。每个坐标引用用于填充的位图上的一个点。U、V、T是表示纹理坐标的变量
+                        每个顶点必须具有一个 UV 或一个 UVT 坐标。对于 UV 坐标，(0,0) 是位图的左上角，(1,1) 是位图的右下角
+                thickness 一个整数，以点为单位表示线条的粗细,默认为0；
+                color 线的颜色
+            */
+            backLayer.graphics.drawTriangles(vertices, indices, uvtData); 
 
             backLayer.addEventListener(LEvent.ENTER_FRAME, onframe);
         }
@@ -114,21 +207,28 @@
             }
         }
 
+        // 旋转速度 10-0
         function runspeed(value) {
             leftspeed = 10 - value;
         }
 
+        // 伸缩 2-0
         function runmax(value) {
             backLayer.scaleX = value / 50;
             backLayer.scaleY = backLayer.scaleX;
         }
     </script>
-    <div id="mylegend1" style="position:absolute;top:400px;width:400px;z-index:1;color: #ffffff;background-color:#000000;">
-        旋转速度:
+
+    <!-- 旋转速度、角度控制 -->
+    <div id="mylegend1" style="position:absolute;top:400px;width:400px;z-index:1;color: #6c6c6c;">
+        <span>旋转速度:</span>
         <input type="number" max="10" min="0" value="10" onchange="runspeed(this.value);" />
-        <br/> 伸缩:
-        <input type="number" max="100" min="0" value="50" onchange="runmax(this.value);" />%
+        <br/>
+        <span>伸缩:</span>
+        <input type="number" max="100" min="0" value="50" onchange="runmax(this.value);" />
+        <span>%</span>
     </div>
+
 </body>
 
 </html>

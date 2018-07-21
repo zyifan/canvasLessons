@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script type="text/javascript" src="./js/lufylegend-1.10.1.min.js"></script>
+</head>
+<body>
+<div id="mylegend">loading...</div>
+<script type="text/javascript">
+ 
+    /*function:lufylegend图片的加载和显示*/
+ 
+    // var loader;
+ 
+    //引擎初始化
+    // init(50, "mylegend", 500, 300, main);
+ 
+    //游戏主函数
+
+    /*
+    function main() {
+ 
+        //LLoader 类可用于加载图像（JPG、PNG 或 GIF）文件。使用 load() 方法来启动加载。
+        loader = new LLoader();
+        //使用 LEventDispatcher 对象注册事件侦听器对象，以使侦听器能够接收事件通知,图片加载完后执行loadBitmapdata
+        loader.addEventListener(LEvent.COMPLETE, loadBitmapdata);
+        //将 JPEG、渐进式 JPEG、非动画 GIF 或 PNG 文件加载到此 LLoader 对象的子对象中。如果加载 GIF 动画文件，将仅显示第一帧。
+        loader.load("./imgs/face.jpg", "bitmapData");
+ 
+    };*/
+    
+    /*
+    //加载图片并对图片操作：
+    function loadBitmapdata(event) {
+ 
+        //图片加载完后此时loader.content就是一个Image,LBitmapData用来保存和读取图片对象
+        //var bitmapdata = new LBitmapData(loader.content);
+ 
+        //使用 LBitmapData 类的方法创建任意大小的Image对象，控制图像显示范围，并在运行时采用多种方式操作这些图像。
+        // LBitmapData ( image  x  y  width  height  dataType ) 
+        var bitmapdata = new LBitmapData(loader.content, 50, 50, 100, 100);
+         
+        //LBitmap用来显示图片到画板
+        var bitmap = new LBitmap(bitmapdata);
+ 
+        //控制图片显示的各种属性
+        //图片坐标
+        bitmap.x = 50;
+        bitmap.y = 50;
+        //图片旋转60度
+        bitmap.rotate = 60;
+        //图片透明度设置为0.4
+        bitmap.alpha = 0.4; 
+ 
+        //将可显示的对象(LSprite,LBitmap等)加入到游戏最底层画板上 
+        addChild(bitmap);
+ 
+    };
+    */
+ 
+     /*
+    //使用精灵操作图片
+    function loadBitmapdata(event) {
+ 
+        //图片加载完后此时loader.content就是一个Image,LBitmapData用来保存和读取图片对象
+        //var bitmapdata = new LBitmapData(loader.content);
+ 
+        //使用 LBitmapData 类的方法创建任意大小的Image对象，控制图像显示范围，并在运行时采用多种方式操作这些图像。
+        // LBitmapData ( image  x  y  width  height  dataType ) 
+        // dataType 指定数据格式，可以使用LBitmapData.DATA_IMAGE（Image对象）和LBitmapData.DATA_CANVAS（Canvas对象）（该参数可省略）
+        var bitmapdata = new LBitmapData(loader.content, 50, 50, 100, 100);
+ 
+        //LBitmap用来显示图片到画板
+        var bitmap = new LBitmap(bitmapdata);
+ 
+        //使用精灵操作图片
+        var sprite = new LSprite();
+        //设置图片摆放位置
+        sprite.x = 50;
+        sprite.y = 50;
+        //图片以左上角为原点旋转60度
+        sprite.rotate = 60;
+        //图片透明度设置为0.5   
+        sprite.alpha = 0.5;
+        sprite.addChild(bitmap);
+ 
+        //将可显示的对象(LSprite,LBitmap等)加入到游戏最底层画板上 
+        addChild(sprite);
+ 
+    };*/
+ 
+     /*
+    //基本图形绘制
+    function main() {
+        graphics = new LGraphics();
+ 
+        //将可显示的对象(LSprite,LBitmap等)加入到游戏最底层画板上 
+        addChild(graphics);
+ 
+        graphics.drawLine(2, '#ff0000', [10, 10, 100, 100]); //画线:线宽，颜色，坐标 
+        //画圆弧:线宽/颜色/[圆心坐标/半径/起始角/跨过角度/是否顺时针]/是否填充/填充颜色 
+        graphics.drawArc(2, '#ff0000', [200, 60, 50, 90 * Math.PI / 180, 180 * Math.PI / 180, true], true, '#00ff00');
+        //画矩形:线宽/颜色/[起始坐标/矩形宽高]/是否填充/填充颜色 
+        graphics.drawRect(2, '#ff0000', [300, 10, 50, 50], true, '#ffff00');
+        //画圆角矩形，多一个圆角半径参数 
+        graphics.drawRoundRect(2, '#ff0000', [400, 10, 50, 50, 10], true, '#ffff00');
+        //画多边形：线宽/颜色/[[],[],[]...(坐标集，至少三个)]/是否填充/填充颜色 
+        graphics.drawVertices(2, '#ff0000', [[10, 110], [10, 210], [50, 170], [50, 150]], true, '#00ff00');
+    }*/ 
+ 
+    /*
+    //使用原生canvas绘图
+    function main() {
+        graphics = new LGraphics();
+        addChild(graphics);
+ 
+        //使用原生canvas绘图 
+        graphics.add(function (coodx, coody) {
+            LGlobal.canvas.strokeStyle = "#000000";
+            LGlobal.canvas.moveTo(20, 20);
+            LGlobal.canvas.lineTo(200, 200);
+            LGlobal.canvas.stroke();
+        });
+    }*/
+ 
+    /*
+    //使用Sprite的graphic绘图
+    function main() {
+        var layer = new LSprite();
+        addChild(layer);
+        layer.graphics.drawRect(1, '#000000', [50, 50, 100, 100]);
+        layer.graphics.drawRect(1, '#000000', [170, 50, 100, 100], true, '#cccccc');
+    }*/
+ 
+    
+    //beginBitmapFill使用位图填充绘图区
+    var loader;
+    init(50, "mylegend", 640, 480, main);   //初始化游戏，游戏加载后调用main
+ 
+    function main() {
+        loader = new LLoader();
+        loader.addEventListener(LEvent.COMPLETE, loadBitmapdata);
+        loader.load("./imgs/face.jpg", "bitmapData");
+    }
+ 
+    function loadBitmapdata(event) {
+        var bitmapdata = new LBitmapData(loader.content);
+        var backLayer = new LSprite();
+        addChild(backLayer);
+        backLayer.graphics.beginBitmapFill(bitmapdata);
+        //backLayer.graphics.drawArc(1,"#000",[110,80,50,0,Math.PI*2]); 
+        backLayer.graphics.drawRect(1, "#000", [80, 50, 70, 100]);
+    }
+
+</script>
+</body>
+</html>
