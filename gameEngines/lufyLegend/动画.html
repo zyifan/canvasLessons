@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="js/lufylegend-1.10.1.min.js"></script>
+    <title>动画</title>
+</head>
+
+<body>
+    <div id="mylegend"></div>
+    <!-- <script type="text/javascript">
+        var loader, anime, layer;
+
+        //初始化画布
+        init(200, "mylegend", 500, 350, main);
+
+        //初始化回调函数
+        function main() {
+            //加载图片资源
+            loader = new LLoader();
+            loader.addEventListener(LEvent.COMPLETE, loadBitmapdata);
+            loader.load("imgs/run.jpg", "bitmapData");
+        }
+        //图片加载完成后回调函数
+        function loadBitmapdata(event) {
+            //LBitmapData用于进一步构造一个Bitmap对象  
+            //LBitmapData四个构造参数含义：图像资源，从原图中开始截取的原点坐标（x，y），截取的宽度和高度
+            var bitmapdata = new LBitmapData(loader.content, 0, 0, 72, 72);
+            ////将原图分割为动画帧，此对象封装了分割方式，将原图分割成4*4
+            // divideCoordinate ( width  height  row  col ), 将传入的宽和高，按照行数和列数进行拆分计算，会得到一个2维数组
+            var list = LGlobal.divideCoordinate(792, 72, 1, 11);
+            //加入层LSprite
+            layer = new LSprite();
+            addChild(layer);
+            //得到一个animate对象，参数：层，bitmapData，分割方式  
+            anime = new LAnimation(layer, bitmapdata, list);
+            //循环动画
+            layer.addEventListener(LEvent.ENTER_FRAME, onframe);
+        }
+        //此函数会被反复调用  
+        //以帧速率调度此事件。 
+        function onframe() {
+            anime.onframe();
+        }
+    </script> -->
+    
+    <script type="text/javascript">
+        var loader, anime, layer;
+        init(200, "mylegend", 500, 350, main);
+
+        function main() {
+            loader = new LLoader();
+            loader.addEventListener(LEvent.COMPLETE, loadBitmapdata);
+            loader.load("imgs/runmans.jpg", "bitmapData");
+        }
+
+        function loadBitmapdata(event) {
+            var bitmapdata = new LBitmapData(loader.content, 0, 0, 72, 72);
+            //将图片分解为装满坐标的二维数组, divideCoordinate (width, height, row, col)
+            var list = LGlobal.divideCoordinate(792, 340, 4, 11);
+            //加入层LSprite
+            layer = new LSprite();
+            addChild(layer);
+
+            //动画操作一般有这几种：1，设置动画 2，获取动画信息 3，添加动画监听事件 4，播放动画
+            anime = new LAnimation(layer, bitmapdata, list);
+
+            layer.addEventListener(LEvent.ENTER_FRAME, onframe);
+        }
+
+        function onframe() {
+            //getAction方法，获取当前播放的贞动画的属性, [rowIndex, colIndex, mode, isMirror]
+            // mode (1,0,-1)分别代表(正序播放,静止,倒序播放)
+            // isMirror 是否使用镜像来水平翻转显示对象
+            var action = anime.getAction();
+            console.log('action....')
+            console.log(action);
+            switch (action[0]) {
+                case 0:
+                    //人物下行
+                    layer.y += 5;
+                    if (layer.y >= 200) {
+                        //setAction方法，设置动画, 设置播放的贞动画
+                        // setAction ( rowIndex  colIndex  mode  isMirror ) 
+                        anime.setAction(2);//播放第2行
+                    }
+                    break;
+                case 1:
+                    //人物左行
+                    layer.x -= 5;
+                    if (layer.x <= 0) {
+                        anime.setAction(0);//播放第0行
+                    }
+                    break;
+                case 2:
+                    //人物右行
+                    layer.x += 5;
+                    if (layer.x >= 200) {
+                        anime.setAction(3);//播放第3行
+                    }
+                    break;
+                case 3:
+                    //人物上行
+                    layer.y -= 5;
+                    if (layer.y <= 0) {
+                        anime.setAction(1);//播放第1行
+                    }
+                    break;
+            }
+            //onframe方法，播放动画
+            anime.onframe();
+        }
+    </script>
+</body>
+
+</html>

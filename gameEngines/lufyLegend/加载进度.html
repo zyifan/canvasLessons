@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="js/lufylegend-1.10.1.min.js"></script>
+    <title>场景</title>
+</head>
+
+<body>
+    <div id="div_caiquan"></div>
+    <script type="text/javascript">
+        //初始化引擎组件
+        init(50, "div_caiquan", 800, 400, main);
+
+        //定义游戏层,加载进度层、游戏背景层
+        var loadingLayer, backLayer;
+
+        //定义游戏图片
+        //定义图片资源加载完成后返回的图片对象
+        var imglist = {};
+
+        //定义图片资源数组
+        var imgData = new Array({
+            name: "bird",
+            path: "imgs/bird.jpg"
+        }, {
+            name: "face",
+            path: "imgs/face.jpg"
+        }, {
+            name: "over",
+            path: "imgs/over.png"
+        }, {
+            name: "run",
+            path: "imgs/run.jpg"
+        }, {
+            name: "runmans",
+            path: "imgs/runmans.jpg"
+        }, {
+            name: "tamkero",
+            path: "imgs/tamkero.png"
+        }, {
+            name: "up",
+            path: "imgs/up.png"
+        });
+
+        //回调函数
+        function main() {
+
+            //创建背景层
+            backLayer = new LSprite();
+
+            //将背景层添加到画布
+            addChild(backLayer);
+
+            //创建加载进度层
+            loadingLayer = new LoadingSample3();
+
+            //将加载进度层添加到背景层
+            backLayer.addChild(loadingLayer);
+
+            //loadingLayer.setProgress(35);
+
+            //加载图片资源
+            LLoadManage.load(
+                //图片数据数组
+                imgData,
+                function (progress) {
+                    //显示加载进度
+                    loadingLayer.setProgress(progress);
+                },
+                function (result) {
+
+                    //加载完成
+                    //result可以认为是一个map，资源列表中的资源可以按键获取 
+                    imglist = result;
+                    //移除加载进度层
+                    backLayer.removeChild(loadingLayer);
+                    loadingLayer = null;
+                    //游戏初始化
+                    gameInit();
+                }
+            );
+        };
+
+        //游戏初始化
+        function gameInit() {
+
+            //game begin
+            console.log('init...')
+            console.log(imglist)
+
+        };
+    </script>
+</body>
+
+</html>

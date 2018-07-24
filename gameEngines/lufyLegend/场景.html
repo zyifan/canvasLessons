@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="js/lufylegend-1.10.1.min.js"></script>
+    <title>场景</title>
+</head>
+
+<body>
+    <div id="div_caiquan"></div>
+    <script type="text/javascript">
+        //初始化legend组件
+        init(50, "div_caiquan", 800, 400, main);
+
+        //定义游戏层
+        //游戏背景层,结果显示层，点击层
+        var backLayer, resultLayer, clickLayer;
+
+        //初始化回调函数
+        function main() {
+
+            gameInit();
+
+        };
+
+        //游戏初始化函数
+        function gameInit() {
+
+
+            //游戏背景层初始化
+            initBackLayer();
+
+            //结果显示层初始化
+            initResultLayer();
+
+            //操作层初始化
+            initClickLayer();
+
+        };
+
+        // 游戏背景层初始化
+        function initBackLayer() {
+
+            //创建游戏背景层对象
+            backLayer = new LSprite();
+            //添加到画布
+            addChild(backLayer);
+
+            //绘制游戏界面背景,使用Sprite的graphic绘图
+            // drawRect ( thickness  color  param  isFill  fillColor )
+            // 线条的粗细、线的颜色、
+            backLayer.graphics.drawRect(10, '#008800', [0, 0, LGlobal.width, LGlobal.height], true, '#000000');
+
+        };
+
+        // 结果显示层初始化
+        function initResultLayer() {
+
+            //创建结果显示层对象
+            resultLayer = new LSprite();
+
+            //绘制结果显示层,使用Sprite的graphic绘图
+            resultLayer.graphics.drawRect(4, '#ff8800', [0, 0, 150, 110], true, '#ffffff');
+
+            //设置结果显示层位置
+            resultLayer.x = 10;
+            resultLayer.y = 100;
+
+            //添加到游戏背景层
+            backLayer.addChild(resultLayer);
+
+        };
+
+        // 操作层初始化
+        function initClickLayer() {
+
+            //创建操作层对象
+            clickLayer = new LSprite();
+
+            //绘制操作层,使用Sprite的graphic绘图
+            clickLayer.graphics.drawRect(4, '#ff8800', [0, 0, 300, 110], true, '#ffffff');
+
+            //设置操作层显示坐标
+            clickLayer.x = 250;
+            clickLayer.y = 275;
+
+            //添加到游戏背景层
+            addChild(clickLayer);
+
+        };
+    </script>
+</body>
+
+</html>

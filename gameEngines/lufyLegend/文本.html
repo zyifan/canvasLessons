@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>文本</title>
+    <script src="js/lufylegend-1.10.1.min.js"></script>
+</head>
+
+<body>
+    <div id="mylegend"></div>
+    <!-- 1.文本 -->
+    <!-- <script type="text/javascript">
+        init(50, "mylegend", 500, 350, main);
+
+        function main() {
+            //创建层
+            var layer = new LSprite();
+            addChild(layer);
+            //创建一个文本标签
+            var field = new LTextField();
+            field.text = "Hello World!";
+            layer.addChild(field);
+        }
+    </script> -->
+    <!-- <script type="text/javascript">
+        init(50, "mylegend", 500, 350, main);
+
+        function main() {
+            var layer = new LSprite();
+            addChild(layer);
+            var field = new LTextField();
+            field.x = 50;
+            field.y = 50;
+            field.text = "Hello World!";
+            field.size = 25;
+            field.color = "#333333";
+            field.weight = "bolder";
+            layer.addChild(field);
+        }
+    </script> -->
+
+
+
+    <!-- 2.文本输入框 -->
+    <!-- <script type="text/javascript">
+        init(50, "mylegend", 500, 350, main);
+
+        function main() {
+            var layer = new LSprite();
+            addChild(layer);
+            var field = new LTextField();
+            field.x = 50;
+            field.y = 50;
+            //设置文本类型为输入框
+            field.setType(LTextFieldType.INPUT);
+            layer.addChild(field);
+        }
+    </script> -->
+
+    <!-- 3.鼠标事件 -->
+    <!-- <script type="text/javascript">
+        init(50, "mylegend", 300, 300, main);
+        var field;
+
+        function main() {
+            var layer = new LSprite();
+            layer.graphics.drawRect(1, '#cccccc', [0, 0, 300, 300], true, '#cccccc');
+            addChild(layer);
+            field = new LTextField();
+            field.text = "Wait Click!";
+            layer.addChild(field);
+            //鼠标按下
+            layer.addEventListener(LMouseEvent.MOUSE_DOWN, downshow);
+            //鼠标抬起
+            layer.addEventListener(LMouseEvent.MOUSE_UP, upshow);
+        }
+
+        function downshow(event) {
+            field.text = "Mouse Down!";
+        }
+
+        function upshow(event) {
+            field.text = "Mouse Up!";
+        }
+    </script> -->
+
+    <!-- 4.循环 -->
+    <!-- <script type="text/javascript">
+        init(50, "mylegend", 300, 300, main);
+        var field;
+
+        function main() {
+            var layer = new LSprite();
+            layer.graphics.drawRect(1, '#cccccc', [0, 0, 300, 300], true, '#cccccc');
+            addChild(layer);
+            field = new LTextField();
+            field.text = "0";
+            layer.addChild(field);
+            //layer上绑定ENTER_FRAME事件，以帧速率调用onframe函数  
+            layer.addEventListener(LEvent.ENTER_FRAME, onframe);
+        }
+
+        function onframe() {
+            field.text = parseInt(field.text) + 1;
+        }
+    </script> -->
+
+    <!-- 5.键盘事件 -->
+    <!-- <script type="text/javascript">
+        init(50, "mylegend", 300, 300, main);
+        var field;
+
+        function main() {
+            var layer = new LSprite();
+            layer.graphics.drawRect(1, '#cccccc', [0, 0, 300, 300], true, '#cccccc');
+            addChild(layer);
+            field = new LTextField();
+            field.text = "Wait Click!";
+            layer.addChild(field);
+            LEvent.addEventListener(LGlobal.window, LKeyboardEvent.KEY_DOWN, downshow);
+            LEvent.addEventListener(LGlobal.window, LKeyboardEvent.KEY_UP, upshow);
+        }
+
+        function downshow(event) {
+            field.text = event.keyCode + " Down!";
+        }
+
+        function upshow(event) {
+            field.text = event.keyCode + " Up!";
+        }
+    </script> -->
+
+    <!-- 6.LButton -->
+    <script type="text/javascript">
+        init(50, "mylegend", 300, 300, main);
+        var loader, bitmapup, bitmapover, field;
+
+        function main() {
+            loader = new LLoader();
+            loader.addEventListener(LEvent.COMPLETE, loadUp);
+            loader.load("imgs/up.png", "bitmapData");
+        }
+
+        function loadUp(event) {
+            bitmapup = new LBitmap(new LBitmapData(loader.content));
+            loader = new LLoader();
+            loader.addEventListener(LEvent.COMPLETE, loadOver);
+            loader.load("imgs/over.png", "bitmapData");
+        }
+
+        function loadOver() {
+            bitmapover = new LBitmap(new LBitmapData(loader.content));
+            var layer = new LSprite();
+            addChild(layer);
+            field = new LTextField();
+            field.text = "Wait Click!";
+            layer.addChild(field);
+            var testButton = new LButton(bitmapup, bitmapover);
+            testButton.y = 50;
+            layer.addChild(testButton);
+            testButton.addEventListener(LMouseEvent.MOUSE_DOWN, downshow);
+        }
+
+        function downshow(event) {
+            field.text = "testButton Click!";
+        }
+    </script>
+</body>
+
+</html>

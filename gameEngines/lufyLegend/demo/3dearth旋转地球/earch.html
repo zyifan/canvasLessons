@@ -39,13 +39,17 @@
         var upspeed = 10;
         var upindex = 1;
 
+        //定义每个顶点的坐标 
         var vertices;
+        //定义三角形，数组vertices中每三个顶点可以组成一个三角形
         var indices;
+        //定义上面的每个顶点相对于整张图片的比例
         var uvtData;
         var backLayer;
 
         var bitmapData, earthBitmapData;
 
+        //分割行数和列数
         var rows = 24,
             cols = 24;
 
@@ -82,26 +86,33 @@
                 可以使用 LBitmapData 类的方法创建任意大小的Image对象，并在运行时采用多种方式操作这些图像。
                 也可以访问使用 LLoader 类加载的Image对象。
             */
+            //获取图片数据
             earthBitmapData = new LBitmapData(imglist["earth"]);
             //earthBitmapData = new LBitmapData("#ffffff", 0, 0, 500, 300);
 
-            // 获取24*24个点坐标
+            // 获取24*24个顶点坐标
             var i, j;
+            //地球半径
             var r = 100;
+
+            //计算定点坐标
             vertices = new Array();
             // rows = cols = 24; 
             // 24*24的循环
             for (i = 0; i <= cols; i++) {
-                for (j = 0; j <= rows; j++) {
-                    //  根据j获取角度值
+                for (j = 0; j <= rows; j++) {             
+                    //计算弧度       
+                    //  根据j获取角度值[90°,-90°]
                     // 180 * j / rows => 180 * {0, 24}/24 => [0, 180];
                     // 90 - 180 * j / rows => [90, -90]
                     var angle = (90 - 180 * j / rows) * Math.PI / 180;
 
+
+                    //计算定点Y坐标
                     // 正弦函数计算
                     var a = Math.sin(angle);
 
-                    // 如果是90的倍数
+                    // 如果是90的奇数倍
                     if ((90 - 180 * j / rows) % 90 == 0 && (90 - 180 * j / rows) % 180 != 0)
                         a = (90 - 180 * j / rows) > 0 ? 1 : -1;
 
@@ -112,13 +123,15 @@
                     // sy = 100 * sin(angle);
                     var sy = -r * a;
 
+
+                    //计算顶点X坐标
                     // 余弦函数计算
                     var sa = Math.cos(angle);
 
                     // 如果是180的倍数
                     if ((90 - 180 * j / rows) % 180 == 0) sa = 1;
 
-                    // sr = 100 * cos
+                    // 球的水平切面圆的半径r1, sr = 100 * cos
                     var sr = Math.abs(r * sa);
 
                     // 根据i获取角度值
@@ -143,14 +156,20 @@
                 }
             }
 
+            //计算定点三角形位置
+            // 获取三角形顶点坐标的索引
             indices = new Array();
             for (i = 0; i < cols; i++) {
                 for (j = 0; j < rows; j++) {
+                    // 正方形上三角（左上，右上，左下）顶点索引
                     indices.push(i * (rows + 1) + j, (i + 1) * (rows + 1) + j, i * (rows + 1) + j + 1);
+                    // 正方形下三角（右上，左下，右下）顶点索引
                     indices.push((i + 1) * (rows + 1) + j, i * (rows + 1) + j + 1, (i + 1) * (rows + 1) + j + 1);
                 }
             }
 
+             //定义定点三角形比例
+            // 每个vertices顶点相对于整张图片的比例[0,1]之间的值
             uvtData = new Array();
             for (i = 0; i <= cols; i++) {
                 for (j = 0; j <= rows; j++) {
@@ -162,34 +181,42 @@
             backLayer = new LSprite();
             backLayer.x = 200;
             backLayer.y = 200;
+            //添加对象
             addChild(backLayer);
             
             // graphics指定属于此 sprite 的 LGraphics 对象，在此 sprite 中可执行矢量绘图命令
             // LGraphics 类包含一组可用来创建矢量形状的方法
+            //使用Sprite的graphic绘图
             backLayer.graphics.clear();
+            
+            //填充背景
             backLayer.graphics.beginBitmapFill(earthBitmapData); //用位图图像填充绘图区
             /**
                 drawTriangles() 方法使用一组 (u,v) 坐标将当前填充或位图填充映射到三角形面
                 drawTriangles (vertices, indices, uvtData, thickness, color) 
-                vertices 由数字构成的矢量，其中的每一对数字将被视为一个坐标位置（一个 x, y 对）。vertices 参数是必需的。
+                vertices (顶点坐标集合)由数字构成的矢量，其中的每一对数字将被视为一个坐标位置（一个 x, y 对）。vertices 参数是必需的。
                          可以指定6个（3对）Number类型，作为Triangle的三个顶点，或者指定6*N个number，来同时绘制出N个Triangles
-                indices 一个由整数或索引构成的矢量，其中每三个索引定义一个三角形。索引是指vertices的索引。
+                indices （边向量集合，基于vertices，一个向量由两个顶点组成）一个由整数或索引构成的矢量，其中每三个索引定义一个三角形。索引是指vertices的索引。
                         当使用这个参数时，verticle的length就不需要为6*N了,函数会使用这个参数来确定Triangles的顶点的位置.
                         如果 indexes 参数为 null，则每三个顶点（vertices 矢量中的 6 对 x,y）定义一个三角形。
                         否则，每个索引将引用一个顶点，即 vertices 矢量中的一对数字。
                         例如，indexes[1] 引用 (vertices[2], vertices[3])。
                         indexes 参数是可选的，但 indexes 通常会减少提交的数据量和计算的数据量。
-                uvtData 该参数对填充图案进行切割。 由用于应用纹理映射的标准坐标构成的矢量。每个坐标引用用于填充的位图上的一个点。U、V、T是表示纹理坐标的变量
+                uvtData (矢量，即向量)该参数对填充图案进行切割。 由用于应用纹理映射的标准坐标构成的矢量。每个坐标引用用于填充的位图上的一个点。U、V、T是表示纹理坐标的变量
                         每个顶点必须具有一个 UV 或一个 UVT 坐标。对于 UV 坐标，(0,0) 是位图的左上角，(1,1) 是位图的右下角
                 thickness 一个整数，以点为单位表示线条的粗细,默认为0；
                 color 线的颜色
             */
+            
+            //LGraphics类添加drawTriangles方法,用于呈现一组三角形
             backLayer.graphics.drawTriangles(vertices, indices, uvtData); 
 
+            //进入图之后，按帧速率调用onframe函数 
             backLayer.addEventListener(LEvent.ENTER_FRAME, onframe);
         }
 
         function onframe() {
+            //变换绘制图片的开始位置，造成旋转动画
             if (leftspeed < 10 && leftindex++ > leftspeed) {
                 leftindex = 0;
                 for (i = 0; i <= rows; i++) {
@@ -207,12 +234,12 @@
             }
         }
 
-        // 旋转速度 10-0
+        //调整旋转速度， 旋转速度 10-0
         function runspeed(value) {
             leftspeed = 10 - value;
         }
 
-        // 伸缩 2-0
+        // //改变地球大小，伸缩 2-0
         function runmax(value) {
             backLayer.scaleX = value / 50;
             backLayer.scaleY = backLayer.scaleX;
