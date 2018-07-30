@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="js/lufylegend-1.10.1.min.js"></script>
-    <title>场景</title>
+    <title>界面title及游戏界面</title>
 </head>
 
 <body>
@@ -22,23 +22,20 @@
         //定义图片资源加载完成后返回的图片对象
         var imglist = {};
         //定义图片资源数组
-        var imgData = new Array(
+        var imgData = new Array({
+            name: "title",
+            path: "imgs/title.jpg"
+        }, {
+            name: "shitou",
+            path: "imgs/shitou.jpg"
+        }, {
+            name: "jiandao",
+            path: "imgs/jiandao.jpg"
+        }, {
+            name: "bu",
+            path: "imgs/bu.jpg"
+        });
 
-            {
-                name: "title",
-                path: "imgs/title.jpg"
-            }, {
-                name: "shitou",
-                path: "imgs/shitou.jpg"
-            }, {
-                name: "jiandao",
-                path: "imgs/jiandao.jpg"
-            }, {
-                name: "bu",
-                path: "imgs/bu.jpg"
-            }
-
-        );
         //定义自己出拳图片，电脑出拳图片
         var selfBitMap, enemyBitMap;
 
@@ -71,7 +68,6 @@
                     loadingLayer.setProgress(progress);
                 },
                 function (result) {
-
                     //加载完成
                     //result可以认为是一个map，资源列表中的资源可以按键获取 
                     imglist = result;
