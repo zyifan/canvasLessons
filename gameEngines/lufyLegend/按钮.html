@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="./js/lufylegend-1.10.1.min.js"></script>
+    <script type="text/javascript" src="./js/lufylegend.ui-0.14.1.min.js"></script>
+    <title>按钮</title>
+</head>
+
+<body>
+    <div id="div_caiquan"></div>
+    <script type="text/javascript">
+        //初始化legend组件
+        init(50, "div_caiquan", 800, 400, main);
+
+        var layer;
+
+        //定义游戏层
+        //游戏背景层,结果显示层，点击层
+        var backLayer, resultLayer, clickLayer;
+
+        //初始化回调函数
+        function main() {
+            layer = new LSprite();
+
+            rectBtn();
+            rectRoundBtn();
+            radios();
+            chk();
+            selects();
+            scrollbar();
+
+            addChild(layer);
+        };
+
+        // 矩形按钮LButtonSample1
+        function rectBtn() {
+
+            var button02 = new LButtonSample1("LButtonSample1");
+            button02.backgroundColor = "#008800";
+            button02.x = 10;
+            button02.y = 10;
+            layer.addChild(button02);
+        }
+
+
+        // 圆角矩形按钮LButtonSample2
+        function rectRoundBtn() {
+            var button04 = new LButtonSample2("LButtonSample2");
+            button04.backgroundColor = "blue";
+            button04.x = 10;
+            button04.y = 70;
+            layer.addChild(button04);
+        }
+
+        // 单选框LRadio
+        function radios() {
+            var radio = new LRadio();
+            radio.x = 20;
+            radio.y = 130;
+            radio.setChildRadio(1, 0, 0);
+            radio.setChildRadio(2, 50, 0);
+            radio.setChildRadio(3, 100, 0);
+            layer.addChild(radio);
+        }
+
+        // 多选框LCheckBox
+        function chk() {
+            var check1 = new LCheckBox();
+            check1.x = 10;
+            check1.y = 160;
+            layer.addChild(check1);
+
+            var check2 = new LCheckBox();
+            check2.x = 50;
+            check2.y = 160;
+            layer.addChild(check2);
+        }
+
+        // 组合框LComboBox
+        function selects() {
+            var com = new LComboBox(20);
+            com.x = 50;
+            com.y = 210;
+            com.setChild({
+                label: "测试一",
+                value: "aaa"
+            });
+            com.setChild({
+                label: "测试二",
+                value: "bbb"
+            });
+            com.setChild({
+                label: "测试三",
+                value: "ccc"
+            });
+            com.setChild({
+                label: "测试四",
+                value: "ddd"
+            });
+            layer.addChild(com);
+        }
+
+        // 滚动条LScrollbar
+        function scrollbar() {
+            var showObject = new LSprite();
+            showObject.graphics.drawRect(2, "#ff0000", [0, 0, 500, 500], true, "#ff0000");
+
+            var t = new LTextField();
+            t.color = "#000000";
+            t.text =
+                "あいうえおかきくけこさしすせそたちつてとあいうえおかきくけこさしすせそたちつてとあいうえおかきくけこさしすせそたちつてとあいうえおかきくけこさしすせそたちつてとあいうえおかきくけこさしすせそたちつてとあいうえおかきくけこさしすせそたちつてとあいうえおかきくけこさしすせそたちつてとあいうえおかきくけこさしすせそたちつてと";
+            t.width = 300;
+            t.stroke = true;
+            t.size = 30;
+            // setWordWrap ( value  height )
+            // value 表示文本字段是否自动换行。如果设置的值为 true，则该文本字段自动换行；如果值为 false，则该文本字段不自动换行
+            // height 指定一行文本的高度.
+            t.setWordWrap(true, 35);
+            showObject.addChild(t);
+
+            var sc = new LScrollbar(showObject, 200, 200);
+            sc.x = 450;
+            sc.y = 20;
+            layer.addChild(sc);
+        }
+    </script>
+</body>
+
+</html>
