@@ -107,7 +107,7 @@ function addEvent(event) {
 	overLayer = new LSprite();
 	backLayer.addChild(overLayer);
 
-	// 选择层
+	// 重新开始层
 	selectLayer = new LSprite();
 	backLayer.addChild(selectLayer);
 
@@ -123,42 +123,55 @@ function addEvent(event) {
 	gameoverLayer.addEventListener(LMouseEvent.MOUSE_UP, reTry);
 }
 
+// 重新开始游戏
 function gameReStart() {
+	// 随机数
 	i0 = Math.floor(Math.random() * 10);
 	j0 = Math.floor(Math.random() * 10);
 
+	// 重置时间
 	time = 0;
 
+	// 删除层及层内元素
 	tileLayer.removeAllChild();
 	overLayer.removeAllChild();
 	selectLayer.removeAllChild();
+
 	backLayer.removeChild(selectLayer);
 	backLayer.removeChild(overLayer);
+
+	// 重置关卡
 	if (checkpointNo != checkpoints.length - 1) {
 		checkpointNo++;
 	}
-	initTile();
-	addEvent();
-	addTimeLine();
+	
+	initTile();// 绘制方格和字	
+	addEvent();// 添加层、事件	
+	addTimeLine();// 添加滚动条
 }
 
+// 重新开始
 function reTry() {
+	// 随机数
 	i0 = Math.floor(Math.random() * 10);
 	j0 = Math.floor(Math.random() * 10);
 
+	// 重置时间
 	time = 0;
 
+	// 删除层及层内元素
 	tileLayer.removeAllChild();
 	overLayer.removeAllChild();
 	gameoverLayer.removeAllChild();
 	selectLayer.removeAllChild();
+
 	backLayer.removeChild(selectLayer);
 	backLayer.removeChild(overLayer);
 	backLayer.removeChild(gameoverLayer);
 
-	initTile();
-	addEvent();
-	addTimeLine();
+	initTile();// 绘制方格和字
+	addEvent();// 添加层、事件
+	addTimeLine();// 添加滚动条
 }
 
 function addTimeLine() {
@@ -172,6 +185,7 @@ function addTimeLine() {
 	}, 100);
 }
 
+// 滚动条
 function drawTimeLine() {
 	// 每100毫秒就移至3+((time/5)*495)/10位置 (3-498)
 	nowLine = 3 + ((time / 5) * 495) / 10;
@@ -186,10 +200,12 @@ function drawTimeLine() {
 	}
 }
 
+// 赢或输后的处理
 function gameOver() {
 	overLayer.graphics.drawRect(5, "dimgray", [(LGlobal.width - 420) * 0.5, 80, 420, 250], true, "lightgray");
 	gameoverLayer.graphics.drawRect(5, "dimgray", [(LGlobal.width - 250) * 0.5, 230, 250, 50], true, "darkgray");
 
+	// var gameoverTextContent = ["对不起，您失败了", "重开关卡"];
 	for (var i = 0; i < gameoverTextContent.length; i++) {
 		gameoverText = new LTextField();
 		gameoverText.weight = "bold";
@@ -212,6 +228,8 @@ function gameOver() {
 	tileLayer.removeEventListener(LMouseEvent.MOUSE_DOWN, onDown);
 }
 
+// 取出鼠标位置，然后 将它除以50并取整，得出点的是哪一格，然后将点的那一格作为参数送进isTure，
+// 在里面我判断了参数值是否与i0和j0符合，如果符合，就调用处理胜利的函数
 function onDown(event) {
 	var mouseX, mouseY;
 	mouseX = event.offsetX;
@@ -224,23 +242,30 @@ function onDown(event) {
 
 function isTure(x, y) {
 	if (x == j0 && y == i0) {
+		// 清除滚动条
 		clearInterval(setTimeLine);
+
+		// 绘制restart操作层
 		overLayer.graphics.drawRect(5, "dimgray", [(LGlobal.width - 420) * 0.5, 80, 420, 250], true, "lightgray");
 		selectLayer.graphics.drawRect(5, "dimgray", [(LGlobal.width - 250) * 0.5, 230, 250, 50], true, "darkgray");
 
+		// 循环 overTextContent = ["恭喜您，您过关了", "进入下一关", "重新开始"]
 		for (var i = 0; i < overTextContent.length; i++) {
 			overText = new LTextField();
 			overText.weight = "bold";
 			overText.color = "dimgray";
 			overText.font = "黑体";
 			if (i == 0) {
+				// 第一行
 				overText.text = overTextContent[i];
 				overText.size = 35;
 				overText.x = (LGlobal.width - overText.getWidth()) * 0.5;
 				overText.y = 120;
 				overLayer.addChild(overText);
 			} else if (i == 1) {
+				// 第二行				
 				if (checkpointNo == checkpoints.length - 1) {
+					// 最后一关
 					overText.text = overTextContent[i + 1];
 					overText.size = 20;
 					overText.x = (LGlobal.width - overText.getWidth()) * 0.5;
