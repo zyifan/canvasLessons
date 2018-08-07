@@ -18,7 +18,7 @@
             loader.load("face.jpg", "bitmapData");
         }
 
-        // LbitmapData（image，x，y，width，height）
+        // LbitmapData（image，x，y，width，height）从图片内x、y位置截取一块 width*height 的图片进行显示
         function loadBitmapdata(event) {
             var bitmapdata = new LBitmapData(loader.content, 50, 50, 150, 150);
             var bitmap = new LBitmap(bitmapdata);
