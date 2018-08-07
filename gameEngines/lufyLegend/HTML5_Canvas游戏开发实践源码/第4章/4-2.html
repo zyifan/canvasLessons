@@ -12,6 +12,7 @@
         var loader;
         init(50, "mylegend", 500, 350, main);
 
+        // Lloader 类加载图片，读取完的图片保存到LbitmapData中，利用Lbitmap将图片显示到画板上
         function main() {
             loader = new LLoader();
             loader.addEventListener(LEvent.COMPLETE, loadBitmapdata);
