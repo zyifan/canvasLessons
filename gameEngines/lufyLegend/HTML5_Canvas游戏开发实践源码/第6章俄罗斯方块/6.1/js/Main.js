@@ -9,6 +9,7 @@ function main() {
 	backLayer.graphics.drawRect(1, "#000000", [0, 0, 320, 480], true, "#000000");
 	//背景显示
 	addChild(backLayer);
+
 	gameInit();
 }
 //读取完所有图片，进行游戏标题画面的初始化工作
@@ -21,6 +22,7 @@ function gameInit() {
 	title.color = "#ffffff";
 	title.text = "俄罗斯方块";
 	backLayer.addChild(title);
+	
 	//显示说明文
 	backLayer.graphics.drawRect(1, "#ffffff", [50, 240, 220, 40]);
 	var txtClick = new LTextField();

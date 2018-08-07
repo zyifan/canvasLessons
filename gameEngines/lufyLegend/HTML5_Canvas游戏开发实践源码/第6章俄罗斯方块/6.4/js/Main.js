@@ -1,6 +1,7 @@
 //声明变量
 //进度条显示层，背景层，方块绘制层，方块预览层
 var loadingLayer, backLayer, graphicsMap, nextLayer;
+
 var imglist = {};
 var imgData = new Array({
 	name: "backImage",
@@ -18,6 +19,7 @@ var imgData = new Array({
 	name: "r4",
 	path: "./images/r4.png"
 });
+
 //方块类变量，用于生成新的方块
 var BOX;
 //方块坐标数组
@@ -26,17 +28,21 @@ var map;
 var nodeList;
 //方块图片数组
 var bitmapdataList;
+
 //方块下落速度相关
 var speed = 15,
 	speedMax = 15,
 	speedIndex = 0;
+
 //当前方块的位置
 var pointBox = {
 	x: 0,
 	y: 0
 };
+
 //当前方块，预览方块
 var nowBox, nextBox;
+
 //方块区域起始位置
 var START_X1 = 15,
 	START_Y1 = 20,
@@ -69,6 +75,7 @@ function main() {
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 	];
+	
 	//背景层初始化
 	backLayer = new LSprite();
 	//在背景层上绘制黑色背景
