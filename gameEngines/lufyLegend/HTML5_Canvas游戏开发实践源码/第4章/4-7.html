@@ -11,9 +11,11 @@
     <script type="text/javascript">
         init(50, "mylegend", 500, 350, main);
 
+        // LGraphics是一个绘图类
         function main() {
             var graphics = new LGraphics();
             addChild(graphics);
+            // 矩形 drawRect(lineWidth, lineColor, [x, y, width, height], isFill, fillColor )
             graphics.drawRect(1, '#000000', [50, 50, 100, 100]);
             graphics.drawRect(1, '#000000', [170, 50, 100, 100], true, '#cccccc');
         }

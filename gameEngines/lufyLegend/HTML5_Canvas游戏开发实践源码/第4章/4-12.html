@@ -22,7 +22,9 @@
             var bitmapdata = new LBitmapData(loader.content);
             var backLayer = new LSprite();
             addChild(backLayer);
+            // 使用LGraphics对象的beginBitmapFill函数绘制图片
             backLayer.graphics.beginBitmapFill(bitmapdata);
+            // 绘制一个圆形区域的图片
             backLayer.graphics.drawArc(1, "#000", [110, 80, 50, 0, Math.PI * 2]);
         }
     </script>

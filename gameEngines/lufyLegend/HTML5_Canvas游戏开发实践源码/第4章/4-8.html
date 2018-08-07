@@ -11,9 +11,11 @@
     <script type="text/javascript">
         init(50, "mylegend", 500, 350, main);
 
+        // LGraphics是一个绘图类
         function main() {
             var graphics = new LGraphics();
             addChild(graphics);
+            // 绘制圆 drawArc(lineWidth, lineColor, [x,y,radius,startAngle,endAngle,顺时针/逆时针], isFill, fillColor)
             graphics.drawArc(1, '#000000', [60, 60, 50, 0, 360 * Math.PI / 180]);
             graphics.drawArc(1, '#000000', [180, 60, 50, 0, 360 * Math.PI / 180], true, '#cccccc');
         }

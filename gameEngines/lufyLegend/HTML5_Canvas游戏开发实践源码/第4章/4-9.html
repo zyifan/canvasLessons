@@ -14,6 +14,9 @@
         function main() {
             var graphics = new LGraphics();
             addChild(graphics);
+
+            // 任意多边形
+            //  drawVertices(lineWidth, lineColor, [(x,y),(顶点坐标)...], isFill, color)
             graphics.drawVertices(1, '#000000', [
                 [50, 20],
                 [80, 20],

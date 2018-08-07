@@ -14,6 +14,7 @@
 		function main() {
 			var graphics = new LGraphics();
 			addChild(graphics);
+			// 使用 Canvas 原始绘图函数进行绘图
 			graphics.add(function (coodx, coody) {
 				LGlobal.canvas.strokeStyle = "#000000";
 				LGlobal.canvas.moveTo(20, 20);

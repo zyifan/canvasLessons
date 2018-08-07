@@ -20,14 +20,19 @@
 
         function loadBitmapdata(event) {
             var bitmapdata = new LBitmapData(loader.content);
+            // Lbitmap 不但能将图片显示到Canvas面板上，还可以控制图片的各种属性，如坐标(x,y)、透明度(alpha)、旋转(rotate)、缩放(scaleX,scaleY)
             var bitmap = new LBitmap(bitmapdata);
+
             //图片坐标
             bitmap.x = 50;
             bitmap.y = 50;
+
             //图片旋转60度
             bitmap.rotate = 60;
+
             //图片透明度设置为0.4
             bitmap.alpha = 0.4;
+            
             addChild(bitmap);
         }
     </script>

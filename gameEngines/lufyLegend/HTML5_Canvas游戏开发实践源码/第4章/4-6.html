@@ -21,9 +21,11 @@
         function loadBitmapdata(event) {
             var bitmapdata = new LBitmapData(loader.content);
             var bitmap = new LBitmap(bitmapdata);
+
             //加入层LSprite
             var layer = new LSprite();
             addChild(layer);
+            
             layer.addChild(bitmap);
             layer.x = 50;
             layer.y = 50;

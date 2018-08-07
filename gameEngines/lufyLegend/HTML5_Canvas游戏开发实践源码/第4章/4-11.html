@@ -10,10 +10,12 @@
     <div id="mylegend">loading...</div>
     <script type="text/javascript">
         init(50, "mylegend", 500, 350, main);
-
+        
+        // 每个LSprite对象都包含一个LGraphics对象
         function main() {
             var layer = new LSprite();
             addChild(layer);
+            // 使用LSprite的graphics来实现绘图
             layer.graphics.drawRect(1, '#000000', [50, 50, 100, 100]);
             layer.graphics.drawRect(1, '#000000', [170, 50, 100, 100], true, '#cccccc');
         }

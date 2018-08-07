@@ -20,10 +20,12 @@
 
         function loadBitmapdata(event) {
             var bitmapdata = new LBitmapData(loader.content);
+            // 层
             var backLayer = new LSprite();
             backLayer.x = 100;
             addChild(backLayer);
-
+            
+            // 订单坐标
             vertices = new Array();
             vertices.push(0, 0);
             vertices.push(0 - 50, 120); //这里将原坐标的x坐标左移50
@@ -35,6 +37,7 @@
             vertices.push(240 + 50, 120); //这里将原坐标的x坐标右移50
             vertices.push(240, 240);
 
+            // 三角形顶点索引数组，每三个顶点组成一个三角
             indices = new Array();
             indices.push(0, 3, 1);
             indices.push(3, 1, 4);
@@ -45,6 +48,7 @@
             indices.push(4, 7, 5);
             indices.push(7, 5, 8);
 
+            // 三角形顶点比例
             uvtData = new Array();
             uvtData.push(0, 0);
             uvtData.push(0, 0.5);

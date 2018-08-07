@@ -21,9 +21,12 @@
         function loadBitmapdata(event) {
             var bitmapdata = new LBitmapData(loader.content);
             var bitmap = new LBitmap(bitmapdata);
+            
             //加入层LSprite
+            // LSprite 对象也有坐标(x,y)、透明度(alpha)、旋转(rotate)、缩放(scaleX,scaleY)等属性，不过它控制的是整个层的属性
             var layer = new LSprite();
             addChild(layer);
+
             layer.addChild(bitmap);
         }
     </script>
