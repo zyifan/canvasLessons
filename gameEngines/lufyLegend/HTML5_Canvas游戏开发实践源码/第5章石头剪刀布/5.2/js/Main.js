@@ -1,58 +1,83 @@
-init(50,"mylegend",800,400,main);
+init(50, "mylegend", 800, 400, main);
 var loadingLayer,
-backLayer,
-resultLayer,
-clickLayer,
-selfBitmap,
-enemyBitmap;
+	backLayer,
+	resultLayer,
+	clickLayer,
+
+	// 己方、电脑的出拳结果
+	selfBitmap,
+	enemyBitmap;
+
 var imglist = {};
-var imgData = new Array(
-		{name:"title",path:"../images/title.png"},
-		{name:"shitou",path:"../images/shitou.png"},
-		{name:"jiandao",path:"../images/jiandao.png"},
-		{name:"bu",path:"../images/bu.png"}
-		);
+var imgData = new Array({
+	name: "title",
+	path: "../images/title.png"
+}, {
+	name: "shitou",
+	path: "../images/shitou.png"
+}, {
+	name: "jiandao",
+	path: "../images/jiandao.png"
+}, {
+	name: "bu",
+	path: "../images/bu.png"
+});
+
 var showList = new Array();
-function main(){
-	backLayer = new LSprite();	
+
+function main() {
+	backLayer = new LSprite();
 	addChild(backLayer);
+
+	// 加载进度条
 	loadingLayer = new LoadingSample3();
 	backLayer.addChild(loadingLayer);
+
+	// LLoadManage.load(imgList, progressFunc, completeFunc)，一次性加载多张图片
 	LLoadManage.load(
 		imgData,
-		function(progress){
+		function (progress) {
 			loadingLayer.setProgress(progress);
 		},
-		function(result){
+		function (result) {
 			imglist = result;
+			// 移除进度条
 			backLayer.removeChild(loadingLayer);
 			loadingLayer = null;
+
+			// 游戏初始化 
 			gameInit();
 		}
 	);
 }
-function gameInit(){
+
+function gameInit() {
+	// 石头剪刀布的图片数据
 	showList.push(new LBitmapData(imglist["shitou"]));
 	showList.push(new LBitmapData(imglist["jiandao"]));
 	showList.push(new LBitmapData(imglist["bu"]));
+
 	//添加游戏界面背景
-	backLayer.graphics.drawRect(10,'#008800',[0,0,LGlobal.width,LGlobal.height],true,'#000000');
-	
+	backLayer.graphics.drawRect(10, '#008800', [0, 0, LGlobal.width, LGlobal.height], true, '#000000');
+
 	//显示游戏标题
 	var titleBitmap = new LBitmap(new LBitmapData(imglist["title"]));
-	titleBitmap.x = (LGlobal.width - titleBitmap.width)/2;
+	titleBitmap.x = (LGlobal.width - titleBitmap.width) / 2;
 	titleBitmap.y = 10;
 	backLayer.addChild(titleBitmap);
+
 	//玩家方出拳图片
 	selfBitmap = new LBitmap(showList[0]);
 	selfBitmap.x = 400 - selfBitmap.width - 50;
 	selfBitmap.y = 130;
 	backLayer.addChild(selfBitmap);
+
 	//电脑方出拳图片
 	enemyBitmap = new LBitmap(showList[0]);
 	enemyBitmap.x = 400 + 50;
 	enemyBitmap.y = 130;
 	backLayer.addChild(enemyBitmap);
+
 	//玩家电脑名称设定
 	var nameText;
 	nameText = new LTextField();
@@ -60,33 +85,37 @@ function gameInit(){
 	nameText.weight = "bolder";
 	nameText.color = "#ffffff";
 	nameText.size = 24;
-	nameText.x = selfBitmap.x + (selfBitmap.width - nameText.getWidth())/2;
+	nameText.x = selfBitmap.x + (selfBitmap.width - nameText.getWidth()) / 2;
 	nameText.y = 95;
 	backLayer.addChild(nameText);
+
 	nameText = new LTextField();
 	nameText.text = "电脑";
 	nameText.weight = "bolder";
 	nameText.color = "#ffffff";
 	nameText.size = 24;
-	nameText.x = enemyBitmap.x + (enemyBitmap.width - nameText.getWidth())/2;
+	nameText.x = enemyBitmap.x + (enemyBitmap.width - nameText.getWidth()) / 2;
 	nameText.y = 95;
 	backLayer.addChild(nameText);
-	
+
 	//结果显示层初始化
 	initResultLayer();
+	
 	//操作层初始化
 	initClickLayer();
 }
-function initResultLayer(){
+
+function initResultLayer() {
 	resultLayer = new LSprite();
-	resultLayer.graphics.drawRect(4,'#ff8800',[0,0,150,110],true,'#ffffff');
+	resultLayer.graphics.drawRect(4, '#ff8800', [0, 0, 150, 110], true, '#ffffff');
 	resultLayer.x = 10;
 	resultLayer.y = 100;
 	backLayer.addChild(resultLayer);
 }
-function initClickLayer(){
+
+function initClickLayer() {
 	clickLayer = new LSprite();
-	clickLayer.graphics.drawRect(4,'#ff8800',[0,0,300,110],true,'#ffffff');
+	clickLayer.graphics.drawRect(4, '#ff8800', [0, 0, 300, 110], true, '#ffffff');
 	clickLayer.x = 250;
 	clickLayer.y = 275;
 	backLayer.addChild(clickLayer);

@@ -11,6 +11,7 @@ function gameInit() {
 	backLayer = new LSprite();
 	addChild(backLayer);
 	//添加游戏界面背景
+	// LGlobal.width 是canvas的宽
 	backLayer.graphics.drawRect(10, '#008800', [0, 0, LGlobal.width, LGlobal.height], true, '#000000');
 	//结果显示层初始化
 	initResultLayer();
