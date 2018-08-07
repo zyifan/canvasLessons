@@ -4,6 +4,7 @@
 <head>
 	<meta charset="utf-8" />
 	<script type="text/javascript" src="../lufylegend-1.7.6.min.js"></script>
+	<title>键盘事件</title>
 </head>
 
 <body>
@@ -17,13 +18,19 @@
 			layer.graphics.drawRect(1, '#cccccc', [0, 0, 300, 300], true, '#cccccc');
 			addChild(layer);
 			field = new LTextField();
-			field.text = "0";
+			field.text = "Wait Click!";
 			layer.addChild(field);
-			layer.addEventListener(LEvent.ENTER_FRAME, onframe);
+			// 键盘事件，键盘事件需要加载到window上
+			LEvent.addEventListener(LGlobal.window, LKeyboardEvent.KEY_DOWN, downshow);
+			LEvent.addEventListener(LGlobal.window, LKeyboardEvent.KEY_UP, upshow);
 		}
 
-		function onframe() {
-			field.text = parseInt(field.text) + 1;
+		function downshow(event) {
+			field.text = event.keyCode + " Down!";
+		}
+
+		function upshow(event) {
+			field.text = event.keyCode + " Up!";
 		}
 	</script>
 </body>

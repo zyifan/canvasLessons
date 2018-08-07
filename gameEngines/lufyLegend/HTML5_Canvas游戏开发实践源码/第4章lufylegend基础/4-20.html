@@ -4,6 +4,7 @@
 <head>
 	<meta charset="utf-8" />
 	<script type="text/javascript" src="../lufylegend-1.7.6.min.js"></script>
+	<title>循环事件</title>
 </head>
 
 <body>
@@ -17,18 +18,14 @@
 			layer.graphics.drawRect(1, '#cccccc', [0, 0, 300, 300], true, '#cccccc');
 			addChild(layer);
 			field = new LTextField();
-			field.text = "Wait Click!";
+			field.text = "0";
 			layer.addChild(field);
-			LEvent.addEventListener(LGlobal.window, LKeyboardEvent.KEY_DOWN, downshow);
-			LEvent.addEventListener(LGlobal.window, LKeyboardEvent.KEY_UP, upshow);
+			// 循环事件 LEvent.ENTER_FRAME
+			layer.addEventListener(LEvent.ENTER_FRAME, onframe);
 		}
 
-		function downshow(event) {
-			field.text = event.keyCode + " Down!";
-		}
-
-		function upshow(event) {
-			field.text = event.keyCode + " Up!";
+		function onframe() {
+			field.text = parseInt(field.text) + 1;
 		}
 	</script>
 </body>

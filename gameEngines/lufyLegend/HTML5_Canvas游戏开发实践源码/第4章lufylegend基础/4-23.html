@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <script type="text/javascript" src="../lufylegend-1.7.6.min.js"></script>
+    <title>动画</title>
 </head>
 
 <body>
@@ -19,16 +20,22 @@
         }
 
         function loadBitmapdata(event) {
+            // img只取一个动作的精灵图片
             var bitmapdata = new LBitmapData(loader.content, 0, 0, 64, 64);
+            // 拆分精灵图 divideCoordinate(width, height, row, col)
+            // 将 width*height 拆分成 row*col 个小图坐标的二维数组
             var list = LGlobal.divideCoordinate(256, 256, 4, 4);
             //加入层LSprite
             layer = new LSprite();
             addChild(layer);
+
+            // LAnimation(layer,data,list) 层、图片数据、坐标数组
             anime = new LAnimation(layer, bitmapdata, list);
             layer.addEventListener(LEvent.ENTER_FRAME, onframe);
         }
 
         function onframe() {
+            // 将所播放图片的列好加1
             anime.onframe();
         }
     </script>

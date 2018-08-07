@@ -4,6 +4,7 @@
 <head>
 	<meta charset="utf-8" />
 	<script type="text/javascript" src="../lufylegend-1.7.6.min.js"></script>
+	<title>按钮</title>
 </head>
 
 <body>
@@ -12,6 +13,7 @@
 		init(50, "mylegend", 300, 300, main);
 		var loader, bitmapup, bitmapover, field;
 
+		// LButton类添加按钮
 		function main() {
 			loader = new LLoader();
 			loader.addEventListener(LEvent.COMPLETE, loadUp);
@@ -19,6 +21,7 @@
 		}
 
 		function loadUp(event) {
+			// 按钮升起状态
 			bitmapup = new LBitmap(new LBitmapData(loader.content));
 			loader = new LLoader();
 			loader.addEventListener(LEvent.COMPLETE, loadOver);
@@ -26,15 +29,21 @@
 		}
 
 		function loadOver() {
+			// 按钮按下状态
 			bitmapover = new LBitmap(new LBitmapData(loader.content));
+
 			var layer = new LSprite();
 			addChild(layer);
+
 			field = new LTextField();
 			field.text = "Wait Click!";
 			layer.addChild(field);
+
 			var testButton = new LButton(bitmapup, bitmapover);
 			testButton.y = 50;
+
 			layer.addChild(testButton);
+
 			testButton.addEventListener(LMouseEvent.MOUSE_DOWN, downshow);
 		}
 

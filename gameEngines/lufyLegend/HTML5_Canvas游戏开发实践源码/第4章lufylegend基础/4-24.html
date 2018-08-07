@@ -21,34 +21,41 @@
 		function loadBitmapdata(event) {
 			var bitmapdata = new LBitmapData(loader.content, 0, 0, 64, 64);
 			var list = LGlobal.divideCoordinate(256, 256, 4, 4);
+
 			//加入层LSprite
 			layer = new LSprite();
 			addChild(layer);
+
 			anime = new LAnimation(layer, bitmapdata, list);
 			layer.addEventListener(LEvent.ENTER_FRAME, onframe);
 		}
 
 		function onframe() {
+			// 获取动画{行号、列号】
 			var action = anime.getAction();
 			switch (action[0]) {
+				// 下
 				case 0:
 					layer.y += 5;
 					if (layer.y >= 200) {
 						anime.setAction(2);
 					}
 					break;
+				// 左
 				case 1:
 					layer.x -= 5;
 					if (layer.x <= 0) {
 						anime.setAction(0);
 					}
 					break;
+				// 右
 				case 2:
 					layer.x += 5;
 					if (layer.x >= 200) {
 						anime.setAction(3);
 					}
 					break;
+				// 上
 				case 3:
 					layer.y -= 5;
 					if (layer.y <= 0) {
@@ -56,6 +63,7 @@
 					}
 					break;
 			}
+			// 将所播放图片的列好加1
 			anime.onframe();
 		}
 	</script>
