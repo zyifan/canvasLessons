@@ -22,10 +22,13 @@ var imgData = new Array({
 
 //方块类变量，用于生成新的方块
 var BOX;
-//方块坐标数组
+
+//方块网格坐标数组
 var map;
+
 //方块数据数组
 var nodeList;
+
 //方块图片数组
 var bitmapdataList;
 
@@ -43,7 +46,7 @@ var pointBox = {
 //当前方块，预览方块
 var nowBox, nextBox;
 
-//方块区域起始位置
+//网格、预览方块区域起始位置
 var START_X1 = 15,
 	START_Y1 = 20,
 	START_X2 = 228,
@@ -52,7 +55,7 @@ var START_X1 = 15,
 function main() {
 	//方块类变量初始化
 	BOX = new Box();
-	//方块坐标数组初始化
+	//左侧网格方块坐标数组初始化
 	map = [
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -75,13 +78,14 @@ function main() {
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 	];
-	
+
 	//背景层初始化
 	backLayer = new LSprite();
 	//在背景层上绘制黑色背景
 	backLayer.graphics.drawRect(1, "#000000", [0, 0, 320, 480], true, "#000000");
 	//背景显示
 	addChild(backLayer);
+
 	//进度条读取层初始化
 	loadingLayer = new LoadingSample1();
 	//进度条读取层显示
@@ -99,9 +103,11 @@ function main() {
 function gameInit(result) {
 	//取得图片读取结果
 	imglist = result;
+	
 	//移除进度条层
 	backLayer.removeChild(loadingLayer);
 	loadingLayer = null;
+
 	//显示游戏标题
 	var title = new LTextField();
 	title.x = 50;
@@ -110,6 +116,7 @@ function gameInit(result) {
 	title.color = "#ffffff";
 	title.text = "俄罗斯方块";
 	backLayer.addChild(title);
+
 	//显示说明文
 	backLayer.graphics.drawRect(1, "#ffffff", [50, 240, 220, 40]);
 	var txtClick = new LTextField();
@@ -119,6 +126,7 @@ function gameInit(result) {
 	txtClick.x = (LGlobal.width - txtClick.getWidth()) / 2;
 	txtClick.y = 245;
 	backLayer.addChild(txtClick);
+
 	//添加点击事件，点击画面则游戏开始
 	backLayer.addEventListener(LMouseEvent.MOUSE_UP, gameToStart);
 }
@@ -127,15 +135,19 @@ function gameToStart() {
 	//背景层清空
 	backLayer.die();
 	backLayer.removeAllChild();
+
 	//背景图片显示
 	var bitmap = new LBitmap(new LBitmapData(imglist["backImage"]));
 	backLayer.addChild(bitmap);
+
 	//方块绘制层初始化
 	graphicsMap = new LSprite();
 	backLayer.addChild(graphicsMap);
+
 	//方块预览层初始化
 	nextLayer = new LSprite();
 	backLayer.addChild(nextLayer);
+
 	//将方块的图片数据保存到数组内
 	bitmapdataList = [
 		new LBitmapData(imglist["r1"]),
@@ -143,7 +155,8 @@ function gameToStart() {
 		new LBitmapData(imglist["r3"]),
 		new LBitmapData(imglist["r4"])
 	];
-	//方块数据数组初始化
+
+	//方块数据数组初始化，为每一个方块对应一个数组及图片
 	nodeList = [];
 	var i, j, nArr, bitmap;
 	for (i = 0; i < map.length; i++) {
@@ -153,6 +166,7 @@ function gameToStart() {
 			bitmap.x = bitmap.getWidth() * j + START_X1;
 			bitmap.y = bitmap.getHeight() * i + START_Y1;
 			graphicsMap.addChild(bitmap);
+
 			nArr[j] = {
 				"index": -1,
 				"value": 0,
@@ -161,10 +175,13 @@ function gameToStart() {
 		}
 		nodeList[i] = nArr;
 	}
+
 	//预览层显示
 	getNewBox();
+
 	//将当前下落方块显示到画面上
 	plusBox();
+
 	//添加循环播放事件侦听
 	backLayer.addEventListener(LEvent.ENTER_FRAME, onframe);
 }
@@ -192,6 +209,7 @@ function onframe() {
 	plusBox();
 	drawMap();
 }
+
 //游戏结束
 function gameOver() {
 	backLayer.die();
@@ -203,6 +221,7 @@ function gameOver() {
 	txt.y = 200;
 	backLayer.addChild(txt);
 }
+
 //绘制所有方块
 function drawMap() {
 	var i, j, boxl = 15;
@@ -216,17 +235,18 @@ function drawMap() {
 		}
 	}
 }
-//判断是否可移动
+
+//判断是否可移动，nx、ny代表当前方块在xy轴的偏移量
 function checkPlus(nx, ny) {
 	var i, j;
 	//循环nowBox数组的每个元素
 	for (i = 0; i < nowBox.length; i++) {
 		for (j = 0; j < nowBox[i].length; j++) {
 			if (i + pointBox.y + ny < 0) {
-				//所判断网格还为落入网格范围内
+				//网格还未落入网格范围内
 				continue;
 			} else if (i + pointBox.y + ny >= map.length || j + pointBox.x + nx < 0 || j + pointBox.x + nx >= map[0].length) {
-				//所判断网格超出网格范围
+				//网格超出网格区域范围
 				if (nowBox[i][j] == 0) {
 					//所判断网格为空则继续判断
 					continue;
@@ -243,11 +263,13 @@ function checkPlus(nx, ny) {
 	}
 	return true;
 }
+
 //移除方块
 function minusBox() {
 	var i, j;
 	for (i = 0; i < nowBox.length; i++) {
 		for (j = 0; j < nowBox[i].length; j++) {
+			// 超出边界不处理
 			if (i + pointBox.y < 0 || i + pointBox.y >= map.length || j + pointBox.x < 0 || j + pointBox.x >= map[0].length) {
 				continue;
 			}
@@ -256,21 +278,26 @@ function minusBox() {
 		}
 	}
 }
+
 //添加方块
 function plusBox() {
 	var i, j;
 	for (i = 0; i < nowBox.length; i++) {
 		for (j = 0; j < nowBox[i].length; j++) {
+			// 超出边界不处理
 			if (i + pointBox.y < 0 || i + pointBox.y >= map.length || j + pointBox.x < 0 || j + pointBox.x >= map[0].length) {
 				continue;
 			}
+			// 获取小方格的图片index
 			map[i + pointBox.y][j + pointBox.x] = nowBox[i][j] + map[i + pointBox.y][j + pointBox.x];
 			nodeList[i + pointBox.y][j + pointBox.x]["index"] = map[i + pointBox.y][j + pointBox.x] - 1;
 		}
 	}
 }
+
 //获取下一方块
 function getNewBox() {
+	// 获取新的预览方块
 	if (nextBox == null) {
 		nextBox = BOX.getBox();
 	}
@@ -279,7 +306,9 @@ function getNewBox() {
 	pointBox.y = -4;
 	nextBox = BOX.getBox();
 
+	// 清空预览区域
 	nextLayer.removeAllChild();
+	// 绘制预览方块
 	var i, j, bitmap;
 	for (i = 0; i < nextBox.length; i++) {
 		for (j = 0; j < nextBox[0].length; j++) {
